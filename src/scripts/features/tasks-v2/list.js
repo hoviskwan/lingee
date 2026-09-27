@@ -11,6 +11,7 @@ import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal, refreshFormAssignees } from './create.js';
+import { startTaskStage } from './task-execution.js';
 
 var projectListMode = false;
 
@@ -124,8 +125,18 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   menu.style.left = left + 'px';
 }
 
+function startTaskExec(taskId) {
+  var task = tkGetTasks().find(function(t) { return t.id === taskId; });
+  if (!task) return;
+  var started = startTaskStage(task);
+  if (!started.ok) { if (started.message) toast(started.message,'warning'); else openDrawer(taskId); return; }
+  render();
+  openTaskConversationWithTask(taskId);
+  toast('已进入' + (started.stage?.name || '当前节点') + '，请在 AI 对话中推进','success');
+}
+
 function handleCardAction(act, aid) {
-  if (act === 'chat') { openTaskConversationWithTask(aid); }
+  if (act === 'chat') { startTaskExec(aid); }
   else if (act === 'edit') { openDrawer(aid); }
   else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
   else if (act === 'copy') {
@@ -1500,14 +1511,14 @@ els.tkBoardScroll.addEventListener('click', function (e) {
       return;
     }
     var playBtnB = e.target.closest('[data-card-play]');
-    if (playBtnB) { openTaskConversationWithTask(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
+    if (playBtnB) { startTaskExec(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var moreBtnB = e.target.closest('[data-card-more]');
     if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
     var cardAct = e.target.closest('[data-card-action]');
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { startTaskExec(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -1597,7 +1608,7 @@ els.tkListBody.addEventListener('click', function (e) {
     if (cardAct2) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
-      if (act2 === 'chat') { openTaskConversationWithTask(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
+      if (act2 === 'chat') { startTaskExec(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
       else if (act2 === 'delete') { tkDeleteTask(aid2); render(); }
       else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); } }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }

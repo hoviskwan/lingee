@@ -1,6 +1,7 @@
 /* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的专家团。 */
-import { EXPERTS, PRESET_TEAMS, STAGES } from '../expert/data.js';
+import { EXPERTS, PRESET_TEAMS } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
+import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { $ } from '../../core/dom.js'; // 模块自检将模板插值的 $ 识别为跨模块符号。
 
 const PHASE_OWNERS = {
@@ -29,7 +30,7 @@ function implementationOwner(title, team) {
 
 function ownerFor(stageId, title, team) {
   const preferred = stageId === 'implementation' ? implementationOwner(title, team) : null;
-  const id = preferred || PHASE_OWNERS[stageId].find(item => team.members.includes(item)) || team.leadId || team.members[0];
+  const id = preferred || (PHASE_OWNERS[stageId] || []).find(item => team.members.includes(item)) || team.leadId || team.members[0];
   return EXPERTS.find(item => item.id === id) || { id, name:team.name };
 }
 
@@ -49,7 +50,7 @@ function detailFor(stageId, task, project, team) {
     verification:`按验收清单核对「${title}」的正常路径、权限边界和异常恢复，并整理回归结论。`,
     delivery:`汇总「${title}」的配置、验证记录与交付说明，完成集成确认和后续观察项登记。`,
   };
-  return texts[stageId];
+  return texts[stageId] || `围绕「${title}」完成当前计划节点，记录执行结果与待审核事项。`;
 }
 
 function normalizedStatus(status) {
@@ -58,28 +59,29 @@ function normalizedStatus(status) {
 
 export function createDeliveryActivity(task, project, options = {}) {
   const team = TEAMS.find(item => item.id === task.teamId || project?.defaultTeam)
-    || PRESET_TEAMS.find(item => item.id === project?.defaultTeam);
-  if (!team) return [];
+    || PRESET_TEAMS.find(item => item.id === project?.defaultTeam)
+    || {id:'task-ai',name:'AI 助手',members:EXPERTS[0] ? [EXPERTS[0].id] : [],leadId:EXPERTS[0]?.id};
   const status = normalizedStatus(task.status);
   const date = task.createDate || options.date || '2026-09-22';
   const title = task.title || project.name;
   const activity = [{stageId:'kickoff', stage:'任务创建', author:options.creator || project.owner || '项目成员',
     text:`将「${title}」加入「${project.name}」，交由${team.name}评估交付范围。`, time:`${date} 09:15`, state:'done'}];
   if (['planned','backlog','cancelled'].includes(status)) return activity;
-  const requestedIndex = STAGES.findIndex(stage => stage.id === task.executionStageId);
+  const stages = taskExecutionStages(task);
+  const requestedIndex = stages.findIndex(stage => stage.id === task.executionStageId);
   const activeIndex = status === 'done' ? -1 : requestedIndex < 0 ? 0 : requestedIndex;
-  const completedCount = status === 'done' ? STAGES.length : activeIndex;
+  const completedCount = status === 'done' ? stages.length : activeIndex;
   const hours = ['09:40','10:25','11:10','13:45','15:05','16:20'];
-  STAGES.forEach((stage, index) => {
+  stages.forEach((stage, index) => {
     if (index >= completedCount && index !== activeIndex) return;
     const expert = ownerFor(stage.id, title, team);
-    let detail = detailFor(stage.id, task, project, team);
+    let detail = stage.desc || detailFor(stage.id, task, project, team);
     let state = 'done';
     if (index === activeIndex) {
       state = status === 'blocked' ? 'blocked' : status === 'in_review' ? 'review' : 'running';
       if (status === 'blocked') detail = `${detail} 当前遇到阻塞：${options.blockedReason || '所需依赖尚未就绪，已暂停后续验证。'}`;
       if (status === 'in_progress') detail = `${detail} 本阶段持续处理中，尚未提交独立验证。`;
-      if (status === 'in_review') detail = `已由${expert.name}提交「${title}」的${stage.name}结果，等待项目负责人审核；通过后${index === STAGES.length - 1 ? '完成任务' : '进入下一阶段'}。`;
+      if (status === 'in_review') detail = `已由${expert.name}提交「${title}」的${stage.name}结果，等待项目负责人审核；通过后${index === stages.length - 1 ? '完成任务' : '进入下一阶段'}。`;
     }
     if (status === 'in_progress' && index === activeIndex && !task.statusHistory?.length) {
       activity.push(

@@ -14,6 +14,7 @@ import { tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
+import { reviewTaskStage, startTaskStage, submitTaskStage, taskExecutionStages } from './task-execution.js';
 import { initTkFormExpertPicker } from './expert-picker.js';
 
 import { initTaskListVersion } from './list-version.js';
@@ -96,6 +97,7 @@ function taskHeaderAction(task) {
   return {
     planned:{label:'加入待办',action:'queue',icon:TASK_START_PLAY_ICON},
     backlog:{label:'开始执行',action:'start',icon:TASK_START_PLAY_ICON},
+    in_progress:{label:'提交当前节点审核',action:'advance',icon:TASK_START_PLAY_ICON},
   }[task.status] || null;
 }
 
@@ -218,7 +220,7 @@ function openTaskConversation() {
 /* origin 省略时按「开始执行」登记会话；传 null 表示继续已有会话，不再登记。 */
 function openTaskConversationWithTask(taskId, origin) {
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
-  if (t && origin !== null) tkAddTaskSession(t, origin || 'start', origin === 'revise' ? t.executionStageId : null);
+  if (t && origin !== null) tkAddTaskSession(t, origin || 'start', t.executionStageId || null);
   closeDrawer();
   openTaskConversation();
   if (!t) return;
@@ -238,6 +240,15 @@ function retryBlockedTask(task) {
   render();
   openDrawer(task.id);
 }
+function startTaskExecution(taskId) {
+  var task = tkGetTasks().find(function (row) { return row.id === taskId; });
+  if (!task) return;
+  var started = startTaskStage(task);
+  if (!started.ok) { if (started.message) toast(started.message, 'warning'); else openDrawer(taskId); return; }
+  render();
+  openTaskConversationWithTask(taskId, 'start');
+  toast('已进入' + (started.stage?.name || '当前节点') + '，请在 AI 对话中推进', 'success');
+}
 function handleTaskHeaderAction() {
   var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
   var action = taskHeaderAction(task)?.action;
@@ -247,9 +258,13 @@ function handleTaskHeaderAction() {
     render();
     openDrawer(task.id);
   } else if (action === 'start') {
-    tkUpdateTask(task.id, {status:'in_progress'});
+    startTaskExecution(task.id);
+  } else if (action === 'advance') {
+    var submitted = submitTaskStage(task);
+    if (!submitted.ok) return;
     render();
-    openTaskConversationWithTask(task.id);
+    openDrawer(task.id);
+    toast(submitted.stage.name + '已提交审核', 'success');
   } else if (action === 'view-run' || action === 'view-result') {
     var report = action === 'view-result' ? els.tkDrawerBody.querySelector('.tk-exec-card-report') : null;
     if (report) report.open = true;
@@ -329,7 +344,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   menu.style.left = left + 'px';
 }
 function handleCardAction(act, aid) {
-  if (act === 'chat') { openTaskConversationWithTask(aid); }
+  if (act === 'chat') { startTaskExecution(aid); }
   else if (act === 'edit') { openDrawer(aid); }
   else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
   else if (act === 'copy') {
@@ -1923,7 +1938,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
     + (taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
     + '<div class="tk-feed-stage-overview-head"><strong>执行进度</strong></div>'
-    + '<ol class="tk-feed-stage-list">' + STAGES.map(function (stage) {
+    + '<ol class="tk-feed-stage-list">' + taskExecutionStages(task).map(function (stage) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
       var label = state === 'done' ? '已完成' : state === 'running' ? currentLabel : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '待执行';
@@ -2956,23 +2971,15 @@ function bindEvents() {
       var reviewTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
       var nextStatus = stageReviewButton.getAttribute('data-stage-review-status');
       if (taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
-        var stageIndex = Math.max(0, STAGES.findIndex(function (stage) { return stage.id === reviewTask.executionStageId; }));
-        var finalStage = stageIndex === STAGES.length - 1;
         var approved = nextStatus === 'done';
+        var reviewed = reviewTaskStage(reviewTask, approved);
+        if (!reviewed.ok) return;
+        render();
         if (approved) {
-          tkUpdateTask(reviewTask.id, {
-            status: finalStage ? 'done' : 'in_progress',
-            executionStageId: finalStage ? STAGES[stageIndex].id : STAGES[stageIndex + 1].id,
-          });
-          render();
-          openDrawer(reviewTask.id);
-          toast(finalStage ? '审核通过，任务已完成' : '审核通过，进入' + STAGES[stageIndex + 1].name, 'success');
+          if (reviewed.done) openDrawer(reviewTask.id);
+          else openTaskConversationWithTask(reviewTask.id, 'start');
+          toast(reviewed.done ? '最终节点审核通过，任务已完成' : '审核通过，进入' + reviewed.next.name, 'success');
         } else {
-          tkUpdateTask(reviewTask.id, {
-            status: 'in_progress',
-            executionStageId: STAGES[stageIndex].id,
-          });
-          render();
           openTaskConversationWithTask(reviewTask.id, 'revise');
           toast('已退回修改，可在会话中二次修改', 'success');
         }
@@ -3071,7 +3078,7 @@ function bindEvents() {
     }
     /* 开始执行按钮 */
     var playBtn = e.target.closest('[data-card-play]');
-    if (playBtn) { openTaskConversationWithTask(parseInt(playBtn.getAttribute('data-card-play'), 10)); return; }
+    if (playBtn) { startTaskExecution(parseInt(playBtn.getAttribute('data-card-play'), 10)); return; }
     /* 三点菜单按钮 */
     var moreBtn = e.target.closest('[data-card-more]');
     if (moreBtn) { showCardMenu(moreBtn.getAttribute('data-card-more'), moreBtn); return; }
@@ -3080,7 +3087,7 @@ function bindEvents() {
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -3582,14 +3589,14 @@ function bindEvents() {
       return;
     }
     var playBtnB = e.target.closest('[data-card-play]');
-    if (playBtnB) { openTaskConversationWithTask(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
+    if (playBtnB) { startTaskExecution(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var moreBtnB = e.target.closest('[data-card-more]');
     if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
     var cardAct = e.target.closest('[data-card-action]');
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -3678,14 +3685,14 @@ function bindEvents() {
       return;
     }
     var playBtn2 = e.target.closest('[data-card-play]');
-    if (playBtn2) { openTaskConversationWithTask(parseInt(playBtn2.getAttribute('data-card-play'), 10)); return; }
+    if (playBtn2) { startTaskExecution(parseInt(playBtn2.getAttribute('data-card-play'), 10)); return; }
     var moreBtn2 = e.target.closest('[data-card-more]');
     if (moreBtn2) { showCardMenu(moreBtn2.getAttribute('data-card-more'), moreBtn2); return; }
     var cardAct2 = e.target.closest('[data-card-action]');
     if (cardAct2) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
-      if (act2 === 'chat') { openTaskConversationWithTask(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
+      if (act2 === 'chat') { startTaskExecution(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
       else if (act2 === 'delete') { tkDeleteTask(aid2); render(); toast('删除成功', 'success'); }
       else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); toast('复制成功', 'success'); } }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }

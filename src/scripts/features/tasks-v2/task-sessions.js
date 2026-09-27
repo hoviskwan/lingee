@@ -4,6 +4,7 @@ import { CV_PROJECTS } from '../collab/data.js';
 import { STAGES } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
 import { tkCurrentUserId } from './data.js';
+import { taskExecutionStages } from './task-execution.js';
 
 export const TASK_SESSION_ORIGINS = { start:'开始执行', revise:'退回修改', retry:'重试执行', manual:'发起会话' };
 export const TASK_SESSION_STATUS = { active:'进行中', ended:'已结束', failed:'执行异常' };
@@ -17,7 +18,7 @@ function formatMinute(date) {
   return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
 }
 function minutesAgo(minutes) { return formatMinute(new Date(Date.now() - minutes * 60000)); }
-function stageName(stageId) { return STAGES.find(function (stage) { return stage.id === stageId; })?.name || ''; }
+function stageName(stageId, task) { return (task ? taskExecutionStages(task) : STAGES).find(function (stage) { return stage.id === stageId; })?.name || ''; }
 function taskAgentName(task) {
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
   var teamId = task.teamId || project?.defaultTeam;
@@ -39,16 +40,16 @@ function createSession(task, ownerId, spec) {
 }
 
 function openingMessage(task, origin, stageId) {
-  if (origin === 'revise') return '退回修改「' + stageName(stageId) + '」阶段，请按审核意见调整后重新提交。';
-  if (origin === 'retry') return '重试执行「' + stageName(stageId) + '」阶段，沿用上次的输入与配置。';
-  if (origin === 'start') return '开始执行任务「' + task.title + '」：' + clip(task.desc, 60);
+  if (origin === 'revise') return '退回修改「' + stageName(stageId, task) + '」阶段，请按审核意见调整后重新提交。';
+  if (origin === 'retry') return '重试执行「' + stageName(stageId, task) + '」阶段，沿用上次的输入与配置。';
+  if (origin === 'start') return '执行「' + (stageName(stageId, task) || '当前节点') + '」：任务「' + task.title + '」；' + clip(task.desc, 60);
   return '关于任务「' + task.title + '」，我想先确认几个问题。';
 }
 
 function sessionTitle(task, origin, stageId) {
-  if (origin === 'revise') return '修改' + stageName(stageId) + '阶段产出';
-  if (origin === 'retry') return '重试' + stageName(stageId) + '阶段';
-  if (origin === 'start') return '执行任务：' + task.title;
+  if (origin === 'revise') return '修改' + stageName(stageId, task) + '阶段产出';
+  if (origin === 'retry') return '重试' + stageName(stageId, task) + '阶段';
+  if (origin === 'start') return '执行' + (stageName(stageId, task) || '任务') + '：' + task.title;
   return '讨论任务：' + task.title;
 }
 
@@ -61,7 +62,7 @@ function seedDemoSessions(task, ownerId) {
   var status = task.initialStatus || task.status;
   if (!['in_progress', 'in_review', 'blocked', 'done'].includes(status)) return;
   var day = task.createDate;
-  var stageId = task.executionStageId || STAGES[0].id;
+  var stageId = task.executionStageId || taskExecutionStages(task)[0].id;
   var agent = taskAgentName(task);
   if (task.id % 2 === 0) createSession(task, ownerId, {
     origin: 'manual', title: '梳理任务范围与验收标准', status: 'ended', startedAt: day + ' 09:48', lastAt: day + ' 10:06',
@@ -73,29 +74,29 @@ function seedDemoSessions(task, ownerId) {
   });
   var startStatus = status === 'in_progress' ? 'active' : 'ended';
   var progress = status === 'done' ? '全部阶段已完成，交付物已归档到任务详情。'
-    : status === 'in_review' ? '「' + stageName(stageId) + '」阶段产出已提交，等待你审核。'
-    : status === 'blocked' ? '「' + stageName(stageId) + '」阶段执行中断，详情见异常会话。'
-    : '正在执行「' + stageName(stageId) + '」阶段，完成后会通知你审核。';
+    : status === 'in_review' ? '「' + stageName(stageId, task) + '」阶段产出已提交，等待你审核。'
+    : status === 'blocked' ? '「' + stageName(stageId, task) + '」阶段执行中断，详情见异常会话。'
+    : '正在执行「' + stageName(stageId, task) + '」阶段，完成后会通知你审核。';
   createSession(task, ownerId, {
     origin: 'start', title: sessionTitle(task, 'start'), stageId: null, status: startStatus,
     startedAt: day + ' 10:20', lastAt: startStatus === 'active' ? minutesAgo(task.id % 40 + 6) : day + ' 11:02',
     messages: [
       { role: 'user', text: openingMessage(task, 'start') },
-      { role: 'agent', text: '已接收任务，按「' + STAGES.map(function (stage) { return stage.name; }).join(' → ') + '」推进。' },
+      { role: 'agent', text: '已接收任务，按「' + taskExecutionStages(task).map(function (stage) { return stage.name; }).join(' → ') + '」推进。' },
       { role: 'agent', text: progress },
     ],
   });
-  if (status === 'in_review' && task.id % 3 === 0 && STAGES.findIndex(function (stage) { return stage.id === stageId; }) > 0) createSession(task, ownerId, {
+  if (status === 'in_review' && task.id % 3 === 0 && taskExecutionStages(task).findIndex(function (stage) { return stage.id === stageId; }) > 0) createSession(task, ownerId, {
     origin: 'revise', title: sessionTitle(task, 'revise', stageId), stageId: stageId, status: 'ended', startedAt: day + ' 15:10', lastAt: day + ' 15:36',
     messages: [
       { role: 'user', text: openingMessage(task, 'revise', stageId) },
-      { role: 'agent', text: '已根据审核意见补充遗漏的边界场景，并重新提交「' + stageName(stageId) + '」阶段产出。' },
+      { role: 'agent', text: '已根据审核意见补充遗漏的边界场景，并重新提交「' + stageName(stageId, task) + '」阶段产出。' },
     ],
   });
   if (status === 'blocked' && task.blockedRun) createSession(task, ownerId, {
-    origin: 'start', title: stageName(stageId) + '阶段执行异常', stageId: stageId, status: 'failed', agentName: task.blockedRun.agentName || agent,
+    origin: 'start', title: stageName(stageId, task) + '阶段执行异常', stageId: stageId, status: 'failed', agentName: task.blockedRun.agentName || agent,
     startedAt: task.blockedRun.failedAt, lastAt: task.blockedRun.failedAt,
-    messages: [{ role: 'user', text: '继续执行「' + stageName(stageId) + '」阶段。' }],
+    messages: [{ role: 'user', text: '继续执行「' + stageName(stageId, task) + '」阶段。' }],
     steps: task.blockedRun.steps || [], error: task.blockedRun.reason, next: task.blockedRun.next,
   });
 }
