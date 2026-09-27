@@ -65,6 +65,14 @@
 #view-collab .pj-card-status--completed{background:var(--success-bg);color:var(--success)}
 #view-collab .pj-card-status--cancelled{background:var(--danger-bg);color:var(--danger)}
 #view-collab .pj-card-desc{display:-webkit-box;min-height:39px;margin:16px 0 0;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.55;color:var(--text-secondary);font-size:12.5px;overflow-wrap:anywhere}
+#view-collab .pj-card-fields{display:flex;align-items:center;gap:16px;min-width:0;margin:12px 0 14px;color:var(--text-soft);font-size:11px}
+#view-collab .pj-card-fields>span{display:inline-flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}
+#view-collab .pj-card-fields b{min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--text-secondary);font-weight:600}
+#view-collab .pj-card-progress{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:12px;color:var(--text-soft);font-size:11px}
+#view-collab .pj-card-progress>span:first-child,#view-collab .pj-card-progress>b{flex:none}
+#view-collab .pj-card-progress>b{color:var(--text-secondary);font-weight:600;font-variant-numeric:tabular-nums}
+#view-collab .pj-card-progress-track{flex:1;min-width:0;height:6px;overflow:hidden;border-radius:3px;background:var(--fill-2)}
+#view-collab .pj-card-progress-track i{display:block;height:100%;border-radius:inherit;background:var(--brand)}
 #view-collab .pj-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:auto;padding-top:15px;border-top:1px solid var(--divider);color:var(--text-secondary);font-size:11px}
 #view-collab .pj-card-meta{display:flex;align-items:center;gap:11px;min-width:0;overflow:hidden}
 #view-collab .pj-card-meta>span{display:inline-flex;align-items:center;gap:4px;flex:none;white-space:nowrap}

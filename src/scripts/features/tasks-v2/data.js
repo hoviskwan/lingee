@@ -274,12 +274,21 @@ var _tasks = TK_TASKS.map(function (t) {
     completedRun: createDemoCompletedRun(t),
   }, t);
 });
+const TASKS_STORAGE_KEY = 'lingee_tasks_v2';
+try {
+  var savedTasks = JSON.parse(localStorage.getItem(TASKS_STORAGE_KEY) || 'null');
+  if (Array.isArray(savedTasks) && savedTasks.every(function (task) { return task && Number.isInteger(task.id) && typeof task.project === 'string'; })) _tasks = savedTasks;
+} catch (e) { /* 存储数据损坏时使用演示任务 */ }
+function persistTasks() {
+  localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));
+  if (typeof document !== 'undefined') document.dispatchEvent(new Event('lingee:tasks-changed'));
+}
 var _views = TK_VIEWS.map(function (v) { return Object.assign({}, v); });
 try {
   var storedViews = JSON.parse(localStorage.getItem('lingee_tasks_custom_views') || '[]');
   if (Array.isArray(storedViews)) _views = _views.concat(storedViews.filter(function (v) { return v && typeof v.id === 'string' && typeof v.name === 'string' && !v.builtin; }));
 } catch (e) { /* 本地存储不可用时仍可在当前页面管理视图 */ }
-var _nextId = Math.max(...TK_TASKS.map(function (task) { return task.id; })) + 1;
+var _nextId = Math.max(0, ...TK_TASKS.map(function (task) { return task.id; }), ..._tasks.map(function (task) { return task.id; })) + 1;
 var _nextViewId = Math.max(4, ..._views.map(function (v) {
   var number = Number(v.id.slice(1));
   return v.id.charAt(0) === 'v' && Number.isInteger(number) ? number + 1 : 0;
@@ -290,10 +299,12 @@ function persistViews() {
 }
 
 export function tkGetTasks() { return _tasks; }
-export function tkSetTasks(arr) { _tasks = arr; }
+export function tkSetTasks(arr) { _tasks = arr; persistTasks(); }
 export function tkPruneOrphanTasks() {
   var projects=new Set(CV_PROJECTS.map(function(project){return project.id;}));
+  var previousLength=_tasks.length;
   _tasks=_tasks.filter(function(task){return projects.has(task.project);});
+  if(_tasks.length!==previousLength)persistTasks();
 }
 export function tkEnsureWorkspaceDemoTasks() {
   var projects=tkProjectsForCurrentUser();
@@ -320,6 +331,7 @@ export function tkAddTask(task) {
   task.statusHistory = [];
   if (!task.createdBy) task.createdBy = tkCurrentUserId();
   _tasks.unshift(task);
+  persistTasks();
   return task;
 }
 export function tkUpdateTask(id, patch) {
@@ -332,12 +344,14 @@ export function tkUpdateTask(id, patch) {
       });
     }
     Object.assign(t, patch, { updatedAt: taskMinuteNow() });
+    persistTasks();
     if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('lingee:task-updated', { detail:{ task:t, before:before, patch:patch } }));
   }
   return t;
 }
 export function tkDeleteTask(id) {
   _tasks = _tasks.filter(function (x) { return x.id !== id; });
+  persistTasks();
 }
 export function tkGetViews() { return _views; }
 export function tkAddView(name, config) {
