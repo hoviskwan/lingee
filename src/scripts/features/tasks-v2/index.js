@@ -1947,16 +1947,30 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '未开始';
       var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
       var isCurrent = index === currentIndex;
+      var expert = entry && EXPERTS.find(function (item) { return item.id === entry.expertId; });
+      var stageArtifacts = latestLayout && entry && ['done', 'review'].includes(state)
+        ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
+      var detailId = 'tkStageDetail' + index;
+      var hasDetail = latestLayout && !!entry;
       return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span>'
-        + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>'
+        + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>'
+        + (hasDetail ? '<span class="tk-feed-stage-expert" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span>' : '')
+        + '<span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>'
         + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '')
         + (task.status === 'in_review' && state === 'review' && taskDetailVersion === 'latest'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，进入下一步">下一步</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
         + (task.status === 'blocked' && state === 'blocked' && latestLayout
-          ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '') + '</li>';
+          ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
+        + (hasDetail ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的执行记录与产物"><span>' + (stageArtifacts.length ? '查看产物' : '查看记录') + '</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>'
+          + '<div class="tk-feed-stage-detail" id="' + detailId + '" hidden>'
+          + '<div class="tk-feed-stage-detail-meta"><strong>' + escapeHtml(entry.author) + '</strong><time>' + escapeHtml(entry.time) + '</time></div>'
+          + (state === 'running' || state === 'blocked' ? renderTaskRunFeedback(getDemoStageRun(task, entry), true) : '')
+          + (state === 'running' ? '' : '<p class="' + (state === 'blocked' ? 'tk-feed-run-error' : '') + '">' + escapeHtml(state === 'blocked' ? task.blockedRun?.reason || entry.text : entry.text) + '</p>')
+          + (stageArtifacts.length ? '<div class="tk-delivery-artifacts"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '')
+          + '</div>' : '') + '</li>';
     }).join('') + '</ol>'
     + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
-    + (latestLayout ? '' : historyButton) + stageHistoryHtml + (latestLayout ? historyButton : '') + '</section>';
+    + (latestLayout ? '' : historyButton + stageHistoryHtml) + '</section>';
 }
 
 function renderTaskPreRunFeedback(task) {
@@ -2114,13 +2128,8 @@ function renderTaskComments(t) {
     } else sections.push({ kind:isAgent ? 'agent' : 'comment', event:event });
   });
   var stageSections = sections.filter(function (section) { return section.kind === 'agent'; });
-  var stageHistoryHtml = stageSections.length ? latestLayout
-    ? '<div id="tkStageHistory" class="tk-feed-stage-history"><div class="tk-feed-stage-history-content">'
-      + renderTaskAgentFeedEntry(t, stageSections.at(-1).event.entry, artifacts)
-      + (stageSections.length > 1 ? '<div id="tkOlderStageHistory" class="tk-feed-stage-history-content" hidden>'
-        + stageSections.slice(0, -1).reverse().map(function (section) { return renderTaskAgentFeedEntry(t, section.event.entry, artifacts); }).join('') + '</div>' : '')
-      + '</div></div>'
-    : '<div id="tkStageHistory" class="tk-feed-stage-history" hidden><div class="tk-feed-stage-history-content">'
+  var stageHistoryHtml = stageSections.length && !latestLayout
+    ? '<div id="tkStageHistory" class="tk-feed-stage-history" hidden><div class="tk-feed-stage-history-content">'
       + stageSections.map(function (section) { return renderTaskAgentFeedEntry(t, section.event.entry, artifacts); }).join('') + '</div></div>' : '';
   var systemEvents = sections.filter(function (section) { return section.kind === 'system'; }).flatMap(function (section) { return section.events; });
   var commentsHtml = sections.filter(function (section) { return section.kind === 'comment'; }).map(function (section) { return renderTaskHumanFeedEntry(section.event); }).join('');
@@ -3501,6 +3510,15 @@ function bindEvents() {
 
   /* 详情面板内：添加子任务 / 打开子任务 */
   els.tkDrawerBody.addEventListener('click', function (e) {
+    var stageDetailToggle = e.target.closest('[data-stage-detail-toggle]');
+    if (stageDetailToggle) {
+      var stageDetail = els.tkDrawerBody.querySelector('#' + stageDetailToggle.getAttribute('aria-controls'));
+      if (!stageDetail) return;
+      stageDetail.hidden = !stageDetail.hidden;
+      stageDetailToggle.setAttribute('aria-expanded', String(!stageDetail.hidden));
+      stageDetailToggle.setAttribute('aria-label', (stageDetail.hidden ? '展开' : '收起') + '执行记录与产物');
+      return;
+    }
     var stageHistoryToggle = e.target.closest('[data-stage-history-toggle]');
     if (stageHistoryToggle) {
       var stageHistory = els.tkDrawerBody.querySelector('#' + stageHistoryToggle.getAttribute('aria-controls'));

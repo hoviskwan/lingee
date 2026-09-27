@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情展示各阶段处理人与状态；新建任务刷新后可恢复，项目卡片进度实时更新。'},
+  {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情在阶段节点集中展示处理人、专家头像、状态与可展开的产物；新建任务刷新后可恢复，项目卡片进度实时更新。'},
   {id:'53',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'项目管理',author:'Joe',body:'项目列表默认卡片视图，整卡进入详情；项目概览仅负责人可修改，其他人只读，代码仓库和描述必填，项目编码不可修改；新建任务须明确所属项目。'},
   {id:'52',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务管理',author:'Joe wu',body:'移除废弃版本功能：从侧边栏及右键菜单彻底移除废弃页面入口，清理相关样式与代码。'},
   {id:'51',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',team:'新建任务专家团确认人',body:'新建任务专家团确认人：新建任务弹窗悬停展开专家团交付阶段二级面板，各阶段可用自定义下拉指定产物确认人，选择后面板保持展开以继续配置。'},
