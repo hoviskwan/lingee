@@ -18,12 +18,29 @@ var CV_LINGEE_DEMO_USERS=[
 function cvPeopleSearchIsDemo(){return typeof window.cvSearchLingeePeople!=='function';}
 function cvLoginPeople(){return getLoginPeople();}
 async function cvSearchLingeePeople(query){
+  var keyword=String(query||'').trim().toLocaleLowerCase();
+  if(!keyword)return [];
+  var local=CV_MEMBERS.concat(cvLoginPeople(),CV_LINGEE_DEMO_USERS).filter(function(person){
+    return person&&person.id!=null&&person.name&&[person.name,person.account,person.phone,person.email].some(function(value){return value&&String(value).toLocaleLowerCase().includes(keyword);});
+  });
+  var remote=[];
   if(!cvPeopleSearchIsDemo()){
-    var rows=await window.cvSearchLingeePeople(query);
-    return Array.isArray(rows)?rows.filter(function(person){return person&&person.id!=null&&person.name;}).map(function(person){return {id:String(person.id),name:String(person.name),phone:person.phone||'',email:person.email||'',dept:person.dept||''};}):[];
+    try{
+      var rows=await window.cvSearchLingeePeople(query);
+      if(Array.isArray(rows))remote=rows.filter(function(person){return person&&person.id!=null&&person.name;});
+    }catch(error){if(!local.length)throw error;}
   }
-  var keyword=query.toLocaleLowerCase();
-  return cvLoginPeople().concat(CV_LINGEE_DEMO_USERS).filter(function(person){return [person.name,person.account,person.phone,person.email].some(function(value){return value&&value.toLocaleLowerCase().includes(keyword);});});
+  var seen=new Set();
+  return local.concat(remote).filter(function(person){
+    var linked=CV_MEMBERS.find(function(row){return row.id===String(person.id)||row.userId===String(person.id)||(row.linkedUserIds||[]).includes(String(person.id));});
+    var id=linked?.id||String(person.id);
+    if(seen.has(id))return false;
+    seen.add(id);
+    return true;
+  }).map(function(person){
+    var linked=CV_MEMBERS.find(function(row){return row.id===String(person.id)||row.userId===String(person.id)||(row.linkedUserIds||[]).includes(String(person.id));});
+    return {id:linked?.id||String(person.id),name:linked?.name||String(person.name),phone:person.phone||linked?.phone||'',email:person.email||linked?.email||'',dept:person.dept||linked?.dept||''};
+  });
 }
 function cvLinkedLingeePerson(id,name){
   return cvPeopleInWorkspace().find(function(row){return row.id===id||row.userId===id||(row.linkedUserIds||[]).includes(id)||(name==='吴宏超'&&row.name===name);})||null;

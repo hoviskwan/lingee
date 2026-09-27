@@ -51,9 +51,16 @@ function closeSbSearch(){
 }
 function filterSidebar(q){
   q=q.trim().toLowerCase();
-  $$('.sub-item, .flat-item',sbScroll).forEach(function(item){
+  $$('.sub-item, .flat-item, .chat-session-entry',sbScroll).forEach(function(item){
     var txt=item.textContent.trim().toLowerCase();
-    item.style.display=(!q||txt.indexOf(q)>-1)?'':'none';
+    var folder=item.closest('.chat-project-folder');
+    var folderMatches=folder && folder.querySelector('.chat-project-title')?.textContent.trim().toLowerCase().includes(q);
+    item.style.display=(!q||txt.indexOf(q)>-1||folderMatches)?'':'none';
+  });
+  var sessionSection=document.getElementById('chatSessionSection');
+  if(sessionSection) sessionSection.hidden=!$$('.chat-session-entry',sessionSection).some(function(item){ return item.style.display!=='none'; });
+  $$('.chat-project-folder',sbScroll).forEach(function(folder){
+    folder.hidden=!$$('.chat-session-entry',folder).some(function(item){ return item.style.display!=='none'; });
   });
   $$('.group-head',sbScroll).forEach(function(h){
     if(!q){ h.style.display=''; return; }
@@ -65,6 +72,7 @@ function filterSidebar(q){
     }
     h.style.display=hasVisible?'':'none';
   });
+  document.dispatchEvent(new Event('lingee:sidebar-filter'));
 }
 /* 侧边栏宽度变化时，把腾出/占用的空间给预览区，保持会话区宽度不变 */
 var _prevWishW=null;

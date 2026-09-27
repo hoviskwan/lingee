@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'55',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新版任务创建与编辑、任务和项目成员可见范围及通知入口完成联动，任务执行会话与产物预览交互同步优化。'},
+  {id:'55',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新版任务与项目支持成员权限、项目删除及阶段流转，执行会话按项目归档并模拟流式输出、关联任务与产物，本机开发服务新增 SQLite 局域网共享数据。'},
   {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情在阶段节点集中展示处理人、专家头像、状态与可展开的产物；新建任务刷新后可恢复，项目卡片进度实时更新。'},
   {id:'53',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'项目管理',author:'Joe',body:'项目列表默认卡片视图，整卡进入详情；项目概览仅负责人可修改，其他人只读，代码仓库和描述必填，项目编码不可修改；新建任务须明确所属项目。'},
   {id:'52',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务管理',author:'Joe wu',body:'移除废弃版本功能：从侧边栏及右键菜单彻底移除废弃页面入口，清理相关样式与代码。'},

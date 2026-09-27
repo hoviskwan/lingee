@@ -98,17 +98,36 @@
 
 /* ============ 项目详情：平铺的项目资料与成员 ============ */
 #view-collab #cv-members .scroll:not(.pj-list-mode){min-height:0;overflow:hidden}
-#view-collab #cv-proj-detail{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+#view-collab #cv-proj-detail{position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
 #view-collab #cv-proj-detail .pj-crumb{display:flex;align-items:center;gap:8px;min-width:0;flex:none}
 #view-collab #cv-proj-detail .pj-crumb-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #view-collab #cv-proj-detail .pj-crumb-current{color:var(--text-secondary);font-size:12px;white-space:nowrap}
 #view-collab #cv-proj-detail .pj-detail-save{min-height:32px;margin-left:auto;padding:0 16px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 #view-collab #cv-proj-detail .pj-detail-save:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 #view-collab #cv-proj-detail .pj-detail-save:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-collab #cv-proj-detail .pj-detail-delete{min-height:32px;margin-left:auto;padding:0 12px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--danger,#d64545);font:inherit;font-size:12px;cursor:pointer}
+#view-collab #cv-proj-detail .pj-detail-delete:hover{background:var(--fill-2)}
+#view-collab #cv-proj-detail .pj-detail-delete:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab #cv-proj-detail .pj-members-open{display:flex;align-items:center;gap:7px;min-height:30px;padding:0 10px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:#fff;font:inherit;font-size:12px;font-weight:500;cursor:pointer}
 #view-collab #cv-proj-detail .pj-members-open:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 #view-collab #cv-proj-detail .pj-members-open:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
-#view-collab #cv-proj-detail .pj-detail-main{flex:1;min-height:0;overflow:hidden;padding:4px 20px 16px;background:#fff;display:flex;flex-direction:column}
+#view-collab #cv-proj-detail .pj-detail-main{flex:1;min-width:0;min-height:0;overflow:hidden;padding:4px 20px 16px;background:#fff;display:flex;flex-direction:column}
+#view-collab #cv-proj-detail .pj-detail-tabs{display:flex;gap:20px;flex:none;padding:0 20px;border-bottom:1px solid var(--border);background:#fff}
+#view-collab #cv-proj-detail .pj-detail-tabs button{min-height:42px;padding:0 3px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer}
+#view-collab #cv-proj-detail .pj-detail-tabs button[aria-selected="true"]{border-bottom-color:var(--brand);color:var(--brand);font-weight:600}
+#view-collab #cv-proj-detail .pj-detail-tabs button:focus-visible,#view-collab #cv-proj-detail .pj-artifacts-row button:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-collab #cv-proj-detail .pj-artifacts-heading{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+#view-collab #cv-proj-detail .pj-artifacts-heading h2{margin:0;color:var(--text);font-size:15px}
+#view-collab #cv-proj-detail .pj-artifacts-heading small{margin-left:5px;color:var(--text-soft);font-size:12px;font-weight:400}
+#view-collab #cv-proj-detail .pj-artifacts-heading p{margin:5px 0 0;color:var(--text-soft);font-size:12px}
+#view-collab #cv-proj-detail .pj-artifacts-table{box-sizing:border-box;flex:1;min-width:0;min-height:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;border:1px solid var(--border);border-radius:8px}
+#view-collab #cv-proj-detail .pj-artifacts-head,#view-collab #cv-proj-detail .pj-artifacts-row{display:grid;grid-template-columns:minmax(180px,1.6fr) minmax(160px,1.5fr) 70px 90px 130px;align-items:center;gap:12px;min-width:700px;padding:10px 14px}
+#view-collab #cv-proj-detail .pj-artifacts-head{background:var(--fill-1);color:var(--text-soft);font-size:12px}
+#view-collab #cv-proj-detail .pj-artifacts-row{border-top:1px solid var(--border);color:var(--text-secondary);font-size:12px}
+#view-collab #cv-proj-detail .pj-artifacts-row strong{overflow:hidden;color:var(--text);font-size:13px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+#view-collab #cv-proj-detail .pj-artifacts-row button{overflow:hidden;padding:0;border:0;background:transparent;color:var(--brand);font:inherit;text-align:left;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+#view-collab #cv-proj-detail .pj-artifacts-row button:hover{text-decoration:underline}
+#view-collab #cv-proj-detail .pj-artifacts-empty{flex:1;padding:48px 20px;border:1px dashed var(--border);border-radius:8px;color:var(--text-soft);font-size:13px;text-align:center}
 #view-collab #cv-proj-detail .pj-info-section{box-sizing:border-box;flex:none;width:100%;padding:8px 0 12px;background:transparent}
 #view-collab #cv-proj-detail .pj-info-section h2{margin:0;font-size:15px;font-weight:600;color:var(--text)}
 #view-collab #cv-proj-detail .pj-info-section h2 small{margin-left:6px;font-size:12px;font-weight:400;color:var(--text-soft)}

@@ -1,6 +1,7 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject } from '../collab/data.js';
+import { getLoginPersonId } from '../login.js';
 import { createDemoReviewReport } from './review-reports.js';
 import { createDemoBlockedRun } from './blocked-runs.js';
 import { createDemoCompletedRun } from './completed-runs.js';
@@ -29,7 +30,9 @@ const TK_DEMO_PERSON_IDS = ['p22', 'p01', 'p02', 'p03', 'p04', 'p05', 'p07'];
 const TK_PERSON_COLORS = ['#495dff', '#08a040', '#e04a3a', '#7858f9', '#c06010', '#0891b2', '#d76794'];
 export const TK_PEOPLE = [];
 export function tkSyncPeople() {
-  var assignedIds = typeof _tasks === 'undefined' ? [] : _tasks.flatMap(function (task) { return [task.assignee, task.createdBy]; }).filter(Boolean);
+  var assignedIds = typeof _tasks === 'undefined' ? [] : _tasks.flatMap(function (task) {
+    return [task.assignee, task.createdBy].concat((task.executionPlan || []).map(function (stage) { return stage.assigneeId; }));
+  }).filter(Boolean);
   var personIds = Array.from(new Set(TK_DEMO_PERSON_IDS.concat(assignedIds)));
   TK_PEOPLE.splice(0, TK_PEOPLE.length, ...personIds.map(function (id, index) {
     var person = CV_MEMBERS.find(function (row) { return row.id === id; });
@@ -40,7 +43,7 @@ export function tkSyncPeople() {
   if (typeof _tasks !== 'undefined') _tasks.forEach(function (task) {
     var people = tkPeopleInProject(task.project);
     if (!people.some(function (person) { return person.id === task.assignee; })) task.assignee = people[0]?.id || '';
-    if (!CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = tkCurrentUserId() || people[0]?.id || '';
+    if (task.createdBy && !CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = '';
   });
 }
 export function tkPeopleInProject(projectId) {
@@ -54,27 +57,49 @@ export function tkPeopleInProject(projectId) {
   });
 }
 export function tkCurrentUserId() {
-  var person = CV_MEMBERS.find(function (row) { return row.name === cvCurrentUserName(); });
-  return person ? person.id : '';
+  var personId = getLoginPersonId();
+  return CV_MEMBERS.some(function (person) { return person.id === personId && person.status !== 'disabled'; }) ? personId : '';
 }
-/* 创建、经办、评论、状态流转或执行计划中参与过的人可见。未识别身份时不展示任务。 */
+export function tkCurrentStageHandlerId(task) {
+  if (!task) return '';
+  if (!Array.isArray(task.executionPlan) || !task.executionPlan.length) return task.assignee || '';
+  var stage = task.executionPlan.find(function (row) { return row.id === task.executionStageId; })
+    || task.executionPlan.find(function (row) { return row.status !== 'done'; })
+    || task.executionPlan[0];
+  return stage?.assigneeId || '';
+}
+export function tkCanStartTask(task) {
+  var me = tkCurrentUserId();
+  return !!me && task?.status === 'backlog' && tkCanViewTask(task) && tkCurrentStageHandlerId(task) === me;
+}
+/* 当前或历史节点负责人均保留在「我负责」，任务完成后也不丢失。 */
+export function tkWasTaskHandler(task) {
+  var me = tkCurrentUserId();
+  return !!me && !!task && (task.assignee === me
+    || (task.assigneeHistory || []).includes(me)
+    || (task.executionPlan || []).some(function (stage) { return stage && (stage.assigneeId === me || stage.reviewerId === me); }));
+}
+/* 项目成员仅能查看自己参与的任务；项目负责人可查看本项目全部任务。 */
 export function tkParticipatesCurrentUser(task) {
   var me = tkCurrentUserId();
   if (!me || !task) return false;
-  return task.assignee === me || task.createdBy === me
-    || (task.assigneeHistory || []).includes(me)
+  return tkWasTaskHandler(task) || task.createdBy === me
     || (task.comments || []).some(function (c) { return c && (c.authorId === me || c.assignee === me); })
-    || (task.statusHistory || []).some(function (entry) { return entry && entry.authorId === me; })
-    || (task.executionPlan || []).some(function (stage) { return stage && (stage.assigneeId === me || stage.reviewerId === me); });
+    || (task.statusHistory || []).some(function (entry) { return entry && entry.authorId === me; });
 }
 export function tkCanViewTask(task) {
-  return !!task && tkProjectsForCurrentUser().some(function (project) { return project.id === task.project; })
-    && tkParticipatesCurrentUser(task);
+  if (!task) return false;
+  var project = tkProjectsForCurrentUser().find(function (row) { return row.id === task.project; });
+  if (!project) return false;
+  var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
+  return project.owner === me?.name || tkParticipatesCurrentUser(task);
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  var userName = cvCurrentUserName();
-  return userId ? CV_PROJECTS.filter(function (project) { return (project.members || []).includes(userId) || project.owner === userName; }) : [];
+  return userId ? CV_PROJECTS.filter(function (project) {
+    return (project.members || []).includes(userId)
+      || CV_MEMBERS.some(function (person) { return person.id === userId && project.owner === person.name; });
+  }) : [];
 }
 
 export const TK_AGENTS = [
@@ -233,12 +258,11 @@ TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75));
 /* 团队任务按人分配；编号固定，便于已保存的本地数据一次性补种。 */
 const TK_TEAM_ASSIGN_IDS = ['p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
 const TK_PERSONAL_DEMO_TASKS = TK_TEAM_ASSIGN_IDS.flatMap(function (personId, index) {
-  var person = CV_MEMBERS.find(function (row) { return row.id === personId; });
   return [
-    { id:1001 + index * 2, code:'T100' + String(1001 + index * 2), title:person.name + '：梳理任务需求与验收条件',
+    { id:1001 + index * 2, code:'T100' + String(1001 + index * 2), title:'梳理任务需求与验收条件',
       desc:'核对当前负责范围、输入资料和验收条件。', status:'backlog', priority:'medium', assignee:personId,
       createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-08' },
-    { id:1002 + index * 2, code:'T100' + String(1002 + index * 2), title:person.name + '：完成方案协作记录',
+    { id:1002 + index * 2, code:'T100' + String(1002 + index * 2), title:'完成方案协作记录',
       desc:'整理已参与的方案讨论与交付记录。', status:'done', priority:'low', assignee:TK_TEAM_ASSIGN_IDS[(index + 1) % TK_TEAM_ASSIGN_IDS.length],
       createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-20', dueDate:'2026-09-26' },
   ];
@@ -295,7 +319,7 @@ var _tasks = TK_TASKS.map(function (t) {
     executionStageId:['in_progress','in_review','blocked'].includes(t.status)
       ? DEMO_TASK_STAGE[t.id] || DEMO_EXECUTION_STAGES[t.id % DEMO_EXECUTION_STAGES.length]
       : null,
-    createdBy: t.project === 'expense' && t.id % 4 === 0 ? 'p22' : (people[(t.id + 1) % people.length]?.id || tkCurrentUserId()),
+    createdBy: t.project === 'expense' && t.id % 4 === 0 ? 'p22' : (people[(t.id + 1) % people.length]?.id || ''),
     createdAt: t.createDate + ' 09:30',
     updatedAt: t.createDate + ' 10:15',
     reviewReport: createDemoReviewReport(t),
@@ -317,6 +341,23 @@ try {
     localStorage.setItem('lingee_tasks_personal_seed_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存中的示例任务 */ }
+/* 清理已补种到本地或共享存储中的旧标题，只匹配原始演示文案，保留用户改过的标题。 */
+var personalDemoTitles = new Map(TK_PERSONAL_DEMO_TASKS.map(function (task) { return [task.code, task.title]; }));
+var personalDemoNames = new Set(TK_TEAM_ASSIGN_IDS.map(function (id) {
+  return CV_MEMBERS.find(function (member) { return member.id === id; })?.name;
+}).filter(Boolean));
+var personalTitlesChanged = false;
+_tasks.forEach(function (task) {
+  var plainTitle = personalDemoTitles.get(task.code);
+  if (!plainTitle || typeof task.title !== 'string') return;
+  var separator = task.title.indexOf('：');
+  if (separator < 0 || task.title.slice(separator + 1) !== plainTitle || !personalDemoNames.has(task.title.slice(0, separator))) return;
+  task.title = plainTitle;
+  personalTitlesChanged = true;
+});
+if (personalTitlesChanged) {
+  try { persistTasks(); } catch (e) { /* 存储不可用时仍更新当前页面 */ }
+}
 /* p34（早期误建的重复记录）名下任务归并到 p23（吴晓锋）；幂等，人员已并入后不会再出现 */
 _tasks.forEach(function (task) { if (task.assignee === 'p34') task.assignee = 'p23'; });
 try {

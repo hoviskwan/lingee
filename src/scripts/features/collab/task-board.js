@@ -48,7 +48,7 @@ function card(t) {
     + "<strong title=\"" + (xesc(t.title)) + "\">" + (xesc(t.title)) + "</strong>"
     + "<span class=\"tb-description\" title=\"" + (xesc(t.desc)) + "\">" + (xesc(t.desc)) + "</span>"
     + "<span class=\"tb-project\" title=\"" + (xesc(projLine)) + "\">" + (xesc(projLine)) + "</span>"
-    + "<span class=\"tb-card-bottom\"><span class=\"tb-person\"><i>" + xesc((t.assignee || '待')[0]) + "</i>" + (xesc(tbOwner(t))) + "</span><span class=\"tb-priority\" data-priority=\"" + (xesc(tbPriority(t))) + "\">≋ " + (xesc(tbPriority(t))) + "</span></span>"
+    + "<span class=\"tb-card-bottom\"><span class=\"tb-priority\" data-priority=\"" + (xesc(tbPriority(t))) + "\">≋ " + (xesc(tbPriority(t))) + "</span></span>"
     + "<span class=\"tb-context\">" + (xesc(tbMode(t))) + "<span>" + (t.status === '审核中' ? '等待人工确认' : t.status === '已阻塞' ? '需要介入' : t.status === '进行中' ? '执行中 · ' + (t.progress || 0) + '%' : xesc(tbLabel(t.status))) + "</span></span>"
     + "<span class=\"tb-card-acts\">" + actBtns + "</span></div>");
 }
@@ -464,7 +464,7 @@ function submitTask(event) {
   const tab = document.querySelector('[data-detail-tab][aria-selected="true"]')?.dataset.detailTab || 'overview';
   const saved = tbSave(); renderTaskBoard(); cvUpdateCounts();
   openTask(CV_TASKS.indexOf(t)); selectDetailTab(tab);
-  document.getElementById('tb-save-state').textContent = saved ? '已保存到本地' : '未持久保存';
+  document.getElementById('tb-save-state').textContent = saved ? (window.lingeeStorageMode === 'sqlite' ? '正在同步到共享数据库' : '已保存到本地') : '未持久保存';
 }
 export function initTaskBoard() {
   /* 先给内置任务补稳定 id，再合并本地快照。旧快照可能没有 boardId，

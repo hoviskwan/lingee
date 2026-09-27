@@ -9,12 +9,12 @@ import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSe
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanViewTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkCanStartTask, tkCanViewTask, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
 import { initNewIssueUI, openNewIssueCreate, openNewIssueEdit } from './new-issue-ui.js';
-import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage, submitTaskStage, taskExecutionStages } from './task-execution.js';
+import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage, submitTaskStage, taskExecutionStages, taskStageHandoffPatch } from './task-execution.js';
 import { initTkFormExpertPicker } from './expert-picker.js';
 
 import { initTaskListVersion } from './list-version.js';
@@ -96,6 +96,7 @@ var taskStartLegacy = false;
 var TASK_HEADER_RETRY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 0-2.3 5.7"/></svg>';
 function taskHeaderAction(task) {
   if (!task) return null;
+  if (task.status === 'backlog' && !tkCanStartTask(task)) return null;
   return {
     planned:{label:'加入待办',action:'queue',icon:TASK_START_PLAY_ICON},
     backlog:{label:'开始执行',action:'start',icon:TASK_START_PLAY_ICON},
@@ -315,7 +316,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   };
   menu.innerHTML = ''
     + (detailOnly ? '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="edit">' + itemSvg.edit + '<span>编辑任务</span></div>' : '')
-    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
+    + (detailOnly || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
     + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>')
     + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
     + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
@@ -433,7 +434,7 @@ function getFilteredTasks() {
   var scope = state.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
-  else if (scope === 'my_assigned') tasks = tasks.filter(function (t) { return t.assignee === tkCurrentUserId(); });
+  else if (scope === 'my_assigned') tasks = tasks.filter(tkWasTaskHandler);
   else if (scope === 'in_progress') tasks = tasks.filter(function (t) { return t.status === 'in_progress'; });
   if (state.search) {
     var q = state.search.toLowerCase();
@@ -666,7 +667,7 @@ function renderCard(t, opts) {
     }
   }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
-    + (isBacklog
+    + (isBacklog && tkCanStartTask(t)
       ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行" aria-label="开始执行">' + TASK_START_PLAY_ICON + '</button>'
       : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
@@ -1965,7 +1966,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var byId = new Map(stages.map(function (entry) { return [entry.stageId, entry]; }));
   var currentState = latest?.state || (task.status === 'cancelled' ? 'cancelled' : 'pending');
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
-  var currentLabel = currentState === 'running' ? '执行中' : currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : '未开始';
+  var currentLabel = currentState === 'running' ? '执行中' : currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
   var completedStages = plannedStages.filter(function (stage) { return byId.get(stage.id)?.state === 'done'; }).length;
   var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
@@ -1988,9 +1989,10 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行专家</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead><tbody>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
-      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '未开始';
+      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
       var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
       var isCurrent = index === currentIndex;
+      var canStartStage = isCurrent && state === 'pending' && tkCanStartTask(task);
       var expert = entry && EXPERTS.find(function (item) { return item.id === entry.expertId; });
       var stageArtifacts = latestLayout && entry && ['done', 'review'].includes(state)
         ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
@@ -2004,8 +2006,10 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         return session.stageId === stage.id || (!session.stageId && isCurrent);
       }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var actions = (inReviewStage
-        ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，流转到下一阶段">流转</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
+      var actions = (canStartStage
+        ? '<button type="button" class="tk-feed-stage-review-btn" data-stage-start="' + escapeHtml(stage.id) + '" aria-label="开始' + escapeHtml(stage.name) + '阶段">开始</button>' : '')
+        + (inReviewStage
+        ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，流转到下一阶段">通过</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
         + (task.status === 'blocked' && state === 'blocked'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
         + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
@@ -2985,6 +2989,14 @@ function bindEvents() {
   /* 属性区折叠 */
   els.tkDrawerBody.addEventListener('click', function (e) {
     var sessionTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
+    var startStageButton = e.target.closest('[data-stage-start]');
+    if (startStageButton && sessionTask) {
+      if (sessionTask.status === 'backlog'
+        && (sessionTask.executionStageId || taskExecutionStages(sessionTask)[0]?.id) === startStageButton.getAttribute('data-stage-start')) {
+        startTaskExecution(sessionTask.id);
+      }
+      return;
+    }
     var submitStageButton = e.target.closest('[data-stage-submit]');
     if (submitStageButton && sessionTask) {
       if (taskDetailVersion === 'latest' && sessionTask.status === 'in_progress'
@@ -3017,13 +3029,12 @@ function bindEvents() {
       if (taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
         var approved = nextStatus === 'done';
         var reviewed = reviewTaskStage(reviewTask, approved);
-        if (!reviewed.ok) return;
+        if (!reviewed.ok) { if (reviewed.message) toast(reviewed.message, 'warning'); return; }
         render();
         if (approved) {
           openDrawer(reviewTask.id);
-          toast(reviewed.done ? '最终节点审核通过，任务已完成' : '审核通过，进入' + reviewed.next.name, 'success');
+          toast(reviewed.done ? '最终节点审核通过，任务已完成' : '审核通过，已流转到' + reviewed.next.name + '，等待处理人开始', 'success');
           document.dispatchEvent(new CustomEvent('lingee:task-stage-completed', {detail:{taskId:reviewTask.id}}));
-          if (reviewed.next) scheduleTaskStageStartedNotice(reviewTask.id, reviewed.next.id);
         } else {
           openTaskConversationWithTask(reviewTask.id, 'revise');
           toast('已退回修改，可在会话中二次修改', 'success');
@@ -3248,8 +3259,7 @@ function bindEvents() {
             text: commentText,
           };
           tkUpdateTask(state.drawerTaskId, {
-            assignee: flowAssigneeDraft.assigneeId,
-            flowAssignee: '',
+            ...taskStageHandoffPatch(flowTask, flowAssigneeDraft.assigneeId),
             comments: (flowTask.comments || []).concat(newComment),
           });
           if (commentInput) commentInput.value = '';
@@ -3942,10 +3952,10 @@ export function initTasksV2() {
   initTkFormExpertPicker();
   bindEvents();
   render();
+  document.addEventListener('lingee:auth-changed', render);
   document.addEventListener('lingee:task-stage-completed',function (event) {
     render();
     if (state.drawerTaskId === event.detail.taskId) openDrawer(event.detail.taskId);
-    document.dispatchEvent(new Event('lingee:open-inbox'));
   });
   document.addEventListener('cv-workspace-change',()=>{
     tkPruneOrphanTasks();

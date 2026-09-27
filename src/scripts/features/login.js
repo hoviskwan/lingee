@@ -31,7 +31,8 @@ var ACCOUNTS={
   '吴晓锋':{pass:'lingee520',role:'owner',name:'吴晓锋',avatar:'吴'},
   '钟伟纯':{pass:'lingee520',role:'owner',name:'钟伟纯',avatar:'钟'},
   '刘鉴洲':{pass:'lingee520',role:'owner',name:'刘鉴洲',avatar:'刘'},
-  '陈谨':{pass:'lingee520',role:'owner',name:'陈谨',avatar:'陈'},
+  '陈谨':{pass:'lingee520',role:'owner',name:'陈瑾',avatar:'陈'},
+  '陈瑾':{pass:'lingee520',role:'owner',name:'陈瑾',avatar:'陈'},
   '陈来珍':{pass:'lingee520',role:'owner',name:'陈来珍',avatar:'陈'},
   '暴福音':{pass:'lingee520',role:'owner',name:'暴福音',avatar:'暴'},
   '荆龙刚':{pass:'lingee520',role:'owner',name:'荆龙刚',avatar:'荆'},
@@ -46,7 +47,14 @@ var ACCOUNTS={
 };
 
 /* 仅暴露可登录账号的公开资料，供协作人员选择；不包含密码和演示角色账号。 */
-var LOGIN_PEOPLE_IDS={'wuhc2023@gmail.com':'p22','17299999999':'p01','6686612@qq.com':'p23'};
+var LOGIN_PEOPLE_IDS={
+  'wuhc2023@gmail.com':'p22','17299999999':'p01','6686612@qq.com':'p23','66866':'p23',
+  '吴宏超':'p22','部伟':'p29','张利军':'p30','王育权':'p31','付鹏城':'p32',
+  '陈惠琼':'p33','吴晓锋':'p23','钟伟纯':'p35','刘鉴洲':'p36','陈谨':'p37',
+  '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','陈瑾':'p37',
+  'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
+};
+export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
 function getLoginPeople(){
   return Object.keys(ACCOUNTS).filter(function(account){return account.includes('@')||/^\d{11}$/.test(account);}).map(function(account){
     var profile=ACCOUNTS[account];
@@ -168,6 +176,7 @@ export function initLogin() {
           applyUserInfo(user);
           applyRole();
           hideLogin();
+          document.dispatchEvent(new Event('lingee:auth-changed'));
           loginBtn.classList.remove('loading');
           loginBtn.disabled=false;
           loginBtn.textContent='登录';
@@ -198,6 +207,7 @@ export function initLogin() {
         applyUserInfo(demoUser);
         applyRole();
         hideLogin();
+        document.dispatchEvent(new Event('lingee:auth-changed'));
         loginBtn.classList.remove('loading');
         loginBtn.disabled=false;
         loginBtn.textContent='登录';

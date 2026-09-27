@@ -128,3 +128,4 @@
 #view-collab .rv-btn--reject:hover{background:#c94040}
 #view-collab .rv-btn--comment{border:1px solid var(--border-hover);background:#fff;color:var(--text-secondary)}
 #view-collab .rv-btn--comment:hover{background:var(--hover)}
+#cv-tasks .tb-card-bottom .tb-priority{margin-left:auto}

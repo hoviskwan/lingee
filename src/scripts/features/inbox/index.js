@@ -180,16 +180,12 @@ export function initInbox() {
   });
   document.addEventListener('click',(event) => { if (!event.target.closest('#inboxPopup, #notificationBell') && !$('#inboxPopup').hidden) closePanel(); });
   document.addEventListener('keydown',(event) => { if (event.key==='Escape' && !$('#inboxPopup').hidden) { closePanel(); bell.focus(); } });
-  document.addEventListener('lingee:open-inbox',openPanel);
   window.addEventListener('resize',() => { if (!$('#inboxPopup').hidden) positionPanel(); });
   const params = new URLSearchParams(initialLocation.search);
   if (initialLocation.path.endsWith('/inbox')) {
     archived=params.get('view')==='archived';
     const issue=params.get('issue');
     if (issue) selected=inboxItems().find((item) => String(item.issue_id)===issue)?.issue_id ? `issue:${inboxItems().find((item) => String(item.issue_id)===issue).workspace_id}:${issue}` : issue;
-    showView('tasks');
-    setNavActive('任务');
-    openPanel();
   }
   $('#inboxArchiveLink').addEventListener('click',() => { archived=true; selected=''; renderInbox(); });
   $('#inboxBack').addEventListener('click',() => { archived=false; selected=''; renderInbox(); });
@@ -230,10 +226,10 @@ export function initInbox() {
   });
   [['#inboxUnreadOnly','unread'],['#inboxStatusFilter','status'],['#inboxPriorityFilter','priority'],['#inboxActorFilter','actor']].forEach(([selector,key]) => $(selector).addEventListener('change',(event) => {filters[key]=key==='unread'?event.target.checked:event.target.value; selected='';renderInbox();}));
   document.addEventListener('lingee:task-updated',(event) => { if (inboxAddFromTaskChange(event.detail)) renderInbox(); });
+  document.addEventListener('lingee:auth-changed', renderInbox);
   document.addEventListener('lingee:task-stage-started-notice',(event) => {
     inboxAddTaskStageStartedNotice(event.detail.taskId,event.detail.stageId);
     renderInbox();
-    openPanel();
   });
   renderInbox();
 }

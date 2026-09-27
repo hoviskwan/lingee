@@ -6,7 +6,7 @@ import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab, cvSwitchView } from './view.js';
 import { xesc } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
-import { getRole } from '../login.js';
+import { getLoginPersonId, getRole } from '../login.js';
 import { CV_PROJECT_ICON_COLORS, cvProjectFolderIcon, cvProjectIconColor, cvProjectIconOptions } from './project-icons.js';
 import { recordConfigAudit, recordProjectConfigAudit } from './audit-log.js';
 import { cvEnsureProjectPerson, cvSearchLingeePeople } from './people-search.js';
@@ -202,8 +202,8 @@ function cvSetProjectIcon(value){
 }
 function cvMayEditProject(project){
   if(!project||!cvProjectInWorkspace(project.id))return false;
-  var name=cvCurrentUserName();
-  return !!name&&project.owner===name;
+  var person=CV_MEMBERS.find(function(row){return row.id===getLoginPersonId()&&row.status!=='disabled';});
+  return !!person&&project.owner===person.name;
 }
 function cvIsWorkspaceAdmin(){
   return getRole()==='owner';

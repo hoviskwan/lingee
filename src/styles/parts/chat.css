@@ -9,6 +9,23 @@
   .chat-header-task.hidden{display:none}
   .chat-header-task .ic{width:14px;height:14px;flex:none}
   .chat-header-task-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #view-chat.task-context-open{flex-direction:row}
+  #view-chat .chat-task-side{box-sizing:border-box;width:300px;max-width:35%;height:100vh;flex:none;border-left:1px solid var(--border);padding:18px 16px;background:#fff;overflow-y:auto}
+  #view-chat .chat-task-side[hidden]{display:none}
+  #view-chat.task-context-open .chat-resizer,#view-chat.task-context-open .chat-preview-side{display:none}
+  #view-chat.task-context-open #togglePreviewBtn{display:none}
+  #view-chat.task-exception-open .chat-task-side{display:none}
+  #view-chat.task-exception-open{flex-direction:column}
+  .chat-task-side-head{font-size:14px;font-weight:600;color:var(--text);padding-bottom:20px}
+  .chat-task-side-section{margin-bottom:24px}
+  .chat-task-side-section h3{font-size:12px;font-weight:600;color:var(--text-muted);margin:0 0 10px}
+  .chat-task-link,.chat-task-artifact{width:100%;display:flex;align-items:center;gap:9px;text-align:left;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);padding:10px;font:inherit;font-size:13px;cursor:pointer}
+  .chat-task-link:hover,.chat-task-artifact:hover{border-color:var(--brand);background:var(--brand-fill)}
+  .chat-task-link svg,.chat-task-artifact svg{width:17px;height:17px;flex:none;color:var(--brand)}
+  .chat-task-link span,.chat-task-artifact span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chat-task-pending{font-size:12px;color:var(--text-muted)}
+  .chat-task-document{margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--fill-2);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  @media(max-width:760px){#view-chat .chat-task-side{width:220px;max-width:42%;padding:14px 10px}}
   /* 关联应用禁用状态 */
   .dropdown.disabled{pointer-events:none;opacity:.65}
   .dropdown.disabled .chip{cursor:default}
@@ -84,6 +101,8 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .step-title{font-size:13px;color:var(--text);font-weight:500}
   .step-status{font-size:12px;color:#495dff}
+  .work-step .step-detail{margin-top:9px;font-size:13px;line-height:1.6;color:var(--text-secondary)}
+  .work-step .step-detail p{margin:0 0 4px}
   /* streaming text */
   .streaming-content{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word}
   .cursor-blink{display:inline;animation:blink 1s infinite;color:#495dff}
@@ -276,4 +295,3 @@
   /* 会话详情不显示项目切换与关联应用（进入会话后二者已确定） */
   #view-chat .workspace-bar{display:none}
   #view-chat #chatAppDropdown{display:none}
-

@@ -21,7 +21,7 @@ var CV_PROJECTS=[
   {id:'service',name:'客户服务工单平台',desc:'工单流转、SLA监控与客户满意度分析',goal:'搭建客户服务工单全生命周期管理平台，支持多渠道接入、智能派单与SLA自动监控',dot:'orange',defaultTeam:'general-app-dev',status:'in_progress',priority:'中',owner:'吴宏超',repo:'',start:'2026-09-01',end:'2027-01-15',milestones:[{name:'需求确认',date:'2026-09-25'},{name:'工单引擎开发',date:'2026-11-15'},{name:'渠道对接',date:'2026-12-15'},{name:'上线',date:'2027-01-15'}],members:['p22','p01','p04','p05','p07'],workspace:'ws-app'},
   {id:'hr-analytics',name:'人力数据分析平台',desc:'组织画像、人效指标与离职预测',goal:'构建人力数据自助分析平台，支持组织画像可视化、人效指标看板与离职风险预警',dot:'green',defaultTeam:'general-app-dev',status:'planned',priority:'中',owner:'赵琳',repo:'',start:'2026-10-01',end:'2027-02-28',milestones:[{name:'指标体系设计',date:'2026-10-20'},{name:'数据管道搭建',date:'2026-12-15'},{name:'看板上线',date:'2027-02-28'}],members:['p22','p03','p04','p05'],workspace:'ws-build'},
   {id:'warehouse',name:'智能仓储管理平台',desc:'库位优化、出入库协同与库存预警',goal:'搭建智能仓储管理平台，支持库位动态优化、扫码出入库协同与库存实时预警',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'李工',repo:'',start:'2026-08-20',end:'2026-12-20',milestones:[{name:'仓储模型设计',date:'2026-09-15'},{name:'出入库开发',date:'2026-10-31'},{name:'预警上线',date:'2026-11-30'},{name:'验收交付',date:'2026-12-20'}],members:['p22','p01','p02','p03','p07'],workspace:'ws-app'},
-  {id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'},
+  {id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'},
   {id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'}
 ];
 
@@ -327,7 +327,7 @@ var CV_MEMBERS = [
   {id:'p33',name:'陈惠琼',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
   {id:'p35',name:'钟伟纯',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
   {id:'p36',name:'刘鉴洲',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
-  {id:'p37',name:'陈谨',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p37',name:'陈瑾',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
   {id:'p38',name:'陈来珍',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
   {id:'p39',name:'暴福音',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
   {id:'p40',name:'荆龙刚',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
@@ -495,15 +495,37 @@ function cvMergeDuplicateCurrentUser(){
 
 /* 项目增改落 localStorage，刷新页面不丢（持久化与数据同源，放这里避免模块循环依赖） */
 var CV_PROJ_STORE_KEY='lingee-collab-projects-v2';
+var CV_DELETED_PROJECTS_KEY='lingee-collab-deleted-projects-v1';
+function cvDeletedProjectIds(){
+  try{var ids=JSON.parse(localStorage.getItem(CV_DELETED_PROJECTS_KEY)||'[]');return Array.isArray(ids)?ids.filter(function(id){return typeof id==='string';}):[];}catch(e){return [];}
+}
+function cvDeleteProjectRecord(id){
+  var index=CV_PROJECTS.findIndex(function(project){return project.id===id;});
+  if(index<0)return false;
+  var previousProjects=localStorage.getItem(CV_PROJ_STORE_KEY);
+  var previousDeleted=localStorage.getItem(CV_DELETED_PROJECTS_KEY);
+  var nextProjects=CV_PROJECTS.filter(function(project){return project.id!==id;});
+  var nextDeleted=Array.from(new Set(cvDeletedProjectIds().concat(id)));
+  try{
+    localStorage.setItem(CV_DELETED_PROJECTS_KEY,JSON.stringify(nextDeleted));
+    localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(nextProjects));
+  }catch(e){
+    try{if(previousDeleted===null)localStorage.removeItem(CV_DELETED_PROJECTS_KEY);else localStorage.setItem(CV_DELETED_PROJECTS_KEY,previousDeleted);}catch(_){}
+    try{if(previousProjects===null)localStorage.removeItem(CV_PROJ_STORE_KEY);else localStorage.setItem(CV_PROJ_STORE_KEY,previousProjects);}catch(_){}
+    return false;
+  }
+  CV_PROJECTS.splice(index,1);
+  return true;
+}
 function cvPersistProjects(){
   try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS)); return true; }catch(e){return false;}
 }
 function cvRestoreProjects(){
   cvRestoreWorkspaces();
   try{
-    var raw=localStorage.getItem(CV_PROJ_STORE_KEY); if(!raw) return;
-    var arr=JSON.parse(raw);
-    if(Array.isArray(arr)){ CV_PROJECTS.length=0; arr.forEach(function(p){if(!p.code)p.code=cvGenProjectCode(p);CV_PROJECTS.push(p);}); }
+    var raw=localStorage.getItem(CV_PROJ_STORE_KEY);
+    var arr=raw?JSON.parse(raw):CV_PROJECTS.slice();
+    if(Array.isArray(arr)){var deleted=new Set(cvDeletedProjectIds());CV_PROJECTS.length=0;arr.forEach(function(p){if(deleted.has(p.id))return;if(!p.code)p.code=cvGenProjectCode(p);CV_PROJECTS.push(p);}); }
   }catch(e){}
 }
 /* 旧缓存覆盖源码预置数组时，只增补一次新样例，不覆盖已编辑项目，也不反复复活已删除样例。 */
@@ -512,6 +534,7 @@ function cvEnsureWorkspaceDemoProjects(){
   try{if(localStorage.getItem(key))return;}catch(e){}
   var changed=false;
   CV_WORKSPACE_DEMO_PROJECTS.forEach(function(sample){
+    if(cvDeletedProjectIds().includes(sample.id))return;
     if(!cvWorkspaceById(sample.workspace))return;
     if(CV_PROJECTS.some(function(project){return project.id===sample.id;}))return;
     CV_PROJECTS.push({...sample,members:sample.members.slice()});
@@ -576,6 +599,7 @@ function cvEnsureProjectRoleDemoData(){
   }
   var changed=false;
   CV_ROLE_DEMO_PROJECTS.forEach(function(sample){
+    if(cvDeletedProjectIds().includes(sample.id))return;
     if(!cvWorkspaceById(sample.workspace))return;
     var existing=CV_PROJECTS.find(function(project){return project.id===sample.id;});
     if(existing){
@@ -620,10 +644,21 @@ function cvEnsureTeamProjectMembers(){
   var project=CV_PROJECTS.find(function(row){return row.id==='lingee-prototype';});
   if(project){
     if(!Array.isArray(project.members))project.members=[];
-    CV_TEAM_SEED_PERSONS.forEach(function(seed){
+    CV_TEAM_SEED_PERSONS.filter(function(seed){return seed.id!=='p30';}).forEach(function(seed){
       if(!project.members.includes(seed.id)){project.members.push(seed.id);changed=true;}
     });
     if(changed)cvPersistProjects();
+  }
+  try{localStorage.setItem(key,'1');}catch(e){}
+}
+/* 旧演示种子曾自动给张利军授予 Lingee Build 成员资格；撤销该默认授权一次。 */
+export function cvRemoveZhangAutoProjectMember(){
+  var key='lingee-collab-zhang-project-access-v1';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  var project=CV_PROJECTS.find(function(row){return row.id==='lingee-prototype';});
+  if(project&&Array.isArray(project.members)&&project.members.includes('p30')){
+    project.members=project.members.filter(function(id){return id!=='p30';});
+    if(!cvPersistProjects())return;
   }
   try{localStorage.setItem(key,'1');}catch(e){}
 }
@@ -863,8 +898,9 @@ function cvSeedTaskDetails(){
 }
 
 /* 自愈：确保 Lingee Build项目在 localStorage 恢复后仍然存在 */
-var CV_PROJ_SEED_LINGEE={id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'};
+var CV_PROJ_SEED_LINGEE={id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'};
 function cvEnsureLingeePrototypeData(){
+  if(cvDeletedProjectIds().includes('lingee-prototype'))return;
   var changed=false;
   var existing=CV_PROJECTS.find(function(p){return p.id==='lingee-prototype';});
   if(!existing){
@@ -877,6 +913,7 @@ function cvEnsureLingeePrototypeData(){
 /* 自愈：确保苍穹应用开发项目在 localStorage 恢复后仍然存在 */
 var CV_PROJ_SEED_COSMIC={id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'};
 function cvEnsureCosmicAppDevData(){
+  if(cvDeletedProjectIds().includes('cosmic-app-dev'))return;
   var changed=false;
   var existing=CV_PROJECTS.find(function(p){return p.id==='cosmic-app-dev';});
   if(!existing){
@@ -886,10 +923,12 @@ function cvEnsureCosmicAppDevData(){
   if(changed)cvPersistProjects();
 }
 
-/* 通用自愈：localStorage 恢复后，补回所有缺失的种子项目（含 cosmic-app-dev、lingee-prototype 等） */
+/* 通用自愈：localStorage 恢复后，补回未被明确删除的种子项目。 */
 function cvEnsureSeedProjects(){
   var changed=false;
+  var deleted=new Set(cvDeletedProjectIds());
   CV_SEED_PROJECT_SNAPSHOT.forEach(function(seed){
+    if(deleted.has(seed.id))return;
     if(!CV_PROJECTS.find(function(p){return p.id===seed.id;})){
       CV_PROJECTS.push(Object.assign({},seed,{members:seed.members.slice(),milestones:seed.milestones.map(function(m){return Object.assign({},m);})}));
       changed=true;
@@ -911,4 +950,4 @@ function cvEnsureSeedWorkspaces(){
   });
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCosmicAppDevData, cvEnsureCurrentUserProjectDemoData, cvEnsureTeamPersons, cvEnsureTeamProjectMembers, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureSeedPersons, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteProjectRecord, cvDeleteWorkspaceData, cvEnsureCosmicAppDevData, cvEnsureCurrentUserProjectDemoData, cvEnsureTeamPersons, cvEnsureTeamProjectMembers, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureSeedPersons, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

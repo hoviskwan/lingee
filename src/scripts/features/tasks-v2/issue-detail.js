@@ -3,7 +3,7 @@ import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：issue-detail。保留原交互；事件在 init* 中按原顺序注册。 */
 import { els, taskViewState, setTaskViewState } from './ui-state.js';
 import { showView, setNavActive, input } from '../../core/view.js';
-import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, tkCanViewTask, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId } from './data.js';
+import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, tkCanStartTask, tkCanViewTask, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId } from './data.js';
 import { escapeHtml, stClass, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
 import { render, showCardMenu, hidePopover, displayChoiceMenu, closeDisplayChoiceMenu, closeFilterPanel, closeViewMenu, closeFieldSettings } from './list.js';
 import { toast } from '../../core/toast.js';
@@ -13,6 +13,7 @@ import { set_activePick } from '../expert/store.js';
 import { renderExpertChips } from '../expert/chips.js';
 import { setComposerTaskReference } from '../composer.js';
 import { tkAddTaskSession } from './task-sessions.js';
+import { taskStageHandoffPatch } from './task-execution.js';
 
 var drawerPreferredWidth = null;
 
@@ -37,6 +38,8 @@ var taskStartLegacy = false;
 function renderTaskStartAction() {
   var button = els.tkDrawerChat;
   if (!button) return;
+  var task = tkGetTasks().find(function (row) { return row.id === taskViewState.drawerTaskId; });
+  button.hidden = task?.status === 'backlog' && !tkCanStartTask(task);
   var label = taskStartLegacy ? '发起会话' : '开始任务';
   button.innerHTML = (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + label + '</span>';
   button.setAttribute('aria-label', label);
@@ -641,6 +644,8 @@ window.addEventListener('resize', applyDrawerWidth);
 if (els.tkDrawerChat) {
     els.tkDrawerChat.addEventListener('click', function () {
       if (!taskViewState.drawerTaskId) return;
+      var task = tkGetTasks().find(function (row) { return row.id === taskViewState.drawerTaskId; });
+      if (task?.status === 'backlog' && !tkCanStartTask(task)) return;
       openTaskConversationWithTask(taskViewState.drawerTaskId);
     });
     var lastRightClickToggle = 0;
@@ -885,8 +890,7 @@ els.tkDrawerBody.addEventListener('click', function (e) {
             text: commentText,
           };
           tkUpdateTask(taskViewState.drawerTaskId, {
-            assignee: flowAssigneeDraft.assigneeId,
-            flowAssignee: '',
+            ...taskStageHandoffPatch(flowTask, flowAssigneeDraft.assigneeId),
             comments: (flowTask.comments || []).concat(newComment),
           });
           if (commentInput) commentInput.value = '';

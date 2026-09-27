@@ -2,6 +2,7 @@
 node_modules/
 node_modules.nosync/
 dist/
+data/
 .vite/
 
 # 系统与编辑器

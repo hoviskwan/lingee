@@ -67,6 +67,7 @@ function sessionTitle(task, origin, stageId) {
 
 /* 演示数据：只给当前用户负责或创建、且已经开始执行的任务生成会话。 */
 function seedDemoSessions(task, ownerId) {
+  if (task.status === 'backlog' && task.executionStageId) return;
   var key = task.id + ':' + ownerId;
   if (_seeded.has(key)) return;
   _seeded.add(key);

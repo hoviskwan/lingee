@@ -66,7 +66,7 @@ export function createDeliveryActivity(task, project, options = {}) {
   const title = task.title || project.name;
   const activity = [{stageId:'kickoff', stage:'任务创建', author:options.creator || project.owner || '项目成员',
     text:`将「${title}」加入「${project.name}」，交由${team.name}评估交付范围。`, time:`${date} 09:15`, state:'done'}];
-  if (['planned','backlog','cancelled'].includes(status)) return activity;
+  if (status === 'planned' || status === 'cancelled' || (status === 'backlog' && !task.executionStageId)) return activity;
   const stages = taskExecutionStages(task);
   const requestedIndex = stages.findIndex(stage => stage.id === task.executionStageId);
   const activeIndex = status === 'done' ? -1 : requestedIndex < 0 ? 0 : requestedIndex;
@@ -78,7 +78,7 @@ export function createDeliveryActivity(task, project, options = {}) {
     let detail = stage.desc || detailFor(stage.id, task, project, team);
     let state = 'done';
     if (index === activeIndex) {
-      state = status === 'blocked' ? 'blocked' : status === 'in_review' ? 'review' : 'running';
+      state = status === 'blocked' ? 'blocked' : status === 'in_review' ? 'review' : status === 'backlog' ? 'pending' : 'running';
       if (status === 'blocked') detail = `${detail} 当前遇到阻塞：${options.blockedReason || '所需依赖尚未就绪，已暂停后续验证。'}`;
       if (status === 'in_progress') detail = `${detail} 本阶段持续处理中，尚未提交独立验证。`;
       if (status === 'in_review') detail = `已由${expert.name}提交「${title}」的${stage.name}结果，等待项目负责人审核；通过后${index === stages.length - 1 ? '完成任务' : '进入下一阶段'}。`;

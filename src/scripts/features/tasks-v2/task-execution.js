@@ -1,5 +1,5 @@
 import { STAGES } from '../expert/data.js';
-import { tkGetTasks, tkGetTaskArtifacts, tkUpdateTask } from './data.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask } from './data.js';
 
 const pendingStageReviews = new Map();
 
@@ -14,8 +14,25 @@ function stagePlan(task, stageId, status) {
   return task.executionPlan.map(function (stage) { return stage.id === stageId ? {...stage, status:status} : stage; });
 }
 
+export function taskStageHandoffPatch(task, assigneeId) {
+  var waiting = !!task.executionStageId && task.status === 'in_progress';
+  return {
+    assignee:assigneeId, flowAssignee:'',
+    ...(waiting ? {status:'backlog'} : {}),
+    ...(Array.isArray(task.executionPlan) ? {executionPlan:task.executionPlan.map(function (stage) {
+      return stage.id === task.executionStageId
+        ? {...stage, assigneeId:assigneeId, ...(waiting ? {status:'pending'} : {})}
+        : stage;
+    })} : {}),
+  };
+}
+
 export function startTaskStage(task) {
   if (!task) return {ok:false};
+  var currentHandlerId = tkCurrentStageHandlerId(task);
+  if (!currentHandlerId || currentHandlerId !== tkCurrentUserId() || !tkCanViewTask(task)) {
+    return {ok:false, message:'仅当前阶段处理人可开始执行'};
+  }
   if (task.status === 'in_progress') {
     var current = taskExecutionStages(task).find(function (stage) { return stage.id === task.executionStageId; });
     if (!current && task.executionPlan?.length) {
@@ -26,8 +43,13 @@ export function startTaskStage(task) {
   }
   if (!['planned','backlog'].includes(task.status)) return {ok:false};
   if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
-  var stage = taskExecutionStages(task)[0];
-  tkUpdateTask(task.id, {status:'in_progress', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
+  var stages = taskExecutionStages(task);
+  var stage = stages.find(function (row) { return row.id === task.executionStageId; })
+    || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
+    || stages[0];
+  if (!stage) return {ok:false};
+  var assigneeId = currentHandlerId;
+  tkUpdateTask(task.id, {status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
     planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus});
   return {ok:true, stage:stage};
 }
@@ -72,9 +94,12 @@ export function reviewTaskStage(task, approved) {
   if (index < 0) return {ok:false};
   var stage = stages[index], next = stages[index + 1];
   var plan = stagePlan(task, stage.id, approved ? 'done' : 'running');
-  if (approved && next && plan) plan = plan.map(function (row) { return row.id === next.id ? {...row,status:'running'} : row; });
-  var patch = {status:approved ? next ? 'in_progress' : 'done' : 'in_progress',
+  var nextAssignee = approved && next ? task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : '') : '';
+  if (approved && next && !nextAssignee) return {ok:false, message:'请先指定下一阶段处理人'};
+  if (approved && next && plan) plan = plan.map(function (row) { return row.id === next.id ? {...row,assigneeId:nextAssignee,status:'pending'} : row; });
+  var patch = {status:approved ? next ? 'backlog' : 'done' : 'in_progress',
     executionStageId:approved && next ? next.id : stage.id, executionPlan:plan};
+  if (approved && next) { patch.assignee = nextAssignee; patch.flowAssignee = ''; }
   if (approved) {
     var artifacts = (task.executionArtifacts || []).map(function (artifact) {
       return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact;
