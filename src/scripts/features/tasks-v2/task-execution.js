@@ -23,9 +23,10 @@ export function startTaskStage(task) {
     return {ok:!!current, stage:current};
   }
   if (!['planned','backlog'].includes(task.status)) return {ok:false};
-  if (task.executionPlan?.length && task.planStatus !== 'confirmed') return {ok:false, message:'请先确认执行计划，再开始执行'};
+  if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
   var stage = taskExecutionStages(task)[0];
-  tkUpdateTask(task.id, {status:'in_progress', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running')});
+  tkUpdateTask(task.id, {status:'in_progress', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
+    planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus});
   return {ok:true, stage:stage};
 }
 
