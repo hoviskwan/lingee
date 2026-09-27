@@ -29,6 +29,11 @@ function cvCanManageProject(project){
   return cvMayEditProject(project);
 }
 var PJ_STATUS={planned:{c:'#6b7280',bg:'#f3f4f6',t:'规划中'},in_progress:{c:'#ff8d42',bg:'#fff4ed',t:'进行中'},paused:{c:'#6b7280',bg:'#f3f4f6',t:'已暂停'},completed:{c:'#4d89ff',bg:'#eef3ff',t:'已完成'},cancelled:{c:'#e04a3a',bg:'#fdeae8',t:'已取消'}};
+var PJ_CARD_ICONS={
+  members:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="6" r="2.3"/><path d="M2.5 16v-1.1A4.4 4.4 0 0 1 6.9 10.5h.2a4.4 4.4 0 0 1 4.4 4.4V16M13 4.2a2.2 2.2 0 0 1 0 4.3M14 10.7a4.1 4.1 0 0 1 3.5 4V16"/></svg>',
+  tasks:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3" width="15" height="14" rx="2"/><path d="m6 10 2.3 2.3L14 6.8"/></svg>',
+  team:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 1.5v3M13 1.5v3M7 15.5v3M13 15.5v3M1.5 7h3M1.5 13h3M15.5 7h3M15.5 13h3M7 7h6v6H7z"/></svg>'
+};
 var PJ_FILTER_FIELDS=[
   ['status','状态','<circle cx="12" cy="12" r="9"/>'],
   ['priority','优先级','<path d="M4 19v-4m5 4V9m5 10V5m5 14V2"/>'],
@@ -117,20 +122,19 @@ function cvRenderProjectList(){
     return;
   }
   el.innerHTML='<div class="pj-projects-cards">'+visible.map(function(p){
-    var memberCount=cvPeopleInProject(p).length;
+    var members=cvPeopleInProject(p);
     var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic';});
-    var done=tasks.filter(function(t){return t.status==='已完成';}).length;
-    var progress=tasks.length?Math.round(done/tasks.length*100):0;
     var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
+    var statusKey=PJ_STATUS[p.status]?p.status:'planned';
+    var teamName=TEAMS.find(function(team){return team.id===p.defaultTeam;})?.name||'未设置专家团';
+    var memberNames=members.map(function(member){return member.name;}).join('、')||'暂无成员';
+    var avatars=members.slice(0,3).map(function(member,index){return '<span class="pj-card-avatar pj-card-avatar--'+index+'" aria-hidden="true">'+xesc((member.name||'?').slice(0,1))+'</span>';}).join('');
+    if(members.length>3)avatars+='<span class="pj-card-avatar pj-card-avatar--more" aria-hidden="true">+'+(members.length-3)+'</span>';
     return '<div class="pj-card" data-pj-row="'+xesc(p.id)+'" data-pj-open="'+xesc(p.id)+'" role="button" tabindex="0" aria-label="查看项目：'+xesc(p.name)+'">'
       +'<div class="pj-card-main"><div class="pj-card-head"><div class="pj-card-identity">'+cvProjectFolderIcon(p.dot)+'<span class="pj-card-title" title="'+xesc(p.name)+'">'+xesc(p.name)+'</span></div>'
-      +'<div class="pj-card-actions"><span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'">'+sc.t+'</span></div></div>'
+      +'<span class="pj-card-status pj-card-status--'+statusKey+'"><i aria-hidden="true"></i>'+sc.t+'</span></div>'
       +'<p class="pj-card-desc" title="'+xesc(p.desc||'暂无描述')+'">'+xesc(p.desc||'暂无描述')+'</p>'
-      +'<div class="pj-card-fields">'
-      +'<div class="pj-card-field"><span>优先级</span><b>'+xesc(p.priority||'中')+'</b></div>'
-      +'<div class="pj-card-field"><span>负责人</span><b title="'+xesc(p.owner||'未设置')+'">'+xesc(p.owner||'未设置')+'</b></div>'
-      +'</div></div>'
-      +'<div class="pj-card-bottom"><span class="pj-card-members">团队人数 <b>'+memberCount+' 人</b></span><span class="pj-card-progress">'+(tasks.length?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" class="pj-card-ring-base"/><circle cx="8" cy="8" r="6" class="pj-card-ring-value" stroke-dasharray="'+(progress*0.377)+' 37.7"/></svg><span>'+done+' / '+tasks.length+'</span>':'暂无任务')+'</span></div>'
+      +'<div class="pj-card-bottom"><div class="pj-card-meta"><span>'+PJ_CARD_ICONS.members+members.length+' 成员</span><span>'+PJ_CARD_ICONS.tasks+tasks.length+' 任务</span><span class="pj-card-team" title="'+xesc(teamName)+'">'+PJ_CARD_ICONS.team+'<b>'+xesc(teamName)+'</b></span></div><div class="pj-card-avatars" aria-label="项目成员：'+xesc(memberNames)+'">'+avatars+'</div></div></div>'
       +'</div>';
   }).join('')+'</div>';
 }
