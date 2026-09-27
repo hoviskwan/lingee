@@ -1916,11 +1916,14 @@ function renderTaskTeamAvatarGroup(team) {
 function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml, stageCount, reportHtml) {
   var stages = activity.filter(function (entry) { return entry.expertId; });
   if (!stages.length && !activity.length) return reportHtml || '';
+  var plannedStages = taskExecutionStages(task);
   var latest = stages.at(-1);
   var byId = new Map(stages.map(function (entry) { return [entry.stageId, entry]; }));
   var currentState = latest?.state || (task.status === 'cancelled' ? 'cancelled' : 'pending');
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
-  var currentLabel = activeRun?.label || (currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : '待执行');
+  var currentLabel = currentState === 'running' ? '执行中' : currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : '未开始';
+  var completedStages = plannedStages.filter(function (stage) { return byId.get(stage.id)?.state === 'done'; }).length;
+  var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
   var teamId = task.teamId || project?.defaultTeam;
   var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
@@ -1937,15 +1940,16 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
     + (taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
-    + '<div class="tk-feed-stage-overview-head"><strong>执行进度</strong></div>'
-    + '<ol class="tk-feed-stage-list">' + taskExecutionStages(task).map(function (stage) {
+    + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong><span class="tk-feed-stage-count">' + completedStages + ' / ' + plannedStages.length + ' 已完成</span></div>'
+    + '<ol class="tk-feed-stage-list">' + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
-      var label = state === 'done' ? '已完成' : state === 'running' ? currentLabel : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '待执行';
-      var icon = state === 'running' ? renderTaskRunIndicator(activeRun?.status || 'running')
-        : statusSvg(state === 'done' ? 'done' : state === 'review' ? 'in_review' : state === 'blocked' ? 'blocked' : 'backlog');
-      return '<li class="tk-feed-stage is-' + state + '" aria-label="' + escapeHtml(stage.name + '，' + label) + '"' + (['running','review','blocked'].includes(state) ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true">' + icon + '</span>'
-        + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-state">' + label + '</span>'
+      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '未开始';
+      var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
+      var isCurrent = index === currentIndex;
+      return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span>'
+        + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>'
+        + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '')
         + (task.status === 'in_review' && state === 'review' && taskDetailVersion === 'latest'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，进入下一步">下一步</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
         + (task.status === 'blocked' && state === 'blocked' && latestLayout
