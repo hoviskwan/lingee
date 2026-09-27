@@ -2,36 +2,34 @@
 <div class="sync-overlay" id="cv-projedit-overlay" style="display:none" onclick="if(event.target===this)cvCloseProjEdit()">
   <div class="sync-modal pe-modal" role="dialog" aria-modal="true" aria-labelledby="cv-pe-title">
     <div class="sync-modal__header pe-header">
-      <div class="pe-breadcrumb"><span id="cv-pe-workspace">工作区</span><span aria-hidden="true">›</span><span id="cv-pe-title">新建</span></div>
+      <div class="pe-breadcrumb"><span id="cv-pe-title">新建项目</span></div>
       <button type="button" class="sync-modal__close" aria-label="关闭" onclick="cvCloseProjEdit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="sync-modal__body pe-body">
-      <div class="pe-body-main">
-        <label class="pe-title-label" for="cv-pe-name">项目名称 <span class="pe-required-mark" aria-hidden="true">*</span></label>
-        <input id="cv-pe-name" class="pe-title-input" placeholder="项目标题" autocomplete="off" required />
-        <div class="pe-icon-field"><span id="cv-pe-icon-label">项目图标</span><div id="cv-pe-icon-options" class="pj-icon-options" role="group" aria-labelledby="cv-pe-icon-label"></div></div>
-        <label class="pe-sr-only" for="cv-pe-desc">项目描述</label>
-        <textarea id="cv-pe-desc" class="pe-desc-input" placeholder="添加描述…"></textarea>
-        <p class="pe-member-default-note">创建后你和所选负责人会成为项目成员；其他成员可在项目详情中搜索添加。</p>
+      <div class="pe-form-grid">
+        <div class="pe-field"><label for="cv-pe-name">项目名称 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-name" type="text" placeholder="输入项目名称" autocomplete="off" required></div>
+        <div class="pe-field pe-icon-field"><span id="cv-pe-icon-label">项目图标</span><div id="cv-pe-icon-options" class="pj-icon-options" role="group" aria-labelledby="cv-pe-icon-label"></div></div>
+        <div class="pe-field pe-field--full"><label for="cv-pe-desc">项目描述</label><textarea id="cv-pe-desc" rows="2" placeholder="描述项目的目标和范围"></textarea></div>
+        <div class="pe-field pe-pill--owner"><label for="cv-pe-owner">项目负责人 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-owner" type="search" placeholder="搜索项目负责人" autocomplete="off" required><div id="cv-pe-owner-results" class="pe-owner-results hidden"></div></div>
+        <div class="pe-field"><label for="cv-pe-team">专家团 <span class="pe-required-mark" aria-hidden="true">*</span></label><select id="cv-pe-team" required></select></div>
+        <div class="pe-field pe-field--full pe-project-members"><label for="cv-pe-member-search">项目成员 <span id="cv-pe-member-count">已选 0 人</span></label><div id="cv-pe-member-selected" class="pe-member-selected"></div><input id="cv-pe-member-search" type="search" placeholder="搜索姓名、手机号或邮箱，添加项目成员" autocomplete="off" aria-controls="cv-pe-member-results" aria-expanded="false"><div id="cv-pe-member-results" class="pe-member-results hidden" role="listbox" aria-multiselectable="true"></div><small>创建人和项目负责人自动成为项目成员。</small></div>
+        <div class="pe-field pe-field--full pe-pill--repo pe-pill--required"><label for="cv-pe-repo">Git 仓库地址 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-repo" type="url" placeholder="https://github.com/organization/repository" required></div>
+        <details class="pe-advanced pe-field--full" id="cv-pe-more"><summary>更多设置</summary><div class="pe-advanced-grid"><div class="pe-field"><label for="cv-pe-status">项目状态</label><select id="cv-pe-status"><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></div><div class="pe-field"><label for="cv-pe-priority">优先级</label><select id="cv-pe-priority"><option>高</option><option>中</option><option>低</option></select></div><div class="pe-field"><label for="cv-pe-start">开始时间</label><input id="cv-pe-start" type="date"></div><div class="pe-field"><label for="cv-pe-end">结束时间</label><input id="cv-pe-end" type="date"></div></div></details>
       </div>
-    </div>
-    <div class="pe-property-bar" aria-label="项目属性">
-      <label class="pe-pill pe-pill--status"><span class="pe-pill-mark" aria-hidden="true">●</span><select id="cv-pe-status" aria-label="项目状态"><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></label>
-      <label class="pe-pill"><span aria-hidden="true">—</span><select id="cv-pe-priority" aria-label="优先级"><option>高</option><option>中</option><option>低</option></select></label>
-      <label class="pe-pill pe-pill--owner"><span class="pe-required-mark" aria-hidden="true">*</span><select id="cv-pe-owner" data-person-select aria-label="项目负责人（必填）" required></select></label>
-      <label class="pe-pill pe-pill--required"><span class="pe-required-mark" aria-hidden="true">*</span><select id="cv-pe-team" aria-label="专家团（必填）" required></select></label>
-      <label class="pe-pill pe-pill--repo pe-pill--required"><span class="pe-required-mark" aria-hidden="true">*</span><svg class="pe-repo-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.162 19.488c.5.093.683-.217.683-.483 0-.237-.009-.866-.014-1.7-2.78.604-3.369-1.34-3.369-1.34-.455-1.157-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.071 1.53 1.03 1.53 1.03.892 1.529 2.34 1.088 2.91.832.09-.646.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.944 0-1.092.39-1.985 1.03-2.685-.104-.253-.447-1.27.098-2.647 0 0 .84-.269 2.75 1.026A9.57 9.57 0 0 1 12 6.818c.85.004 1.705.115 2.504.337 1.91-1.295 2.748-1.026 2.748-1.026.547 1.377.204 2.394.1 2.647.64.7 1.028 1.593 1.028 2.685 0 3.844-2.339 4.688-4.566 4.936.359.31.678.92.678 1.855 0 1.34-.012 2.421-.012 2.751 0 .268.18.58.688.481A10.002 10.002 0 0 0 12 2Z"/></svg><input id="cv-pe-repo" type="url" aria-label="Git 仓库地址（必填）" placeholder="代码仓库 URL" required></label>
-      <details class="pe-more" id="cv-pe-more"><summary aria-label="更多项目属性" title="更多项目属性">···</summary>
-        <div class="pe-more-panel">
-          <label for="cv-pe-start">开始时间<input id="cv-pe-start" type="date"></label>
-          <label for="cv-pe-end">结束时间<input id="cv-pe-end" type="date"></label>
-        </div>
-      </details>
     </div>
     <div class="sync-modal__footer pe-footer">
       <button type="button" class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseProjEdit()">取消</button>
       <button id="cv-pe-submit" class="sync-modal__btn sync-modal__btn--primary" onclick="cvSaveProjEdit()">创建项目</button>
     </div>
+  </div>
+</div>
+
+<!-- 移除项目成员确认 -->
+<div class="sync-overlay pj-member-remove-overlay" id="cv-project-member-remove-overlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal pj-member-remove-modal" role="alertdialog" aria-modal="true" aria-labelledby="cv-project-member-remove-title" aria-describedby="cv-project-member-remove-message" tabindex="-1">
+    <div class="sync-modal__header"><div class="sync-modal__title" id="cv-project-member-remove-title">移除项目成员</div></div>
+    <div class="sync-modal__body"><p id="cv-project-member-remove-message"></p><p class="pj-member-remove-note">移除后，该成员将不再属于此项目；不会删除其灵基账号。</p></div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pj-remove-cancel>取消</button><button type="button" class="sync-modal__btn pj-member-remove-confirm" data-pj-remove-confirm>确认移除</button></div>
   </div>
 </div>
 
@@ -49,7 +47,7 @@
       <div class="pj-member-search-row" id="cv-project-member-search-row">
         <label class="pj-member-search-field" for="cv-project-member-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-          <input id="cv-project-member-search" type="search" placeholder="搜索工作区人员姓名、手机号或邮箱" autocomplete="off" aria-controls="pj-member-picker-popup" aria-expanded="false">
+          <input id="cv-project-member-search" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="pj-member-picker-popup" aria-expanded="false">
         </label>
         <button type="button" class="pj-member-add-btn" id="cv-project-member-add" data-pj-add-member disabled>添加</button>
       </div>

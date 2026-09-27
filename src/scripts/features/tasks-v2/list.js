@@ -17,6 +17,7 @@ var projectListMode = false;
 var projectListProjectId = '';
 
 var layoutBeforeProjectList = null;
+var viewBeforeProjectList = null;
 
 var collapsedParents = new Set();
 
@@ -25,13 +26,13 @@ var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
 function persistViewState() {
   try {
     localStorage.setItem(VIEW_STATE_STORAGE_KEY, JSON.stringify({
-      activeViewId:taskViewState.activeViewId,
+      activeViewId:projectListMode ? viewBeforeProjectList?.activeViewId : taskViewState.activeViewId,
       layout:projectListMode ? layoutBeforeProjectList : taskViewState.layout,
-      viewMode:taskViewState.viewMode,
+      viewMode:projectListMode ? viewBeforeProjectList?.viewMode : taskViewState.viewMode,
       groupBy:taskViewState.groupBy,
       sortBy:taskViewState.sortBy,
       sortDir:taskViewState.sortDir,
-      filters:taskViewState.filters,
+      filters:projectListMode ? viewBeforeProjectList?.filters : taskViewState.filters,
       showSubtasks:taskViewState.showSubtasks,
       collapsedTaskIds:Array.from(collapsedParents),
       collapsedBoardGroups:Array.from(taskViewState.collapsedBoardGroups),
@@ -654,14 +655,21 @@ function render() {
 function tkSetProjectListMode(active, projectId) {
   if (active === projectListMode && (!active || projectListProjectId === projectId)) return;
   if (active) {
-    if (!projectListMode) layoutBeforeProjectList = taskViewState.layout;
+    if (!projectListMode) {
+      layoutBeforeProjectList = taskViewState.layout;
+      viewBeforeProjectList = {activeViewId:taskViewState.activeViewId,scope:taskViewState.scope,filters:taskViewState.filters,search:taskViewState.search,viewMode:taskViewState.viewMode};
+    }
     projectListMode = true;
     projectListProjectId = projectId || '';
+    taskViewState.layout = 'list';
+    taskViewState.activeViewId='all';taskViewState.scope='all';taskViewState.filters=[];taskViewState.search='';taskViewState.viewMode='slide';
+    if(els.tkSearch)els.tkSearch.value='';
   } else {
     projectListMode = false;
     projectListProjectId = '';
     taskViewState.layout = layoutBeforeProjectList || taskViewState.layout;
     layoutBeforeProjectList = null;
+    if(viewBeforeProjectList){Object.assign(taskViewState,viewBeforeProjectList);if(els.tkSearch)els.tkSearch.value=taskViewState.search;viewBeforeProjectList=null;}
   }
   if (els.tkBody) render();
 }
@@ -796,7 +804,7 @@ function saveInlineTask() {
   if (cancelBtn) cancelBtn.disabled = true;
   setTimeout(function () {
     var mx = Math.max.apply(null, tkGetTasks().map(function(x){return x.id;}));
-     var projectId = projectListProjectId || tkProjectsForCurrentUser()[0]?.id;
+     var projectId = projectListProjectId;
      if (!projectId || !tkProjectsForCurrentUser().some(function (project) { return project.id === projectId; })) { toast('请先加入项目再创建任务', 'warning'); render(); return; }
      tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av || tkPeopleInProject(projectId)[0]?.id || '', project:projectId, labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
     render();

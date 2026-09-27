@@ -68,50 +68,53 @@
 .cv-scope .pe-picker-panel .pe-member-search{margin:0 20px 8px}
 .cv-scope .pe-picker-panel .pe-members{margin:0 20px 12px;flex:1}
 
-/* 项目创建与编辑：主编辑区、交付属性区、操作栏 */
-.cv-scope .pe-modal{width:780px;max-width:calc(100vw - 32px);height:min(620px,88vh);max-height:88vh}
-.cv-scope .pe-header{padding:18px 28px 0}
-.cv-scope .pe-breadcrumb{display:flex;align-items:center;gap:9px;min-width:0;font-size:12px;color:var(--text-soft)}
-.cv-scope .pe-breadcrumb span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cv-scope .pe-breadcrumb span:last-child{color:var(--text-secondary);font-weight:600;white-space:nowrap}
-.cv-scope .pe-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.cv-scope .pe-body{display:flex;flex-direction:column;min-height:0;padding:0}
-.cv-scope .pe-body-main{display:flex;flex-direction:column;flex:1;min-height:0;padding:38px 28px 12px}
-.cv-scope .pe-title-label{margin-bottom:4px;font-size:12px;color:var(--text-soft)}
+/* 项目创建与编辑：字段标题常显，仓库地址独占一行。 */
+.cv-scope .pe-modal{width:760px;max-width:calc(100vw - 32px);max-height:90vh}
+.cv-scope .pe-header{padding:12px 24px;border-bottom:1px solid var(--border)}
+.cv-scope .pe-breadcrumb{font-size:17px;font-weight:600;color:var(--text)}
+.cv-scope .pe-body{min-height:0;padding:16px 24px;overflow-y:auto}
+.cv-scope .pe-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px}
+.cv-scope .pe-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.cv-scope .pe-field--full{grid-column:1/-1}
+.cv-scope .pe-field>label,.cv-scope .pe-icon-field>span{font-size:13px;font-weight:600;color:var(--text-secondary)}
 .cv-scope .pe-required-mark{color:var(--danger);font-weight:700}
 #view-collab .pe-required-mark{color:var(--danger);font-weight:700}
-.cv-scope .pe-title-input{width:100%;border:0;font-size:26px;font-weight:600;line-height:1.5;color:var(--text);padding:0;outline:none;background:none;font-family:inherit}
-.cv-scope .pe-title-input::placeholder{color:var(--text-soft);font-weight:600}
-.cv-scope .pe-icon-field{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:12px;color:var(--text-soft)}
-.cv-scope .pe-icon-field .pj-icon-options{gap:6px}
-.cv-scope .pe-icon-field .pj-icon-option{width:34px;height:34px}
-.cv-scope .pe-icon-field .pj-folder-icon{width:23px;height:23px}
-.cv-scope .pe-desc-input{width:100%;flex:1;min-height:120px;margin-top:18px;font-size:15px;color:var(--text-secondary);outline:none;resize:none;font-family:inherit;line-height:1.7;background:none;border:0;padding:0}
-.cv-scope .pe-desc-input::placeholder{color:var(--text-soft)}
-.cv-scope .pe-member-default-note{flex:none;margin:8px 0 0;color:var(--text-soft);font-size:12px;line-height:1.5}
-.cv-scope .pe-property-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 28px 16px;flex:none}
-.cv-scope .pe-pill,.cv-scope .pe-more summary{display:inline-flex;align-items:center;gap:6px;min-height:34px;border:1px solid var(--border-hover);border-radius:18px;background:var(--bg);color:var(--text-secondary);padding:0 11px;font-size:12px;white-space:nowrap}
-.cv-scope .pe-pill:focus-within,.cv-scope .pe-more summary:focus-visible{border-color:var(--brand);outline:0}
-.cv-scope .pe-pill select,.cv-scope .pe-pill input{min-width:0;max-width:150px;border:0;outline:0;background:none;color:var(--text);font:inherit;font-size:12px}
-.cv-scope .pe-pill select{cursor:pointer}
-.cv-scope .pe-pill--owner{min-width:150px;max-width:190px}
-.cv-scope .pe-pill--owner select{width:100%;max-width:none;padding-right:12px}
-.cv-scope .pe-pill--owner select:invalid{color:var(--text-soft)}
-.cv-scope .pe-pill--status .pe-pill-mark{color:var(--text-secondary);font-size:10px}
-.cv-scope .pe-pill--required{border-color:var(--border-focus)}
-.cv-scope .pe-pill--required select{max-width:145px}
-.cv-scope .pe-pill--repo input{width:130px}
-.cv-scope .pe-repo-icon{width:14px;height:14px;flex:none;color:var(--text-secondary)}
-.cv-scope .pe-more{position:relative}
-.cv-scope .pe-more summary{display:flex;cursor:pointer;list-style:none;font-weight:700;letter-spacing:2px;padding:0 12px}
-.cv-scope .pe-more summary::-webkit-details-marker{display:none}
-.cv-scope .pe-more[open] summary{border-color:var(--brand);color:var(--brand)}
-.cv-scope .pe-more-panel{position:absolute;right:0;bottom:calc(100% + 8px);z-index:120;width:280px;max-width:calc(100vw - 48px);padding:14px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:0 10px 32px rgba(0,0,0,.12)}
-.cv-scope .pe-more-panel label{display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:12px}
-.cv-scope .pe-more-panel select,.cv-scope .pe-more-panel input{width:100%;height:36px;padding:6px 9px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:12px}
-.cv-scope .pe-more-panel select:focus,.cv-scope .pe-more-panel input:focus{outline:0;border-color:var(--brand)}
-.cv-scope .pe-footer{padding:14px 28px}
-@media(max-width:600px){.cv-scope .pe-header{padding:12px 18px 0}.cv-scope .pe-body-main{padding:24px 18px 12px}.cv-scope .pe-property-bar{padding:10px 18px 14px}.cv-scope .pe-footer{padding:12px 18px}.cv-scope .pe-title-input{font-size:21px}.cv-scope .pe-desc-input{font-size:13px}}
+.cv-scope .pe-field>input,.cv-scope .pe-field>select,.cv-scope .pe-field>textarea{box-sizing:border-box;width:100%;min-width:0;padding:9px 12px;border:1px solid var(--border-hover);border-radius:8px;background:#fff;color:var(--text);font:inherit;font-size:13px;outline:none}
+.cv-scope .pe-field>input,.cv-scope .pe-field>select{height:36px}
+.cv-scope .pe-field>textarea{min-height:60px;resize:vertical;line-height:1.4}
+.cv-scope .pe-field>input:focus,.cv-scope .pe-field>select:focus,.cv-scope .pe-field>textarea:focus{border-color:var(--brand)}
+.cv-scope .pe-icon-field .pj-icon-options{display:flex;flex-wrap:wrap;gap:5px}
+.cv-scope .pe-icon-field .pj-icon-option{width:30px;height:30px}
+.cv-scope .pe-icon-field .pj-folder-icon{width:21px;height:21px}
+.cv-scope .pe-pill--owner{position:relative}
+.cv-scope .pe-owner-results{position:fixed;z-index:150;box-sizing:border-box;overflow-y:auto;padding:5px;border:1px solid var(--border);border-radius:9px;background:#fff;box-shadow:var(--menu-shadow)}
+.cv-scope .pe-owner-results.hidden{display:none}
+.cv-scope .pe-owner-results button{display:flex;flex-direction:column;gap:2px;width:100%;padding:8px;border:0;border-radius:6px;background:#fff;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.cv-scope .pe-owner-results button:hover{background:var(--brand-fill)}
+.cv-scope .pe-owner-results small{color:var(--text-soft)}
+.cv-scope .pe-project-members>label{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cv-scope .pe-project-members>label span{font-size:12px;font-weight:400;color:var(--text-soft)}
+.cv-scope .pe-project-members>small{font-size:11px;color:var(--text-soft)}
+.cv-scope .pe-member-selected{display:flex;flex-wrap:wrap;gap:6px;min-height:24px}
+.cv-scope .pe-member-chip{display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:0 8px;border-radius:12px;background:var(--brand-fill);color:var(--brand);font-size:12px}
+.cv-scope .pe-member-chip button{padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.cv-scope .pe-member-results{position:fixed;z-index:150;box-sizing:border-box;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:8px;background:#fff;box-shadow:var(--menu-shadow)}
+.cv-scope .pe-member-results.hidden{display:none}
+.cv-scope .pe-member-results button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;padding:8px;border:0;border-radius:6px;background:#fff;text-align:left;font:inherit;font-size:12px;cursor:pointer}
+.cv-scope .pe-member-results button:hover:not(:disabled){background:var(--brand-fill)}
+.cv-scope .pe-member-results button:disabled{color:var(--text-soft);cursor:default}
+.cv-scope .pe-member-results button>small{grid-column:1;color:var(--text-soft)}
+.cv-scope .pe-member-results button>b{grid-column:2;grid-row:1 / span 2;align-self:center;color:var(--brand)}
+.cv-scope .pe-member-search-empty{display:block;padding:8px;color:var(--text-soft);font-size:12px}
+.cv-scope .pe-advanced{border-top:1px solid var(--border);padding-top:9px}
+.cv-scope .pe-advanced summary{display:inline-flex;align-items:center;gap:8px;color:var(--brand);font-size:13px;font-weight:600;cursor:pointer;list-style:none}
+.cv-scope .pe-advanced summary::-webkit-details-marker{display:none}
+.cv-scope .pe-advanced summary::after{content:'⌄';font-size:17px;line-height:1}
+.cv-scope .pe-advanced[open] summary::after{transform:rotate(180deg)}
+.cv-scope .pe-advanced-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 20px;padding-top:18px}
+.cv-scope .pe-member-default-note{margin:0;color:var(--text-soft);font-size:12px;line-height:1.5}
+.cv-scope .pe-footer{padding:10px 24px}
+@media(max-width:600px){.cv-scope .pe-header{padding:12px 18px}.cv-scope .pe-body{padding:14px 18px}.cv-scope .pe-form-grid,.cv-scope .pe-advanced-grid{grid-template-columns:1fr;gap:12px}.cv-scope .pe-field--full{grid-column:1}.cv-scope .pe-footer{padding:10px 18px}}
 
 /* 成员行内布局：+ 按钮紧接着人员标签，不换行 */
 .cv-scope .pe-member-inline{display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap}

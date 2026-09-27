@@ -6,7 +6,7 @@ import { cvWorkspace } from './data.js';
 /* 单文件原型的本地配置审计；正式审计应由服务端按已认证用户写入。 */
 const AUDIT_KEY='lingee-collab-config-audit-v1';
 const CATEGORIES={workspace:'工作区',person:'人员',integration:'系统集成',project:'项目配置'};
-const PROJECT_FIELDS={name:'名称',desc:'描述',status:'状态',priority:'优先级',owner:'负责人',repo:'代码仓库',dot:'图标颜色',start:'开始时间',end:'结束时间',defaultTeam:'专家团'};
+const PROJECT_FIELDS={name:'名称',desc:'描述',goal:'目标',status:'状态',priority:'优先级',owner:'负责人',repo:'代码仓库',dot:'图标颜色',start:'开始时间',end:'结束时间',defaultTeam:'专家团'};
 let entries=[];
 
 function restoreAuditLog(){

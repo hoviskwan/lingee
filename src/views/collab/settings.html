@@ -3,11 +3,10 @@
   <div class="scroll">
     <div class="config-layout">
       <aside class="config-nav">
-        <div class="cv-config-nav-group">基础</div>
         <button type="button" class="config-nav-item hidden" data-config-nav="workspace">工作区概况</button>
-        <button type="button" class="config-nav-item on" data-config-nav="perm">人员</button>
+        <button type="button" class="config-nav-item hidden" data-config-nav="perm">人员</button>
         <div class="cv-config-nav-group">管理</div>
-        <button type="button" class="config-nav-item" data-config-nav="integration">系统集成</button>
+        <button type="button" class="config-nav-item on" data-config-nav="integration">系统集成</button>
         <button type="button" class="config-nav-item" data-config-nav="audit">审计日志</button>
       </aside>
       <div class="config-main">
@@ -33,7 +32,7 @@
             <div class="cv-ws-delete-actions"><button type="button" id="cv-ws-delete-cancel">取消</button><button type="button" id="cv-ws-delete-confirm" disabled>永久删除</button></div>
           </dialog>
         </div>
-        <div class="config-pane" data-config-pane="perm">
+        <div class="config-pane hidden" data-config-pane="perm">
           <div class="cv-head">
             <div class="cv-head-right">
               <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
@@ -42,7 +41,7 @@
           <div class="cv-perm-scope"><strong>协作角色</strong><span>所有灵基用户均可参与协作；工作区角色仅有成员和管理员，项目负责人在项目内指定。</span></div>
           <div id="cv-perm-table"></div>
         </div>
-        <div class="config-pane hidden" data-config-pane="integration">
+        <div class="config-pane" data-config-pane="integration">
           <div class="cv-integration-note">当前是单文件原型：应用密钥仅用于演示录入，不会保存到浏览器；真实鉴权与任务同步需要服务端接入。这里不会向第三方发送请求，请勿填写真实密钥。</div>
           <div class="cv-integration-providers">
             <button type="button" class="cv-integration-provider" data-cv-integration-provider="devops"><span class="cv-integration-mark">D</span><span><b>DevOps</b><small>用户故事、缺陷与任务</small></span><span class="cv-integration-action">配置来源 →</span></button>
@@ -74,7 +73,7 @@
               <div class="cv-audit-title">配置审计 <span id="cv-audit-count">0</span></div>
               <div class="cv-audit-filters">
                 <label class="cv-audit-sr-only" for="cv-audit-category">日志类别</label>
-                <select id="cv-audit-category"><option value="">全部类别</option><option value="workspace">工作区</option><option value="person">人员</option><option value="integration">系统集成</option><option value="project">项目配置</option></select>
+                <select id="cv-audit-category"><option value="">全部类别</option><option value="person">人员</option><option value="integration">系统集成</option><option value="project">项目配置</option></select>
                 <label class="cv-audit-sr-only" for="cv-audit-search">搜索操作人或详情</label>
                 <input id="cv-audit-search" type="search" placeholder="搜索操作人或详情" autocomplete="off">
               </div>

@@ -59,7 +59,8 @@ export function tkCurrentUserId() {
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  return userId ? CV_PROJECTS.filter(function (project) { return (project.members || []).includes(userId); }) : [];
+  var userName = cvCurrentUserName();
+  return userId ? CV_PROJECTS.filter(function (project) { return (project.members || []).includes(userId) || project.owner === userName; }) : [];
 }
 
 export const TK_AGENTS = [

@@ -72,6 +72,7 @@ function cvSwitchSub(name){
 function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
+  if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   cvSyncWorkspacePermissions();
   if(name==='config' && !cvIsWorkspaceAdmin()) name='tasks';   /* 设置仅工作区管理员可进 */
   if(name==='tasks'){

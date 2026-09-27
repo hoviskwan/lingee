@@ -45,6 +45,7 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
+  if(which!=='collab'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
   if(which==='tasks'){
     if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();

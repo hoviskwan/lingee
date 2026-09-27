@@ -77,7 +77,7 @@ function cvToggleSyncDropdown(el,ev){
 function cvCollectSyncTaskData(status){
   var title=document.getElementById('cv-sync-title');if(!title||!title.value.trim()){cvToast('请输入任务标题','warning');return null;}
   var activeProject=CV_PROJECTS.find(function(project){return project.id===cvProject&&cvProjectInWorkspace(project.id);})||CV_PROJECTS.find(function(project){return cvProjectInWorkspace(project.id);});
-  if(!activeProject){cvToast('请先在当前工作区创建项目','warning');return null;}
+  if(!activeProject){cvToast('请先创建项目','warning');return null;}
   var desc=document.getElementById('cv-sync-desc');
   var type=document.getElementById('cv-sync-type-val');
   var priority=document.getElementById('cv-sync-priority-val');

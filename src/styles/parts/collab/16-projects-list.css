@@ -30,6 +30,7 @@
 #view-collab .pj-view-switch button{flex:1;border:0;border-radius:4px;padding:6px 10px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
 #view-collab .pj-view-switch button.on{background:var(--bg);color:var(--brand);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 #view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fill,320px);align-content:start;gap:14px;width:100%}
+@media(max-width:380px){#view-collab .pj-projects-cards{grid-template-columns:minmax(0,1fr)}}
 #view-collab .pj-cards-board{display:flex;gap:14px;overflow-x:auto;width:100%;padding-bottom:8px}
 #view-collab .pj-board-col{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
 #view-collab .pj-board-col-head{display:flex;align-items:center;gap:6px;padding:4px 2px;font-size:12px;font-weight:600;color:var(--text)}
@@ -38,8 +39,9 @@
 #view-collab .pj-board-col-body{display:flex;flex-direction:column;gap:10px;min-height:60px}
 #view-collab .pj-board-col-empty{padding:24px 12px;border:1px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-soft);font-size:12px}
 #view-collab #cv-proj-list:not(.is-list){padding:16px 24px}
-#view-collab .pj-card{min-width:0;border:1px solid var(--border);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}
+#view-collab .pj-card{min-width:0;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;transition:border-color .15s,box-shadow .15s}
 #view-collab .pj-card:hover{border-color:var(--border-focus);box-shadow:0 3px 12px rgba(0,0,0,.04)}
+#view-collab .pj-card:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab .pj-card-main{padding:12px 14px 10px}
 #view-collab .pj-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
 #view-collab .pj-card-identity{display:flex;align-items:center;gap:9px;min-width:0}
@@ -55,16 +57,15 @@
 .pj-icon-option:hover{background:var(--fill-1)}
 .pj-icon-option[aria-pressed=true]{border-color:var(--border-focus);background:var(--brand-fill)}
 .pj-icon-option:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-#view-collab .pj-card-title-button{min-width:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
-#view-collab .pj-card-title-button:hover{color:var(--brand)}
-#view-collab .pj-card-title-button:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
+#view-collab .pj-card-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600;color:var(--text)}
+#view-collab .pj-card:hover .pj-card-title{color:var(--brand)}
 #view-collab .pj-card-actions{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
 #view-collab .pj-card-status{width:auto;max-width:100px;padding:2px 7px}
-#view-collab .pj-card-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 10px;margin-top:10px}
+#view-collab .pj-card-desc{display:-webkit-box;min-height:36px;margin:10px 0 0;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:18px;color:var(--text-secondary);font-size:12px;overflow-wrap:anywhere}
+#view-collab .pj-card-fields{margin-top:10px}
 #view-collab .pj-card-field{display:flex;align-items:center;gap:4px;min-width:0;color:var(--text-soft);font-size:11px}
 #view-collab .pj-card-field>span{flex:none}
 #view-collab .pj-card-field>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-weight:400}
-#view-collab .pj-card-field .pj-list-edit{flex:1;width:auto;font-size:11px}
 #view-collab .pj-card-progress{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-height:18px;margin-top:10px;color:var(--text-secondary);font-size:11px;font-variant-numeric:tabular-nums}
 #view-collab .pj-card-progress svg{width:16px;height:16px;flex:none;fill:none;stroke-width:2}
 #view-collab .pj-card-ring-base{stroke:var(--border-hover)}
@@ -72,6 +73,7 @@
 #view-collab .pj-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:9px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-secondary)}
 #view-collab .pj-card-bottom>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 #view-collab .pj-card-members{display:flex;align-items:center;gap:6px;flex:1}
+#view-collab .pj-card-members b{color:var(--text-secondary);font-weight:500;font-variant-numeric:tabular-nums}
 #view-collab .pj-card-bottom .pj-card-progress{margin-top:0;flex:none;overflow:visible}
 #view-collab .pj-projects-list{border-top:var(--cv-list-border);border-bottom:var(--cv-list-border);overflow-x:auto}
 #view-collab .pj-list-head,#view-collab .pj-list-row{display:grid;grid-template-columns:minmax(180px,2fr) 110px 72px minmax(120px,1.3fr) 104px 128px 128px 96px;align-items:center;gap:12px;min-width:1070px;padding:var(--cv-list-row-pad)}

@@ -1,5 +1,6 @@
   <!-- ===================== 任务管理 v2 ===================== -->
   <div class="view hidden" id="view-tasks" data-list-version="latest">
+    <div class="tk-project-context hidden" id="tkProjectContext"><button type="button" id="tkProjectBack">项目</button><span>›</span><strong id="tkProjectContextName"></strong><span>›</span><b>项目任务</b></div>
     <!-- 页头 -->
     <div class="list-page-header tk-header">
       <div class="list-page-heading">
@@ -228,7 +229,7 @@
             <div class="tk-mc-label-picker" id="tkMcLabelPicker" role="button" tabindex="0" aria-label="添加标签" aria-haspopup="listbox" aria-expanded="false"></div>
             <input type="hidden" id="tkFormLabels">
             <select class="tk-mc-pill" id="tkFormStatus" hidden aria-hidden="true"></select>
-            <select class="tk-mc-pill" id="tkFormProject" hidden aria-hidden="true"></select>
+            <label class="tk-mc-project"><span>所属项目 <b aria-hidden="true">*</b></span><select class="tk-mc-pill" id="tkFormProject" required></select></label>
             <select class="tk-mc-pill" id="tkFormAssignee" hidden aria-hidden="true"></select>
             <button type="button" class="tk-mc-pill tk-mc-assignee-trigger" id="tkMcAssigneeTrigger" aria-label="选择负责人" aria-haspopup="listbox" aria-expanded="false" hidden><span class="tk-avatar-sm" id="tkMcAssigneeAvatar"></span><span id="tkMcAssigneeName">负责人</span><svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
             <input class="tk-mc-pill" type="date" id="tkFormDue" hidden>

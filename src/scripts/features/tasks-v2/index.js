@@ -69,6 +69,7 @@ var state = {
 var projectListMode = false;
 var projectListProjectId = '';
 var layoutBeforeProjectList = null;
+var viewBeforeProjectList = null;
 var els = {};
 var drawerPreferredWidth = null;
 var docPreviewCloseTimer = null;
@@ -121,13 +122,13 @@ function renderTaskStartAction() {
 function persistViewState() {
   try {
     localStorage.setItem(VIEW_STATE_STORAGE_KEY, JSON.stringify({
-      activeViewId:state.activeViewId,
+      activeViewId:projectListMode ? viewBeforeProjectList?.activeViewId : state.activeViewId,
       layout:projectListMode ? layoutBeforeProjectList : state.layout,
-      viewMode:state.viewMode,
+      viewMode:projectListMode ? viewBeforeProjectList?.viewMode : state.viewMode,
       groupBy:state.groupBy,
       sortBy:state.sortBy,
       sortDir:state.sortDir,
-      filters:state.filters,
+      filters:projectListMode ? viewBeforeProjectList?.filters : state.filters,
       showSubtasks:state.showSubtasks,
       collapsedTaskIds:Array.from(collapsedParents),
       collapsedBoardGroups:Array.from(taskViewState.collapsedBoardGroups),
@@ -900,16 +901,27 @@ function render() {
 export function tkSetProjectListMode(active, projectId) {
   if (active === projectListMode && (!active || projectListProjectId === projectId)) return;
   if (active) {
-    if (!projectListMode) layoutBeforeProjectList = state.layout;
+    if (!projectListMode) {
+      layoutBeforeProjectList = state.layout;
+      viewBeforeProjectList = {activeViewId:state.activeViewId,scope:state.scope,filters:state.filters,search:state.search,viewMode:state.viewMode};
+    }
     projectListMode = true;
     projectListProjectId = projectId || '';
+    state.layout = 'list';
+    state.activeViewId = 'all';state.scope = 'all';state.filters = [];state.search = '';state.viewMode = 'slide';
+    if(els.tkSearch)els.tkSearch.value='';
   } else {
     projectListMode = false;
     projectListProjectId = '';
     state.layout = layoutBeforeProjectList || state.layout;
     layoutBeforeProjectList = null;
+    if(viewBeforeProjectList){Object.assign(state,viewBeforeProjectList);if(els.tkSearch)els.tkSearch.value=state.search;viewBeforeProjectList=null;}
   }
   if (els.tkBody) render();
+}
+export function tkOpenProjectTaskCreate(projectId) {
+  if (projectId !== projectListProjectId) tkSetProjectListMode(true, projectId);
+  openTaskModal(null);
 }
 var cardPropertyOptions = [
   ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
@@ -1039,7 +1051,7 @@ function saveInlineTask() {
   if (cancelBtn) cancelBtn.disabled = true;
   setTimeout(function () {
     var mx = Math.max.apply(null, tkGetTasks().map(function(x){return x.id;}));
-     var projectId = projectListProjectId || tkProjectsForCurrentUser()[0]?.id;
+     var projectId = projectListProjectId;
      if (!projectId || !tkProjectsForCurrentUser().some(function (project) { return project.id === projectId; })) { toast('请先加入项目再创建任务', 'warning'); render(); return; }
      tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av || tkPeopleInProject(projectId)[0]?.id || '', project:projectId, labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
     render();
@@ -1169,18 +1181,23 @@ function openTaskModal(taskId, parentId) {
   fillSelects();
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
-  els.tkModalTitle.textContent = parentId ? '新增子任务' : '新建任务';
+  els.tkModalTitle.textContent = parentId ? '新增子任务' : (projectListMode ? '新建任务 · '+(CV_PROJECTS.find(function(project){return project.id===projectListProjectId;})?.name||'项目') : '新建任务');
   tkMcSetMode('manual');
   if (els.tkMcAgentPrompt) els.tkMcAgentPrompt.value = '';
   els.tkFormTitle.value = '';
   els.tkFormDesc.value = '';
   els.tkFormStatus.value = 'backlog';
   els.tkFormPriority.value = 'medium';
-  els.tkFormProject.value = projectListProjectId || tkProjectsForCurrentUser()[0].id;
+  els.tkFormProject.insertAdjacentHTML('afterbegin','<option value="">请选择所属项目 *</option>');
+  els.tkFormProject.value = projectListMode ? projectListProjectId : '';
   set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
-  ['tkFormStatus','tkFormProject','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
+  ['tkFormStatus','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
+  els.tkFormProject.hidden=false;
+  els.tkFormProject.disabled=!!(projectListMode&&!parentId);
+  els.tkFormProject.setAttribute('aria-label','所属项目（必填）');
+  els.tkFormProject.required=true;
   document.getElementById('tkMcAssigneeTrigger').hidden = true;
   closeModalAssigneeMenu();
   document.getElementById('tkMcMoreFields')?.classList.remove('open');
@@ -1222,6 +1239,7 @@ function tkMcSetMode(mode) {
   if (isAgent && els.tkMcAgentPrompt) setTimeout(function(){ els.tkMcAgentPrompt.focus(); }, 50);
 }
 function tkMcAgentSendMsg() {
+  if (!els.tkFormProject.value) { toast('请选择所属项目', 'warning'); els.tkFormProject.focus(); return; }
   var prompt = els.tkMcAgentPrompt.value.trim();
   if (!prompt) { els.tkMcAgentPrompt.focus(); return; }
   els.tkMcAgentPrompt.value = '';
@@ -1244,7 +1262,8 @@ function closeTaskModal() {
 function saveTask() {
   var title = els.tkFormTitle.value.trim();
   if (!title) { els.tkFormTitle.focus(); return; }
-  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === els.tkFormProject.value; })) { toast('请先加入项目再创建任务', 'warning'); return; }
+  if (!els.tkFormProject.value) { toast('请选择所属项目', 'warning'); els.tkFormProject.focus(); return; }
+  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === els.tkFormProject.value; })) { toast('请选择可参与的项目', 'warning'); return; }
   var createdForOpenParent = !state.editingTaskId && state.editingParentId && state.drawerTaskId === state.editingParentId;
   var labels = modalLabelSelection.slice();
   if (!tkPeopleInProject(els.tkFormProject.value).some(function (person) { return person.id === els.tkFormAssignee.value; })) { toast('请选择该项目成员作为处理人', 'warning'); return; }
@@ -3607,7 +3626,7 @@ function bindEvents() {
     }
     var inlineCreateRow = e.target.closest('#tkRowCreate');
     if (inlineCreateRow && inlineCreateRow.querySelector('#tkInlineCreateBtn')) {
-      if (state.viewMode === 'split') { openTaskModal(null); return; }
+      if (state.viewMode === 'split' || !projectListMode) { openTaskModal(null); return; }
       inlineCreateRow.classList.add('is-editing');
       inlineCreateRow.innerHTML = '<td colspan="' + visibleListColumnCount() + '"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><div class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn"><input type="text" id="tkInlineAssigneeInput" placeholder="处理人" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + tkPeopleInProject(projectListProjectId || tkProjectsForCurrentUser()[0]?.id).map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
       setTimeout(function(){ var i=els.tkListBody.querySelector('#tkInlineTitle'); if(i) i.focus(); },0);
