@@ -203,7 +203,7 @@ function cvSetProjectIcon(value){
 function cvMayEditProject(project){
   if(!project||!cvProjectInWorkspace(project.id))return false;
   var name=cvCurrentUserName();
-  return !!name&&(project.owner===name||cvIsWorkspaceAdmin());
+  return !!name&&project.owner===name;
 }
 function cvIsWorkspaceAdmin(){
   return getRole()==='owner';
@@ -231,7 +231,7 @@ function cvRenderProjectSettings(){
 }
 function cvOpenProjEdit(id){
   var p=cvProjectById(id);if(!p)return;
-  if(!cvMayEditProject(p)){toast('只有项目负责人或管理员可以编辑项目','warning');return;}
+  if(!cvMayEditProject(p)){toast('只有项目负责人可以编辑项目','warning');return;}
   cvProjEditId=id;
   cvResetProjectMemberPicker();
   cvSetProjectIcon(p.dot);
@@ -243,9 +243,6 @@ function cvOpenProjEdit(id){
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
-  var repoInput=$('#cv-pe-repo');if(repoInput)repoInput.required=false;
-  repoInput?.closest('.pe-field')?.classList.remove('pe-pill--required');
-  var repoRequired=repoInput?.closest('.pe-field')?.querySelector('.pe-required-mark');if(repoRequired)repoRequired.hidden=true;
   var memberNote=$('#cv-projedit-overlay .pe-member-default-note');if(memberNote)memberNote.hidden=true;
   var toolbar=$('#cv-project-toolbar');if(toolbar)toolbar.classList.add('hidden');
   var tt=$('#cv-pe-title');if(tt)tt.textContent='编辑项目';
@@ -294,10 +291,11 @@ function cvSaveProjEdit(){
   var teamId=g('team');
   if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择专家团','error'); $('#cv-pe-team').focus(); return; }
   var repo=g('repo');
-  if(isNew&&!repo){toast('请填写 Git 仓库地址','error');$('#cv-pe-repo').focus();return;}
+  if(!g('desc')){toast('请填写项目描述','warning');$('#cv-pe-desc')?.focus();return;}
+  if(!repo){toast('请填写 Git 仓库地址','error');$('#cv-pe-repo').focus();return;}
   if(!$('#cv-pe-repo').checkValidity()){toast('请填写有效的 Git 仓库 URL','error');$('#cv-pe-repo').focus();return;}
   var p=isNew?null:cvProjectById(cvProjEditId);
-  if(!isNew&&!cvMayEditProject(p)){toast('只有项目负责人或管理员可以编辑项目','warning');return;}
+  if(!isNew&&!cvMayEditProject(p)){toast('只有项目负责人可以编辑项目','warning');return;}
   if(p&&g('owner')!==p.owner&&!window.confirm('确定将「'+p.name+'」的负责人由「'+(p.owner||'未设置')+'」变更为「'+g('owner')+'」吗？'))return;
   var owner=cvEnsureProjectPerson(cvSelectedProjectOwner);
   if(!owner||owner.status==='disabled'){toast('无法保存项目负责人','error');return;}
