@@ -1,5 +1,7 @@
 import { STAGES } from '../expert/data.js';
-import { tkUpdateTask } from './data.js';
+import { tkGetTasks, tkGetTaskArtifacts, tkUpdateTask } from './data.js';
+
+const pendingStageReviews = new Map();
 
 export function taskExecutionStages(task) {
   return Array.isArray(task?.executionPlan) && task.executionPlan.length
@@ -35,8 +37,31 @@ export function submitTaskStage(task) {
   var stage = taskExecutionStages(task).find(function (row) { return row.id === task.executionStageId; });
   if (!stage && task.executionPlan?.length) stage = taskExecutionStages(task).find(function (row) { return task.executionPlan.find(function (item) { return item.id === row.id; })?.status !== 'done'; });
   if (!stage) return {ok:false};
-  tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review')});
+  var artifacts = task.executionArtifacts || [];
+  if (!tkGetTaskArtifacts(task).some(function (artifact) { return artifact.stageId === stage.id; })) {
+    var now = new Date();
+    var date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+      + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    artifacts = artifacts.concat({
+      id:'stage-' + stage.id, stageId:stage.id, type:stage.name + '产物', summary:stage.desc || '「' + task.title + '」的阶段执行结果',
+      status:'待审核', date:date, author:'执行 Agent',
+      sections:[{heading:'阶段目标', text:stage.desc || task.desc || task.title},
+        {heading:'执行结果', text:'「' + stage.name + '」阶段已完成模拟执行，提交当前产物等待审核。'}],
+    });
+  }
+  tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
   return {ok:true, stage:stage};
+}
+
+export function scheduleTaskStageStartedNotice(taskId, stageId) {
+  if (!stageId || pendingStageReviews.has(taskId)) return;
+  const timer = setTimeout(function () {
+    pendingStageReviews.delete(taskId);
+    const task = tkGetTasks().find(function (row) { return row.id === taskId; });
+    if (!task || !['in_progress', 'in_review'].includes(task.status) || task.executionStageId !== stageId) return;
+    document.dispatchEvent(new CustomEvent('lingee:task-stage-started-notice', {detail:{taskId:taskId, stageId:stageId}}));
+  }, 5000);
+  pendingStageReviews.set(taskId, timer);
 }
 
 export function reviewTaskStage(task, approved) {
@@ -48,7 +73,14 @@ export function reviewTaskStage(task, approved) {
   var stage = stages[index], next = stages[index + 1];
   var plan = stagePlan(task, stage.id, approved ? 'done' : 'running');
   if (approved && next && plan) plan = plan.map(function (row) { return row.id === next.id ? {...row,status:'running'} : row; });
-  tkUpdateTask(task.id, {status:approved ? next ? 'in_progress' : 'done' : 'in_progress',
-    executionStageId:approved && next ? next.id : stage.id, executionPlan:plan});
+  var patch = {status:approved ? next ? 'in_progress' : 'done' : 'in_progress',
+    executionStageId:approved && next ? next.id : stage.id, executionPlan:plan};
+  if (approved) {
+    var artifacts = (task.executionArtifacts || []).map(function (artifact) {
+      return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact;
+    });
+    if (artifacts.length) patch.executionArtifacts = artifacts;
+  }
+  tkUpdateTask(task.id, patch);
   return {ok:true, stage:stage, next:approved ? next : null, done:approved && !next};
 }

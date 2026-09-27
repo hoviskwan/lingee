@@ -19,8 +19,23 @@ var ACCOUNTS={
   'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   '17299999999':{pass:['KDadm!@#2022','lingee520'],role:'owner',name:'张工',avatar:'张'},
   'wei_bu@kingdee.com':{pass:'lingee520',role:'owner',name:'Wei',avatar:'W'},
-  '6686612@qq.com':{pass:'lingee520',role:'owner',name:'吴晓峰',avatar:'吴'},
+  '6686612@qq.com':{pass:'lingee520',role:'owner',name:'吴晓锋',avatar:'吴'},
   'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
+  /* 团队人员账号（账号 = 姓名） */
+  '吴宏超':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  '部伟':{pass:'lingee520',role:'owner',name:'部伟',avatar:'部'},
+  '张利军':{pass:'lingee520',role:'owner',name:'张利军',avatar:'张'},
+  '王育权':{pass:'lingee520',role:'owner',name:'王育权',avatar:'王'},
+  '付鹏城':{pass:'lingee520',role:'owner',name:'付鹏城',avatar:'付'},
+  '陈惠琼':{pass:'lingee520',role:'owner',name:'陈惠琼',avatar:'陈'},
+  '吴晓锋':{pass:'lingee520',role:'owner',name:'吴晓锋',avatar:'吴'},
+  '钟伟纯':{pass:'lingee520',role:'owner',name:'钟伟纯',avatar:'钟'},
+  '刘鉴洲':{pass:'lingee520',role:'owner',name:'刘鉴洲',avatar:'刘'},
+  '陈谨':{pass:'lingee520',role:'owner',name:'陈谨',avatar:'陈'},
+  '陈来珍':{pass:'lingee520',role:'owner',name:'陈来珍',avatar:'陈'},
+  '暴福音':{pass:'lingee520',role:'owner',name:'暴福音',avatar:'暴'},
+  '荆龙刚':{pass:'lingee520',role:'owner',name:'荆龙刚',avatar:'荆'},
+  '梁平贤':{pass:'lingee520',role:'owner',name:'梁平贤',avatar:'梁'},
   /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   'project_manager':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
@@ -29,6 +44,16 @@ var ACCOUNTS={
   'qa':{pass:'lingee520',role:'qa',name:'陈晨',avatar:'陈'},
   'ops':{pass:'lingee520',role:'ops',name:'周杰',avatar:'周'}
 };
+
+/* 仅暴露可登录账号的公开资料，供协作人员选择；不包含密码和演示角色账号。 */
+var LOGIN_PEOPLE_IDS={'wuhc2023@gmail.com':'p22','17299999999':'p01','6686612@qq.com':'p23'};
+function getLoginPeople(){
+  return Object.keys(ACCOUNTS).filter(function(account){return account.includes('@')||/^\d{11}$/.test(account);}).map(function(account){
+    var profile=ACCOUNTS[account];
+    return {id:LOGIN_PEOPLE_IDS[account]||'login:'+account,name:profile.name,account:account,
+      phone:/^\d{11}$/.test(account)?account:'',email:account.includes('@')?account:''};
+  });
+}
 
 /* 演示角色：不同角色登录后看到不同视图（权限差异演示） */
 var DEMO_ROLES=[
@@ -61,7 +86,7 @@ function setAuthed(user){
   try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
 }
 function applyUserInfo(user){
-  var acc=ACCOUNTS[user]||{name:'吴晓峰',avatar:'吴',role:'owner'};
+  var acc=ACCOUNTS[user]||{name:'吴晓锋',avatar:'吴',role:'owner'};
   var av=$('#userAvatar'),nm=$('#userName');
   if(av) av.textContent=acc.avatar;
   if(nm) nm.textContent=acc.name;
@@ -191,4 +216,4 @@ export function initLogin() {
   }
 }
 
-export { DEMO_ROLES, LOGIN_KEY, REMEMBER_KEY, _authedUser, applyRole, getRole, loginError, loginForm, showLogin };
+export { DEMO_ROLES, LOGIN_KEY, REMEMBER_KEY, _authedUser, applyRole, getLoginPeople, getRole, loginError, loginForm, showLogin };

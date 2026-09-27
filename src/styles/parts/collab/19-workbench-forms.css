@@ -470,3 +470,10 @@
 #cv-newtask-overlay .nt-toggle-label{font-size:13px;color:var(--text-secondary)}
 #cv-newtask-overlay.nt-fullscreen .nt-modal{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;border-radius:0!important}
 #cv-newtask-overlay textarea{resize:none!important}
+
+/* 任务详情只读模式：任务启动后表单字段不可编辑，仅可查看 */
+#cv-tasks .tb-detail-readonly #tb-form input[readonly],
+#cv-tasks .tb-detail-readonly #tb-form textarea[readonly]{background:var(--fill-1);color:var(--text-secondary);cursor:default}
+#cv-tasks .tb-detail-readonly #tb-form input[readonly]:focus,
+#cv-tasks .tb-detail-readonly #tb-form textarea[readonly]:focus{outline:none;box-shadow:none;border-color:var(--border)}
+#cv-tasks .tb-detail-readonly #tb-form select:disabled{opacity:1;background:var(--fill-1);color:var(--text-secondary);cursor:default}

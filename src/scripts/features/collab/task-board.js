@@ -2,7 +2,7 @@ import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvCurrentUserName, cvInProject, cv
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
-import { tbBoardColumns, tbColumns, tbCurrentTeamId, tbLabel, tbMode, tbOwner, tbPriority, tbTaskId, tbGetSelected, tbSave, tbSetSelected, tbTeamName, tbTeamStages, tbMatchedTeam } from './tb-core.js';
+import { tbBoardColumns, tbColumns, tbCurrentTeamId, tbIsStarted, tbLabel, tbMode, tbOwner, tbPriority, tbTaskId, tbGetSelected, tbSave, tbSetSelected, tbTeamName, tbTeamStages, tbMatchedTeam } from './tb-core.js';
 import { ensureTaskRuntime, retryTaskRuntime, runtimeArtifacts, syncTaskFromRuntime } from './runtime.js';
 /* 任务看板：列渲染、任务详情（打开/保存）、筛选与初始化
    共享状态与工具在 tb-core；新建任务在 new-task；任务对话在 task-chat。 */
@@ -388,6 +388,23 @@ export function openTask(index, status = '待办') {
         </aside>
       </div>
     </form>`;
+  /* 任务启动后转只读：锁定所有表单字段，隐藏保存/转交/添加附件入口 */
+  if (selected && tbIsStarted(selected)) {
+    workspace.classList.add('tb-detail-readonly');
+    workspace.querySelectorAll('#tb-form input:not([type="button"]):not([type="submit"]), #tb-form textarea').forEach(el => { el.readOnly = true; });
+    workspace.querySelectorAll('#tb-form select').forEach(el => { el.disabled = true; });
+    const submitBtn = workspace.querySelector('#tb-form button[type="submit"]');
+    if (submitBtn) submitBtn.hidden = true;
+    const transferBtn = workspace.querySelector('[data-tb-transfer]');
+    if (transferBtn) transferBtn.hidden = true;
+    const dropzone = workspace.querySelector('[data-tb-dropzone]');
+    if (dropzone) dropzone.hidden = true;
+    const saveState = document.getElementById('tb-save-state');
+    if (saveState) saveState.textContent = '任务已启动 · 只读';
+    workspace.querySelectorAll('.tb-aside-group-k:not(.tb-aside-group-k--ro)').forEach(k => { k.textContent = '只读'; });
+  } else {
+    workspace.classList.remove('tb-detail-readonly');
+  }
   document.getElementById('tb-board-view').hidden = true;
   workspace.hidden = false;
   document.getElementById('cv-tasks').classList.add('tb-detail-open');

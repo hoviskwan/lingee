@@ -3,7 +3,7 @@ import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvIsMe, cvPeopleInWorkspace, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvWorkspace, cvWorkspaceById, cvWorkspaceRole } from './data.js';
 import { cvRenderProjectDetail, cvRenderProjectList } from './project-view.js';
 import { xesc } from '../expert/data.js';
-import { cvLinkLingeePerson, cvLinkedLingeePerson, cvPeopleSearchIsDemo, cvSearchLingeePeople } from './people-search.js';
+import { cvLinkLingeePerson, cvLinkedLingeePerson, cvLoginPeople, cvPeopleSearchIsDemo, cvSearchLingeePeople } from './people-search.js';
 import { recordConfigAudit } from './audit-log.js';
 /* 设置：关联灵基用户并维护协作角色；原型使用明确标记的演示搜索数据。 */
 
@@ -41,7 +41,7 @@ function cvSearchPersonInput(){
 function cvOpenPersonNew(){
   clearTimeout(cvSearchTimer);
   cvSelectedPerson=null;cvSearchResults=[];cvSearchSeq++;
-  var note=$('#cv-ps-note');if(note)note.textContent=cvPeopleSearchIsDemo()?'当前使用演示数据搜索；灵基人员搜索接口待接入。':'从当前租户的灵基用户中搜索并添加。';
+  var note=$('#cv-ps-note');if(note)note.textContent=cvPeopleSearchIsDemo()?'可搜索当前原型的登录账号和演示人员；灵基人员接口待接入。':'从当前租户的灵基用户中搜索并添加。';
   var search=$('#cv-ps-search');if(search)search.value='';
   var results=$('#cv-ps-results');if(results)results.innerHTML='<div class="cv-person-search-empty">输入姓名、手机号或邮箱开始搜索</div>';
   var selected=$('#cv-ps-selected');if(selected){selected.classList.add('hidden');selected.innerHTML='';}
@@ -116,6 +116,14 @@ function cvRenderPermTable(){
   var el=$('#cv-perm-table'); if(!el) return;
   var people=cvPeopleInWorkspace();
   var cnt=$('#cv-perm-count'); if(cnt) cnt.textContent=people.length;
+  var accounts=$('#cv-login-people');
+  if(accounts)accounts.innerHTML='<div class="cfg-table">'
+    +'<div class="cfg-table-head cv-login-head"><span>人员</span><span>登录账号</span><span>工作区</span></div>'
+    +cvLoginPeople().map(function(person,index){
+      var linked=!!cvLinkedLingeePerson(person.id,person.name);
+      return '<div class="cfg-table-row cv-login-row"><span class="cfg-t-name">'+cvPersonAvHtml(person,'ps-av')+'<b>'+xesc(person.name)+'</b></span>'
+        +'<span class="cv-perm-meta">'+xesc(person.account)+'</span><span>'+(linked?'<span class="cv-login-linked">已加入</span>':'<button type="button" class="act-btn" data-ps-login-add="'+index+'">加入工作区</button>')+'</span></div>';
+    }).join('')+'</div>';
   el.innerHTML='<div class="cfg-table">'
     +'<div class="cfg-table-head cv-perm-head"><span>人员</span><span>手机号</span><span>邮箱</span><span>工作区角色</span><span>操作</span></div>'
     +people.map(function(p){
@@ -142,6 +150,14 @@ export function initCollabPersons(){
     results.querySelectorAll('[data-cv-person-result]').forEach(function(row){row.setAttribute('aria-selected',String(row===option));});
   });
   var permTable=$('#cv-perm-table');
+  $('#cv-login-people')?.addEventListener('click',function(e){
+    var add=e.target.closest('[data-ps-login-add]');if(!add)return;
+    var person=cvLoginPeople()[Number(add.getAttribute('data-ps-login-add'))];if(!person)return;
+    if(!cvLinkLingeePerson(person)){toast('无法保存工作区人员关联','error');return;}
+    recordConfigAudit('person','添加协作人员「'+person.name+'」');
+    cvRenderPermTable();cvRenderProjectDetail();cvRenderProjectList();
+    toast('已添加协作人员：'+person.name);
+  });
   if(permTable) permTable.addEventListener('click',function(e){
     var del=e.target.closest('[data-ps-del]');
     if(del){ cvDeletePerson(del.getAttribute('data-ps-del')); return; }

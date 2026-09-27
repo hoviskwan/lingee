@@ -21,8 +21,8 @@ var CV_PROJECTS=[
   {id:'service',name:'客户服务工单平台',desc:'工单流转、SLA监控与客户满意度分析',goal:'搭建客户服务工单全生命周期管理平台，支持多渠道接入、智能派单与SLA自动监控',dot:'orange',defaultTeam:'general-app-dev',status:'in_progress',priority:'中',owner:'吴宏超',repo:'',start:'2026-09-01',end:'2027-01-15',milestones:[{name:'需求确认',date:'2026-09-25'},{name:'工单引擎开发',date:'2026-11-15'},{name:'渠道对接',date:'2026-12-15'},{name:'上线',date:'2027-01-15'}],members:['p22','p01','p04','p05','p07'],workspace:'ws-app'},
   {id:'hr-analytics',name:'人力数据分析平台',desc:'组织画像、人效指标与离职预测',goal:'构建人力数据自助分析平台，支持组织画像可视化、人效指标看板与离职风险预警',dot:'green',defaultTeam:'general-app-dev',status:'planned',priority:'中',owner:'赵琳',repo:'',start:'2026-10-01',end:'2027-02-28',milestones:[{name:'指标体系设计',date:'2026-10-20'},{name:'数据管道搭建',date:'2026-12-15'},{name:'看板上线',date:'2027-02-28'}],members:['p22','p03','p04','p05'],workspace:'ws-build'},
   {id:'warehouse',name:'智能仓储管理平台',desc:'库位优化、出入库协同与库存预警',goal:'搭建智能仓储管理平台，支持库位动态优化、扫码出入库协同与库存实时预警',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'李工',repo:'',start:'2026-08-20',end:'2026-12-20',milestones:[{name:'仓储模型设计',date:'2026-09-15'},{name:'出入库开发',date:'2026-10-31'},{name:'预警上线',date:'2026-11-30'},{name:'验收交付',date:'2026-12-20'}],members:['p22','p01','p02','p03','p07'],workspace:'ws-app'},
-  {id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓峰',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23'],workspace:'ws-build'},
-  {id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓峰',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'}
+  {id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'},
+  {id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'}
 ];
 
 /* 项目范围演示：吴宏超负责费用报销应用和智能合同工作台，参与其余项目。 */
@@ -137,9 +137,9 @@ var CV_TASKS = [
   {boardId:'epic-supply-collab',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-SUPCOLLAB',status:'进行中',title:'供应商协同对接',desc:'供应商门户对接与交期变更消息推送',acceptance:'订单确认与交期回复状态可正确回写，推送失败可重试',files:[],assignee:'赵琳',priority:'低',project:'supply',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-supply-rating',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-SUPRATE',status:'未开始',title:'供应商评级与档案',desc:'供应商评级定时任务与资质到期提醒',acceptance:'评级任务分片执行不超时，资质到期前可提前提醒',files:[],assignee:'赵琳',priority:'低',project:'supply',progress:0,artifacts:[],activity:[]},
   /* Lingee Build：父任务与子任务 */
-  {boardId:'epic-lingee-ui',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEUI',status:'进行中',title:'原型界面与交互',desc:'原型整体页面架构、样式统一与交互细节优化',acceptance:'核心页面布局完整、样式一致、交互流畅',files:[],assignee:'吴晓峰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-collab',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEECOLLAB',status:'进行中',title:'协作开发模块',desc:'协作开发页面拆分、任务管理、人员与专家管理',acceptance:'页面按归属拆分、任务与人员管理链路完整',files:[],assignee:'吴晓峰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-data',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEDATA',status:'进行中',title:'数据与任务管理',desc:'项目数据持久化、筛选联动与产物中心',acceptance:'数据持久化可靠、筛选联动正确、产物按项目沉淀',files:[],assignee:'吴晓峰',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
+  {boardId:'epic-lingee-ui',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEUI',status:'进行中',title:'原型界面与交互',desc:'原型整体页面架构、样式统一与交互细节优化',acceptance:'核心页面布局完整、样式一致、交互流畅',files:[],assignee:'吴晓锋',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
+  {boardId:'epic-lingee-collab',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEECOLLAB',status:'进行中',title:'协作开发模块',desc:'协作开发页面拆分、任务管理、人员与专家管理',acceptance:'页面按归属拆分、任务与人员管理链路完整',files:[],assignee:'吴晓锋',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
+  {boardId:'epic-lingee-data',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEDATA',status:'进行中',title:'数据与任务管理',desc:'项目数据持久化、筛选联动与产物中心',acceptance:'数据持久化可靠、筛选联动正确、产物按项目沉淀',files:[],assignee:'吴晓锋',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-lingee-auth',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEAUTH',status:'已完成',title:'用户认证与登录',desc:'登录页、账号密码验证与会话保持',acceptance:'登录验证安全可靠，会话不过期',files:[],assignee:'周杰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-lingee-sidebar',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESIDEBAR',status:'已完成',title:'侧边栏导航系统',desc:'左侧导航菜单、用户信息展示与页面切换',acceptance:'导航层级清晰，页面切换无闪烁',files:[],assignee:'何欣',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-lingee-workbench',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEWORKBENCH',status:'进行中',title:'工作台首页',desc:'工作台任务概览、统计面板与快捷入口',acceptance:'统计数据实时准确，快捷入口直达功能',files:[],assignee:'李工',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
@@ -157,15 +157,15 @@ var CV_TASKS = [
   {boardId:'epic-lingee-search',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESEARCH',status:'待评审',title:'全局搜索与筛选',desc:'任务搜索、人员搜索与多维筛选联动',acceptance:'搜索结果准确，筛选联动无遗漏',files:[],assignee:'蒋雯',priority:'低',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-lingee-perf',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEPERF',status:'进行中',title:'性能优化与加载体验',desc:'模块懒加载、DOM 复用与渲染性能优化',acceptance:'首屏加载 < 2s，交互无卡顿',files:[],assignee:'梁平',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-lingee-build',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEBUILD',status:'已完成',title:'构建工具与打包流程',desc:'Vite 构建、单文件打包与模块自检工具',acceptance:'构建产物可独立打开，自检覆盖全模块',files:[],assignee:'周杰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-001',exec:'专家团',status:'进行中',collab:'人人协作',title:'原型整体页面架构设计',desc:'设计原型首页、工作台、协作开发等核心页面布局与导航',assignee:'吴晓峰',progress:45,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
+  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-001',exec:'专家团',status:'进行中',collab:'人人协作',title:'原型整体页面架构设计',desc:'设计原型首页、工作台、协作开发等核心页面布局与导航',assignee:'吴晓锋',progress:45,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
   {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-002',exec:'专家团',status:'未开始',collab:'人人协作',title:'协作开发页面拆分重构',desc:'将协作开发按页面拆分 HTML、CSS 和 JS 独立文件',assignee:'王工',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
   {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9001',exec:'自动执行',status:'已完成',collab:'无需协作',title:'侧边栏用户名显示错乱',desc:'侧边栏在不同分辨率下用户名被截断',assignee:'郑凯',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'任务',size:'大',source:'Jira',sourceId:'LINGEE-003',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'任务看板拖拽流转实现',desc:'实现任务看板的状态拖拽和流转动画效果',assignee:'吴晓峰',progress:62,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
+  {type:'任务',size:'大',source:'Jira',sourceId:'LINGEE-003',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'任务看板拖拽流转实现',desc:'实现任务看板的状态拖拽和流转动画效果',assignee:'吴晓锋',progress:62,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
   {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-020',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'任务详情交互优化',desc:'优化任务详情展开折叠与折叠记忆',assignee:'陈晨',progress:35,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
   {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-004',exec:'专家团',status:'待评审',collab:'人人协作',title:'专家管理与专家团功能开发',desc:'开发专家管理、专家团列表与项目绑定',assignee:'赵琳',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
   {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9002',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'弹窗ESC关闭未生效',desc:'部分表单弹窗按 ESC 键无法关闭',assignee:'郑凯',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
   {type:'任务',size:'小',source:'API',sourceId:'API-40',exec:'自动执行',status:'已完成',collab:'无需协作',title:'项目数据持久化方案实现',desc:'项目数据 localStorage 持久化与恢复机制',assignee:'梁平',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'需求',size:'大',source:'飞书',sourceId:'FS-60',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'更新日志页面重构',desc:'更新日志从顶部铃铛改为用户菜单独立页面',assignee:'吴晓峰',progress:52,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
+  {type:'需求',size:'大',source:'飞书',sourceId:'FS-60',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'更新日志页面重构',desc:'更新日志从顶部铃铛改为用户菜单独立页面',assignee:'吴晓锋',progress:52,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
   {type:'改进',size:'大',source:'Jira',sourceId:'LINGEE-005',exec:'专家团',status:'未开始',collab:'人人协作',title:'CSS变量统一与样式拆分',desc:'统一样式为 CSS 变量并按页面拆分 CSS 文件',assignee:'冯远',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
   {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9003',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'任务列表排序失效',desc:'任务列表按状态排序时偶发乱序',assignee:'钱涛',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
   {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-006',exec:'专家团',status:'进行中',collab:'人人协作',title:'人员管理与权限体系',desc:'开发协作人员管理与角色权限管理',assignee:'赵琳',progress:45,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
@@ -313,8 +313,72 @@ var CV_MEMBERS = [
   {id:'p20',name:'唐辉',email:'tang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS'},
   {id:'p21',name:'梁平',email:'liang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
   {id:'p22',name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'},
-  {id:'p23',name:'吴晓峰',email:'6686612@qq.com',dept:'产品部',workspaceRole:'system_admin',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'}
+  {id:'p23',name:'吴晓锋',email:'6686612@qq.com',dept:'产品部',workspaceRole:'system_admin',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
+  {id:'p24',name:'需求',email:'',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员'},
+  {id:'p25',name:'架构',email:'',dept:'架构部',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员'},
+  {id:'p26',name:'开发',email:'',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
+  {id:'p27',name:'测试',email:'',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
+  {id:'p28',name:'部署',email:'',dept:'运维部',roles:[{tag:'member-tag--ops',text:'部署'}],status:'available',source:'直接成员'},
+  /* 团队人员（登录账号=姓名，密码统一 lingee520） */
+  {id:'p29',name:'部伟',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p30',name:'张利军',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p31',name:'王育权',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p32',name:'付鹏城',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p33',name:'陈惠琼',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p35',name:'钟伟纯',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p36',name:'刘鉴洲',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p37',name:'陈谨',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p38',name:'陈来珍',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p39',name:'暴福音',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p40',name:'荆龙刚',email:'',dept:'',roles:[],status:'available',source:'直接成员'},
+  {id:'p41',name:'梁平贤',email:'',dept:'',roles:[],status:'available',source:'直接成员'}
 ];
+var CV_SEED_PERSONS=[
+  {id:'p24',name:'需求',email:'',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员'},
+  {id:'p25',name:'架构',email:'',dept:'架构部',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员'},
+  {id:'p26',name:'开发',email:'',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
+  {id:'p27',name:'测试',email:'',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
+  {id:'p28',name:'部署',email:'',dept:'运维部',roles:[{tag:'member-tag--ops',text:'部署'}],status:'available',source:'直接成员'}
+];
+function cvEnsureSeedPersons(){
+  var changed=false;
+  CV_SEED_PERSONS.forEach(function(seed){
+    if(!CV_MEMBERS.some(function(person){return person.id===seed.id;})){
+      CV_MEMBERS.push(Object.assign({},seed));
+      changed=true;
+    }
+  });
+  if(changed)cvPersistPersons();
+}
+/* 团队人员种子：localStorage 恢复人员目录后，补回缺失的团队成员（人员记录不由 UI 删除，幂等安全） */
+var CV_TEAM_SEED_IDS=['p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
+var CV_TEAM_SEED_PERSONS=CV_TEAM_SEED_IDS.map(function(id){return CV_MEMBERS.find(function(person){return person.id===id;});}).filter(Boolean);
+function cvEnsureTeamPersons(){
+  var changed=false;
+  CV_TEAM_SEED_PERSONS.forEach(function(seed){
+    var existing=CV_MEMBERS.find(function(person){return person.id===seed.id;});
+    if(!existing){
+      CV_MEMBERS.push(Object.assign({},seed));
+      changed=true;
+    }else if(existing.name!==seed.name){
+      existing.name=seed.name;
+      changed=true;
+    }
+  });
+  /* 名字统一与并入：p23「吴晓峰」改为「吴晓锋」；p34（早期误建的重复记录）并入 p23 */
+  var p23=CV_MEMBERS.find(function(person){return person.id==='p23';});
+  if(p23&&p23.name==='吴晓峰'){p23.name='吴晓锋';changed=true;}
+  var stale=CV_MEMBERS.findIndex(function(person){return person.id==='p34';});
+  if(stale>-1){CV_MEMBERS.splice(stale,1);changed=true;}
+  CV_PROJECTS.forEach(function(project){
+    if(project.owner==='吴晓峰'){project.owner='吴晓锋';changed=true;}
+    if(Array.isArray(project.members)&&project.members.includes('p34')){
+      project.members=project.members.filter(function(id){return id!=='p34';});
+      changed=true;
+    }
+  });
+  if(changed){cvPersistPersons();cvPersistProjects();}
+}
 function cvWorkspaceMembers(workspace){
   if(!workspace)return [];
   if(Array.isArray(workspace.peopleIds))return workspace.peopleIds;
@@ -545,6 +609,22 @@ function cvEnsureCurrentUserProjectDemoData(){
     if(project&&project.owner!==person.name){project.owner=person.name;ownedCount++;changed=true;}
   });
   if(changed)cvPersistProjects();
+  try{localStorage.setItem(key,'1');}catch(e){}
+}
+
+/* 一次性补齐：把团队人员加入 Lingee Build 项目成员，姓名账号登录后可见该项目；之后由项目成员管理正常维护 */
+function cvEnsureTeamProjectMembers(){
+  var key='lingee-collab-team-project-members-v1';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  var changed=false;
+  var project=CV_PROJECTS.find(function(row){return row.id==='lingee-prototype';});
+  if(project){
+    if(!Array.isArray(project.members))project.members=[];
+    CV_TEAM_SEED_PERSONS.forEach(function(seed){
+      if(!project.members.includes(seed.id)){project.members.push(seed.id);changed=true;}
+    });
+    if(changed)cvPersistProjects();
+  }
   try{localStorage.setItem(key,'1');}catch(e){}
 }
 
@@ -783,7 +863,7 @@ function cvSeedTaskDetails(){
 }
 
 /* 自愈：确保 Lingee Build项目在 localStorage 恢复后仍然存在 */
-var CV_PROJ_SEED_LINGEE={id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓峰',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23'],workspace:'ws-build'};
+var CV_PROJ_SEED_LINGEE={id:'lingee-prototype',name:'Lingee Build',desc:'高保真交互原型与协作开发平台建设',goal:'构建 Lingee 高保真原型，支持协作开发、任务管理与专家协作全流程',dot:'green',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/lingee-prototype',start:'2026-07-01',end:'2026-12-31',milestones:[{name:'需求与设计定稿',date:'2026-08-01'},{name:'核心功能开发',date:'2026-10-15'},{name:'联调测试',date:'2026-11-30'},{name:'上线交付',date:'2026-12-31'}],members:['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10','p11','p12','p13','p14','p15','p16','p17','p18','p19','p20','p21','p22','p23','p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'],workspace:'ws-build'};
 function cvEnsureLingeePrototypeData(){
   var changed=false;
   var existing=CV_PROJECTS.find(function(p){return p.id==='lingee-prototype';});
@@ -795,7 +875,7 @@ function cvEnsureLingeePrototypeData(){
 }
 
 /* 自愈：确保苍穹应用开发项目在 localStorage 恢复后仍然存在 */
-var CV_PROJ_SEED_COSMIC={id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓峰',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'};
+var CV_PROJ_SEED_COSMIC={id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓锋',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'};
 function cvEnsureCosmicAppDevData(){
   var changed=false;
   var existing=CV_PROJECTS.find(function(p){return p.id==='cosmic-app-dev';});
@@ -831,4 +911,4 @@ function cvEnsureSeedWorkspaces(){
   });
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCosmicAppDevData, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCosmicAppDevData, cvEnsureCurrentUserProjectDemoData, cvEnsureTeamPersons, cvEnsureTeamProjectMembers, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureSeedPersons, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

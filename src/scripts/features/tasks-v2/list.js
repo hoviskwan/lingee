@@ -1,6 +1,6 @@
 /* T00 结构拆分：list。保留原交互；事件在 init* 中按原顺序注册。 */
 import { taskViewState, els, LIST_FIELDS, DEFAULT_LIST_FIELD_ORDER } from './ui-state.js';
-import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj } from './data.js';
+import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, tkCanViewTask, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
@@ -11,7 +11,7 @@ import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal, refreshFormAssignees } from './create.js';
-import { startTaskStage } from './task-execution.js';
+import { scheduleTaskStageStartedNotice, startTaskStage } from './task-execution.js';
 
 var projectListMode = false;
 
@@ -56,7 +56,7 @@ function restoreViewState() {
   if (['board','list'].includes(saved.layout)) taskViewState.layout = saved.layout;
   if (['slide','full','split'].includes(saved.viewMode)) taskViewState.viewMode = saved.viewMode;
   if (['status','priority','assignee','project','none'].includes(saved.groupBy)) taskViewState.groupBy = saved.groupBy;
-  if (['status','priority','dueDate','createDate','title','module','code','assignee','project'].includes(saved.sortBy)) taskViewState.sortBy = saved.sortBy;
+  if (['status','priority','dueDate','createDate','updatedAt','title','module','code','assignee','project'].includes(saved.sortBy)) taskViewState.sortBy = saved.sortBy;
   if (['asc','desc'].includes(saved.sortDir)) taskViewState.sortDir = saved.sortDir;
   if (typeof saved.showSubtasks === 'boolean') taskViewState.showSubtasks = saved.showSubtasks;
   if (Array.isArray(saved.collapsedTaskIds)) {
@@ -130,6 +130,7 @@ function startTaskExec(taskId) {
   if (!task) return;
   var started = startTaskStage(task);
   if (!started.ok) { if (started.message) toast(started.message,'warning'); else openDrawer(taskId); return; }
+  scheduleTaskStageStartedNotice(taskId, started.stage?.id);
   render();
   openTaskConversationWithTask(taskId);
   toast('已进入' + (started.stage?.name || '当前节点') + '，请在 AI 对话中推进','success');
@@ -158,8 +159,7 @@ function handleCardAction(act, aid) {
 
 function getFilteredTasks() {
   var tasks = tkGetTasks();
-  var joinedProjectIds = new Set(tkProjectsForCurrentUser().map(function (project) { return project.id; }));
-  tasks = tasks.filter(function (task) { return joinedProjectIds.has(task.project); });
+  tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
   var scope = taskViewState.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
@@ -179,13 +179,14 @@ function getFilteredTasks() {
     tasks = tasks.filter(function (t) { return choices.some(function (f) { return matchFilter(t, f); }); });
   });
   return tasks.slice().sort(function (a, b) {
-    var sortKey = taskViewState.sortDir === 'none' ? 'createDate' : taskViewState.sortBy;
+    var sortKey = taskViewState.sortDir === 'none' ? 'updatedAt' : taskViewState.sortBy;
     var sortDir = taskViewState.sortDir === 'none' ? 'desc' : taskViewState.sortDir;
     var va, vb;
     switch (sortKey) {
       case 'priority': va = priWeight(a.priority); vb = priWeight(b.priority); break;
       case 'dueDate': va = a.dueDate || '9999'; vb = b.dueDate || '9999'; break;
       case 'createDate': va = a.createDate || ''; vb = b.createDate || ''; break;
+      case 'updatedAt': va = a.updatedAt || ''; vb = b.updatedAt || ''; break;
       case 'status': va = TK_STATUSES.findIndex(function (s) { return s.id === a.status; }); vb = TK_STATUSES.findIndex(function (s) { return s.id === b.status; }); break;
       case 'code': va = a.code; vb = b.code; break;
       case 'title': va = a.title; vb = b.title; break;
@@ -565,7 +566,7 @@ function updateSortArrows() {
       hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
       th.appendChild(hint);
     }
-    if (th.getAttribute('data-sort') === taskViewState.sortBy && taskViewState.sortDir !== 'none' && !(taskViewState.sortBy === 'createDate' && taskViewState.sortDir === 'desc')) {
+    if (th.getAttribute('data-sort') === taskViewState.sortBy && taskViewState.sortDir !== 'none' && !((taskViewState.sortBy === 'createDate' || taskViewState.sortBy === 'updatedAt') && taskViewState.sortDir === 'desc')) {
       th.classList.add('sorted');
       var span = document.createElement('span');
       span.className = 'tk-sort-arrow';
@@ -598,7 +599,7 @@ function renderFilterChips() {
 function showEmpty() {
   els.tkBoard.classList.add('hidden'); els.tkList.classList.add('hidden'); els.tkEmpty.classList.remove('hidden');
   var projects=tkProjectsForCurrentUser(),projectIds=new Set(projects.map(function(project){return project.id;}));
-  var hasTasks=tkGetTasks().some(function(task){return projectIds.has(task.project)&&(!projectListMode||task.project===projectListProjectId);});
+  var hasTasks=tkGetTasks().some(function(task){return tkCanViewTask(task)&&projectIds.has(task.project)&&(!projectListMode||task.project===projectListProjectId);});
   var message=els.tkEmpty.querySelector('p');
   if(message)message.textContent=!projects.length?'还没有可参与的项目，请先到「项目」页创建项目或联系管理员':hasTasks?'没有匹配的任务':'项目中还没有任务，点击右上「新建」开始';
   els.tkResetFilter.classList.toggle('hidden',!hasTasks);
@@ -618,14 +619,13 @@ function updateBulkBar() {
 
 function render() {
   tkSyncPeople();
-  var joinedProjects = new Set(tkProjectsForCurrentUser().map(function (project) { return project.id; }));
   taskViewState.selectedIds.forEach(function (id) {
     var task = tkGetTasks().find(function (item) { return item.id === id; });
-    if (!task || !joinedProjects.has(task.project)) taskViewState.selectedIds.delete(id);
+    if (!tkCanViewTask(task)) taskViewState.selectedIds.delete(id);
   });
   if (taskViewState.drawerTaskId) {
     var openTask = tkGetTasks().find(function (item) { return item.id === taskViewState.drawerTaskId; });
-    if (!openTask || !joinedProjects.has(openTask.project)) closeDrawer();
+    if (!tkCanViewTask(openTask)) closeDrawer();
   }
   var split = taskViewState.viewMode === 'split';
   if (split) taskViewState.layout = 'list';
@@ -695,7 +695,7 @@ var displayGroupOptions = [
 ];
 
 var displaySortOptions = [
-  ['status','状态'],['priority','优先级'],['dueDate','截止日期'],['createDate','创建时间'],
+  ['status','状态'],['priority','优先级'],['dueDate','截止日期'],['updatedAt','修改时间'],['createDate','创建时间'],
   ['code','#'],['title','标题'],['module','模块'],['project','项目'],
 ];
 
@@ -741,7 +741,7 @@ function openDisplayChoiceMenu(trigger, kind, focusEdge) {
     if (kind === 'group') taskViewState.groupBy = option.getAttribute('data-value');
     else {
       taskViewState.sortBy = option.getAttribute('data-value');
-      taskViewState.sortDir = taskViewState.sortBy === 'createDate' || taskViewState.sortBy === 'priority' ? 'desc' : 'asc';
+      taskViewState.sortDir = (taskViewState.sortBy === 'createDate' || taskViewState.sortBy === 'updatedAt' || taskViewState.sortBy === 'priority') ? 'desc' : 'asc';
     }
     closeDisplayChoiceMenu(true);
     render();
@@ -1374,7 +1374,7 @@ els.tkViewTabs.addEventListener('click', function (e) {
         taskViewState.filters = (view.filters || []).map(function (f) { return Object.assign({}, f); });
         taskViewState.groupBy = view.groupBy || 'status';
         taskViewState.viewMode = ['slide','full','split'].includes(view.viewMode) ? view.viewMode : 'slide';
-        taskViewState.sortBy = view.sortBy || 'createDate';
+        taskViewState.sortBy = view.sortBy || 'updatedAt';
         taskViewState.sortDir = view.sortDir || 'desc';
         taskViewState.layout = view.layout || 'board';
         taskViewState.showSubtasks = view.showSubtasks !== false;

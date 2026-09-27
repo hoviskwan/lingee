@@ -308,12 +308,12 @@ function cvSaveProjEdit(){
   var fields=['name','desc','status','priority','owner','repo','dot','start','end','defaultTeam'];
   var before=p?Object.fromEntries(fields.map(function(field){return [field,p[field]||''];})):null;
   if(p){
-    p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.dot=cvSelectedProjectIcon;p.start=g('start');p.end=g('end');p.defaultTeam=teamId;
+    p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.dot=cvSelectedProjectIcon;p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.updatedAt=Date.now();
     p.members=Array.from(new Set((p.members||[]).concat(owner.id,addedMembers)));
   }else{
     var currentPerson=CV_MEMBERS.find(function(person){return person.name===cvCurrentUserName();});
     if(!currentPerson){toast('未找到当前用户，无法创建项目','error');return;}
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers))),priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end')};
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers))),priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end'),updatedAt:Date.now()};
     CV_PROJECTS.push(p);
   }
   cvPersistProjects();

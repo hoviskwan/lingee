@@ -3,7 +3,7 @@ import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：issue-detail。保留原交互；事件在 init* 中按原顺序注册。 */
 import { els, taskViewState, setTaskViewState } from './ui-state.js';
 import { showView, setNavActive, input } from '../../core/view.js';
-import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId } from './data.js';
+import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, tkCanViewTask, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId } from './data.js';
 import { escapeHtml, stClass, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
 import { render, showCardMenu, hidePopover, displayChoiceMenu, closeDisplayChoiceMenu, closeFilterPanel, closeViewMenu, closeFieldSettings } from './list.js';
 import { toast } from '../../core/toast.js';
@@ -401,7 +401,7 @@ function syncDrawerClickaway() {
 }
 
 function renderSubtasksSection(t) {
-  var children = tkGetTasks().filter(function (c) { return c.parentId === t.id; });
+  var children = tkGetTasks().filter(function (c) { return c.parentId === t.id && tkCanViewTask(c); });
   if (!children.length) {
     return '<div class="tk-subtasks tk-subtasks-empty"><button type="button" class="tk-subtask-empty-add" data-drawer-subtask="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>添加子任务</span></button></div>';
   }
@@ -449,7 +449,7 @@ function openDrawer(taskId) {
   closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
-  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
+  if (!tkCanViewTask(t)) { toast('未参与该任务，无法查看', 'warning'); return; }
   if (flowAssigneeDraft.taskId !== taskId) {
     var savedAssignee = tkPeopleInProject(t.project).some(function (person) { return person.id === t.flowAssignee; }) ? t.flowAssignee : '';
     flowAssigneeDraft = { taskId: taskId, assigneeId: savedAssignee };
@@ -1048,8 +1048,8 @@ export { restoreTaskLabelCatalog, initTaskDetailPreferences, initTaskDetailWidth
 export function openIssueDetail(issueId, options = {}) {
   var task = tkGetTasks().find(function (row) { return String(row.id) === String(issueId); });
   if (!task) return { ok: false, error: { code: 'NOT_FOUND', message: '未找到任务' } };
-  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === task.project; })) {
-    return { ok: false, error: { code: 'FORBIDDEN', message: '未加入该项目' } };
+  if (!tkCanViewTask(task)) {
+    return { ok: false, error: { code: 'FORBIDDEN', message: '未参与该任务' } };
   }
   var tab = options.tab || 'info';
   if (!['info', 'changelog'].includes(tab) || options.workItemId) {

@@ -4,7 +4,7 @@
     <div class="config-layout">
       <aside class="config-nav">
         <button type="button" class="config-nav-item hidden" data-config-nav="workspace">工作区概况</button>
-        <button type="button" class="config-nav-item hidden" data-config-nav="perm">人员</button>
+        <button type="button" class="config-nav-item" data-config-nav="perm">人员</button>
         <div class="cv-config-nav-group">管理</div>
         <button type="button" class="config-nav-item on" data-config-nav="integration">系统集成</button>
         <button type="button" class="config-nav-item" data-config-nav="audit">审计日志</button>
@@ -38,7 +38,9 @@
               <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
             </div>
           </div>
-          <div class="cv-perm-scope"><strong>协作角色</strong><span>所有灵基用户均可参与协作；工作区角色仅有成员和管理员，项目负责人在项目内指定。</span></div>
+          <div class="cv-perm-scope"><strong>可登录账号</strong><span>下列账号可登录当前原型，可加入工作区和项目；其他演示人员不代表真实登录账号。</span></div>
+          <div id="cv-login-people"></div>
+          <h3 class="cv-perm-section-title">工作区人员 <span id="cv-perm-count">0</span></h3>
           <div id="cv-perm-table"></div>
         </div>
         <div class="config-pane" data-config-pane="integration">

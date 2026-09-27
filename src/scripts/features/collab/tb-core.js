@@ -63,6 +63,9 @@ export function tbTeamStages(team) {
   return covered.length ? covered : STAGES.slice();
 }
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
+/* 任务是否已启动：待规划与待办视为未启动，目标与分工仍可编辑；
+   进入进行中及之后的状态即为启动，详情页转为只读。 */
+export function tbIsStarted(t) { return !!t && !['待规划', '待办'].includes(t.status); }
 export function tbSave() {
   try { localStorage.setItem(storageKey, JSON.stringify(CV_TASKS)); return true; }
   catch { toast('保存失败，本地存储空间不足', 'error'); return false; }

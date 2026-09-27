@@ -53,8 +53,14 @@ function cvProjectFieldValue(project,field){
   if(field==='progress')return cvProjectProgress(project);
   return '';
 }
+/* 当前登录人可见的项目：本人负责或为项目成员；项目列表与筛选统计共用 */
+function cvMyProjects(){
+  var currentName=cvCurrentUserName();
+  var currentPerson=currentName?CV_MEMBERS.find(function(person){return person.name===currentName;}):null;
+  return CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id)&&(p.owner===currentName||(currentPerson&&(p.members||[]).includes(currentPerson.id)));});
+}
 function cvProjectFilterChoices(field){
-  var projects=CV_PROJECTS.filter(function(project){return cvProjectInWorkspace(project.id);});
+  var projects=cvMyProjects();
   var pairs=field==='status'?Object.keys(PJ_STATUS).map(function(id){return [id,PJ_STATUS[id].t];})
     :field==='priority'?['高','中','低'].map(function(value){return [value,value];})
     :field==='owner'?Array.from(new Set(projects.map(function(project){return project.owner||'';}).filter(Boolean))).sort().map(function(value){return [value,value];})
@@ -85,11 +91,11 @@ function cvRenderProjectList(){
   var el=$('#cv-proj-list'); if(!el) return;
   el.classList.toggle('is-list',cvProjectListView==='list');
   cvRenderProjectFilters();
-  var list=CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id);});
-  var currentName=cvCurrentUserName(),currentPerson=CV_MEMBERS.find(function(person){return person.name===currentName;});
+  var currentName=cvCurrentUserName();
+  var list=cvMyProjects();
   var query=(($('#cvProjectSearch')||{}).value||'').trim().toLocaleLowerCase();
   var filters=cvProjectFilters;
-  var visible=list.filter(function(p){return (cvProjectScope==='all'||(cvProjectScope==='owned'&&p.owner===currentName)||(cvProjectScope==='joined'&&p.owner!==currentName&&currentPerson&&(p.members||[]).includes(currentPerson.id)))
+  var visible=list.filter(function(p){return (cvProjectScope==='all'||(cvProjectScope==='owned'&&p.owner===currentName)||(cvProjectScope==='joined'&&p.owner!==currentName))
     &&(!query||[p.name,p.desc||''].join(' ').toLocaleLowerCase().includes(query))
     &&PJ_FILTER_FIELDS.every(function(field){var selected=filters.filter(function(item){return item.field===field[0];});return !selected.length||selected.some(function(item){return cvProjectFieldValue(p,field[0])===item.value;});});}).sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0);});
   var switcher=$('#cv-project-view-switch');

@@ -1,14 +1,15 @@
 import { CV_PROJECTS, CV_WORKSPACES, cvCurrentUserName } from '../collab/data.js';
-import { tkGetTasks, tkGetPerson, tkGetStatusName, tkCurrentUserId, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
+import { tkGetTasks, tkGetPerson, tkGetStatusName, tkCurrentUserId, tkCanViewTask } from '../tasks-v2/data.js';
+import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 
-const KEY = 'lingee-inbox-v1';
+const storageKey = () => 'lingee-inbox-v1:' + (tkCurrentUserId() || 'unknown');
 const stamp = (hours) => new Date(Date.now() - hours * 3600000).toISOString();
-const visibleTasks = () => { const projects=new Set(tkProjectsForCurrentUser().map((project) => project.id)); const tasks=tkGetTasks().filter((task) => projects.has(task.project)); return tasks.length ? tasks : tkGetTasks(); };
+const visibleTasks = () => tkGetTasks().filter(tkCanViewTask);
 const byStatus = (status) => visibleTasks().filter((task) => task.status === status);
 const projectOf = (task) => CV_PROJECTS.find((project) => project.id === task.project);
 const actorOf = (task, type) => {
   if (type !== 'agent') return tkGetPerson(task.assignee).name;
-  const team = projectOf(task)?.defaultTeam;
+  const team = task.teamId || projectOf(task)?.defaultTeam;
   return ({'cosmic-app-dev':'苍穹应用开发专家团','general-app-dev':'通用应用开发专家团','kingdee-saas':'金蝶 SaaS 实施专家团','kingdee-custom':'金蝶二次开发专家团'})[team] || '项目执行专家团';
 };
 
@@ -59,11 +60,14 @@ function initialItems() {
 }
 
 let items = null;
+let itemsForUser = '';
 export function inboxItems() {
-  if (items) return items;
+  const userId = tkCurrentUserId();
+  if (items && itemsForUser === userId) return items;
+  itemsForUser = userId;
   const seeds = initialItems();
   let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { /* fresh state */ }
+  try { saved = JSON.parse(localStorage.getItem(storageKey()) || '{}') || {}; } catch (e) { /* fresh state */ }
   const states = saved.states || {};
   items = seeds.map((item) => ({...item, ...states[item.id]}));
   (saved.added || []).forEach((item) => { if (item && item.id && !items.some((row) => row.id === item.id)) items.push(item); });
@@ -73,14 +77,28 @@ export function inboxPersist() {
   const all = inboxItems();
   const states = {};
   all.filter((item) => item.id.startsWith('seed-')).forEach((item) => { states[item.id] = {read:item.read, archived:item.archived}; });
-  try { localStorage.setItem(KEY,JSON.stringify({states,added:all.filter((item) => !item.id.startsWith('seed-'))})); } catch (e) { /* session state remains */ }
+  try { localStorage.setItem(storageKey(),JSON.stringify({states,added:all.filter((item) => !item.id.startsWith('seed-'))})); } catch (e) { /* session state remains */ }
+}
+export function inboxAddTaskStageStartedNotice(taskId, stageId) {
+  const task = tkGetTasks().find((row) => row.id === taskId);
+  if (!task || task.executionStageId !== stageId || task.status !== 'in_progress') return false;
+  const stageName = taskExecutionStages(task).find((stage) => stage.id === stageId)?.name || '当前阶段';
+  inboxItems().unshift(makeItem('live-agent-started-'+Date.now(),task,'agent_started',0,`「${stageName}」阶段的 Agent 已启动，可在任务详情查看进度。`,'agent'));
+  inboxPersist();
+  return true;
 }
 export function inboxAddFromTaskChange(detail) {
   const {task,before,patch} = detail || {};
   if (!task || !before || !patch) return false;
   const changes = [];
   if (patch.assignee && patch.assignee !== before.assignee) changes.push(['assignee_changed',`负责人变更为「${tkGetPerson(patch.assignee).name}」。`]);
-  if (patch.status && patch.status !== before.status) changes.push(['status_changed',`状态由「${tkGetStatusName(before.status)}」变更为「${tkGetStatusName(patch.status)}」。`]);
+  if (patch.status && patch.status !== before.status) {
+    const agentFinished = patch.status === 'in_review' && Object.hasOwn(patch,'executionPlan');
+    const stageName = taskExecutionStages(task).find((stage) => stage.id === task.executionStageId)?.name || '当前阶段';
+    changes.push(agentFinished
+      ? ['review_requested',`「${stageName}」阶段的 Agent 已完成，等待你审核。`,'agent']
+      : ['status_changed',`状态由「${tkGetStatusName(before.status)}」变更为「${tkGetStatusName(patch.status)}」。`]);
+  }
   if (patch.priority && patch.priority !== before.priority) changes.push(['priority_changed','任务优先级已调整。']);
   if (Object.hasOwn(patch,'dueDate') && patch.dueDate !== before.dueDate) changes.push(['due_date_changed',`截止日期调整为 ${patch.dueDate || '未设置'}。`]);
   if (Array.isArray(patch.comments) && patch.comments.length > before.comments) {
@@ -89,10 +107,10 @@ export function inboxAddFromTaskChange(detail) {
   }
   if (!changes.length) return false;
   inboxItems().filter((item) => item.issue_id === task.id).forEach((item) => { item.issue_status=task.status; item.issue_priority=task.priority; });
-  changes.forEach(([type,body], index) => {
-    const item=makeItem('live-'+Date.now()+'-'+index,task,type,0,body);
+  changes.forEach(([type,body,actorType], index) => {
+    const item=makeItem('live-'+Date.now()+'-'+index,task,type,0,body,actorType);
     const authorId=(type==='new_comment' || type==='mentioned') ? patch.comments?.at(-1)?.authorId : tkCurrentUserId();
-    item.actor_id=tkGetPerson(authorId).name;
+    if (actorType !== 'agent') item.actor_id=tkGetPerson(authorId).name;
     inboxItems().unshift(item);
   });
   inboxPersist();

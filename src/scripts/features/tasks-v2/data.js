@@ -57,6 +57,20 @@ export function tkCurrentUserId() {
   var person = CV_MEMBERS.find(function (row) { return row.name === cvCurrentUserName(); });
   return person ? person.id : '';
 }
+/* 创建、经办、评论、状态流转或执行计划中参与过的人可见。未识别身份时不展示任务。 */
+export function tkParticipatesCurrentUser(task) {
+  var me = tkCurrentUserId();
+  if (!me || !task) return false;
+  return task.assignee === me || task.createdBy === me
+    || (task.assigneeHistory || []).includes(me)
+    || (task.comments || []).some(function (c) { return c && (c.authorId === me || c.assignee === me); })
+    || (task.statusHistory || []).some(function (entry) { return entry && entry.authorId === me; })
+    || (task.executionPlan || []).some(function (stage) { return stage && (stage.assigneeId === me || stage.reviewerId === me); });
+}
+export function tkCanViewTask(task) {
+  return !!task && tkProjectsForCurrentUser().some(function (project) { return project.id === task.project; })
+    && tkParticipatesCurrentUser(task);
+}
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
   var userName = cvCurrentUserName();
@@ -87,7 +101,7 @@ export function tkGetTaskArtifacts(task) {
       test: nameAt(3, task.assignee),
       owner: tkGetPerson(task.createdBy || task.assignee).name,
     },
-  });
+  }).concat(task.executionArtifacts || []);
 }
 
 /* ---------- 视图配置 ---------- */
@@ -183,7 +197,7 @@ export const TK_TASKS = [
   { id: 74, code: 'T1000074', title: '旧版工单短信模板迁移', desc: '原计划将旧版工单短信模板迁移到新通知中心；因模板已被统一消息服务替代，项目负责人取消该项工作并保留任务记录供追溯。', status: 'cancelled', priority: 'low', assignee: 'p04', project: 'service', labels: ['缺陷'], dueDate: '2026-09-30', createDate: '2026-09-20' },
 ];
 
-/* 将吴晓峰项目已有的演示任务接入当前任务管理列表。 */
+/* 将吴晓锋项目已有的演示任务接入当前任务管理列表。 */
 const LINGEE_TASK_STATUSES = {
   '未开始': 'backlog', '待办': 'backlog', '进行中': 'in_progress',
   '待评审': 'in_review', '审核中': 'in_review', '已完成': 'done', '已失败': 'blocked', '已阻塞': 'blocked',
@@ -215,6 +229,21 @@ function tkConvertCvTasks(projectId, startId) {
 }
 TK_TASKS.push(...tkConvertCvTasks('lingee-prototype', 53).slice(0, 20));
 TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75));
+
+/* 团队任务按人分配；编号固定，便于已保存的本地数据一次性补种。 */
+const TK_TEAM_ASSIGN_IDS = ['p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
+const TK_PERSONAL_DEMO_TASKS = TK_TEAM_ASSIGN_IDS.flatMap(function (personId, index) {
+  var person = CV_MEMBERS.find(function (row) { return row.id === personId; });
+  return [
+    { id:1001 + index * 2, code:'T100' + String(1001 + index * 2), title:person.name + '：梳理任务需求与验收条件',
+      desc:'核对当前负责范围、输入资料和验收条件。', status:'backlog', priority:'medium', assignee:personId,
+      createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-08' },
+    { id:1002 + index * 2, code:'T100' + String(1002 + index * 2), title:person.name + '：完成方案协作记录',
+      desc:'整理已参与的方案讨论与交付记录。', status:'done', priority:'low', assignee:TK_TEAM_ASSIGN_IDS[(index + 1) % TK_TEAM_ASSIGN_IDS.length],
+      createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-20', dueDate:'2026-09-26' },
+  ];
+});
+TK_TASKS.push(...TK_PERSONAL_DEMO_TASKS);
 
 /* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
@@ -279,6 +308,23 @@ try {
   var savedTasks = JSON.parse(localStorage.getItem(TASKS_STORAGE_KEY) || 'null');
   if (Array.isArray(savedTasks) && savedTasks.every(function (task) { return task && Number.isInteger(task.id) && typeof task.project === 'string'; })) _tasks = savedTasks;
 } catch (e) { /* 存储数据损坏时使用演示任务 */ }
+/* 只补充缺失的示例任务，不改写本地已有任务或人员分工。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_personal_seed_v1')) {
+    var existingCodes = new Set(_tasks.map(function (task) { return task.code; }));
+    _tasks.push(...TK_PERSONAL_DEMO_TASKS.filter(function (task) { return !existingCodes.has(task.code); }));
+    persistTasks();
+    localStorage.setItem('lingee_tasks_personal_seed_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时保留内存中的示例任务 */ }
+/* p34（早期误建的重复记录）名下任务归并到 p23（吴晓锋）；幂等，人员已并入后不会再出现 */
+_tasks.forEach(function (task) { if (task.assignee === 'p34') task.assignee = 'p23'; });
+try {
+  if (!localStorage.getItem('lingee_tasks_merge_p34_v1')) {
+    persistTasks();
+    localStorage.setItem('lingee_tasks_merge_p34_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时跳过持久化 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));
   if (typeof document !== 'undefined') document.dispatchEvent(new Event('lingee:tasks-changed'));
@@ -342,6 +388,9 @@ export function tkUpdateTask(id, patch) {
       t.statusHistory = (t.statusHistory || []).concat({
         from:t.status, to:patch.status, authorId:tkCurrentUserId(), time:taskMinuteNow(),
       });
+    }
+    if (patch.assignee && patch.assignee !== t.assignee && t.assignee) {
+      t.assigneeHistory = Array.from(new Set((t.assigneeHistory || []).concat(t.assignee)));
     }
     Object.assign(t, patch, { updatedAt: taskMinuteNow() });
     persistTasks();
