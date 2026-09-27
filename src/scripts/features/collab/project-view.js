@@ -128,6 +128,7 @@ function cvRenderProjectList(){
       +'<p class="pj-card-desc" title="'+xesc(p.desc||'暂无描述')+'">'+xesc(p.desc||'暂无描述')+'</p>'
       +'<div class="pj-card-fields">'
       +'<div class="pj-card-field"><span>优先级</span><b>'+xesc(p.priority||'中')+'</b></div>'
+      +'<div class="pj-card-field"><span>负责人</span><b title="'+xesc(p.owner||'未设置')+'">'+xesc(p.owner||'未设置')+'</b></div>'
       +'</div></div>'
       +'<div class="pj-card-bottom"><span class="pj-card-members">团队人数 <b>'+memberCount+' 人</b></span><span class="pj-card-progress">'+(tasks.length?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" class="pj-card-ring-base"/><circle cx="8" cy="8" r="6" class="pj-card-ring-value" stroke-dasharray="'+(progress*0.377)+' 37.7"/></svg><span>'+done+' / '+tasks.length+'</span>':'暂无任务')+'</span></div>'
       +'</div>';

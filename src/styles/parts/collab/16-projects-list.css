@@ -62,7 +62,7 @@
 #view-collab .pj-card-actions{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
 #view-collab .pj-card-status{width:auto;max-width:100px;padding:2px 7px}
 #view-collab .pj-card-desc{display:-webkit-box;min-height:36px;margin:10px 0 0;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:18px;color:var(--text-secondary);font-size:12px;overflow-wrap:anywhere}
-#view-collab .pj-card-fields{margin-top:10px}
+#view-collab .pj-card-fields{display:flex;align-items:center;gap:16px;min-width:0;margin-top:10px}
 #view-collab .pj-card-field{display:flex;align-items:center;gap:4px;min-width:0;color:var(--text-soft);font-size:11px}
 #view-collab .pj-card-field>span{flex:none}
 #view-collab .pj-card-field>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-weight:400}
