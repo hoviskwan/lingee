@@ -29,7 +29,7 @@
 #view-collab .pj-view-switch{display:flex;gap:2px;padding:3px;margin-top:8px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)}
 #view-collab .pj-view-switch button{flex:1;border:0;border-radius:4px;padding:6px 10px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
 #view-collab .pj-view-switch button.on{background:var(--bg);color:var(--brand);box-shadow:0 1px 4px rgba(0,0,0,.08)}
-#view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fill,320px);align-content:start;gap:14px;width:100%}
+#view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-content:start;gap:14px;width:100%}
 @media(max-width:380px){#view-collab .pj-projects-cards{grid-template-columns:minmax(0,1fr)}}
 #view-collab .pj-cards-board{display:flex;gap:14px;overflow-x:auto;width:100%;padding-bottom:8px}
 #view-collab .pj-board-col{flex:1;min-width:240px;display:flex;flex-direction:column;gap:10px}
