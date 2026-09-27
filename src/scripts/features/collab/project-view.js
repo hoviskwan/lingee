@@ -158,14 +158,14 @@ function cvCaptureProjectDetailDraft(){
 function cvProjectDetailField(label,field,value,display,editable,wide){
   var id='pj-detail-'+field;
   var html='<div class="pj-info-field'+(wide?' pj-info-field--wide':'')+'">';
-  html+=editable&&field!=='dot'?'<label for="'+id+'">'+label+'</label>':'<span>'+label+'</span>';
+  html+=editable&&field!=='dot'?'<label for="'+id+'">'+label+(['name','owner','defaultTeam'].includes(field)?' <span class="pj-required-mark" aria-hidden="true">*</span>':'')+'</label>':'<span>'+label+'</span>';
   if(!editable||field==='code')return html+(field==='dot'?'<b>'+cvProjectFolderIcon(value)+'</b>':'<b>'+xesc(display||value||'—')+'</b>')+'</div>';
   if(field==='dot')return html+'<div class="pj-detail-icon-options" role="group" aria-label="项目图标">'+cvProjectIconOptions(value,'data-pj-detail-icon')+'</div></div>';
   if(field==='status')html+='<select id="'+id+'" data-pj-field="status">'+Object.keys(PJ_STATUS).map(function(key){return '<option value="'+key+'"'+(key===value?' selected':'')+'>'+PJ_STATUS[key].t+'</option>';}).join('')+'</select>';
   else if(field==='priority')html+='<select id="'+id+'" data-pj-field="priority">'+['高','中','低'].map(function(item){return '<option'+(item===value?' selected':'')+'>'+item+'</option>';}).join('')+'</select>';
-  else if(field==='defaultTeam')html+='<select id="'+id+'" data-pj-field="defaultTeam"><option value="">请选择专家团</option>'+TEAMS.map(function(team){return '<option value="'+xesc(team.id)+'"'+(team.id===value?' selected':'')+'>'+xesc(team.name)+'</option>';}).join('')+'</select>';
-  else if(field==='owner')html+='<input id="'+id+'" data-pj-field="owner" type="search" value="'+xesc(value)+'" autocomplete="off" placeholder="搜索项目负责人" aria-controls="pj-detail-owner-results" aria-expanded="false"><div id="pj-detail-owner-results" class="pj-detail-owner-results hidden"></div>';
-  else if(field==='desc'||field==='goal')html+='<textarea id="'+id+'" data-pj-field="'+field+'" rows="2">'+xesc(value)+'</textarea>';
+  else if(field==='defaultTeam')html+='<select id="'+id+'" data-pj-field="defaultTeam" required><option value="">请选择专家团</option>'+TEAMS.map(function(team){return '<option value="'+xesc(team.id)+'"'+(team.id===value?' selected':'')+'>'+xesc(team.name)+'</option>';}).join('')+'</select>';
+  else if(field==='owner')html+='<input id="'+id+'" data-pj-field="owner" type="search" value="'+xesc(value)+'" autocomplete="off" placeholder="搜索项目负责人" aria-controls="pj-detail-owner-results" aria-expanded="false" required><div id="pj-detail-owner-results" class="pj-detail-owner-results hidden"></div>';
+  else if(field==='desc')html+='<textarea id="'+id+'" data-pj-field="'+field+'" rows="2">'+xesc(value)+'</textarea>';
   else html+='<input id="'+id+'" data-pj-field="'+field+'" type="'+(['start','end'].includes(field)?'date':field==='repo'?'url':'text')+'" value="'+xesc(value)+'"'+(field==='name'?' required':'')+'>';
   return html+'</div>';
 }
@@ -178,7 +178,7 @@ function cvRenderProjectDetail(resetDraft){
   var p=cvProjectById(cvProjCur);
   if(!p){cvResetProjectListState();return;}
   var editable=cvMayEditProject(p),draft=cvProjectDetailDraft?.projectId===p.id?cvProjectDetailDraft:null;
-  var values=Object.assign({name:p.name||'',status:p.status||'planned',priority:p.priority||'中',owner:p.owner||'',defaultTeam:p.defaultTeam||'',start:p.start||'',end:p.end||'',repo:p.repo||'',goal:p.goal||'',desc:p.desc||''},draft?.values||{});
+  var values=Object.assign({name:p.name||'',status:p.status||'planned',priority:p.priority||'中',owner:p.owner||'',defaultTeam:p.defaultTeam||'',start:p.start||'',end:p.end||'',repo:p.repo||'',desc:p.desc||''},draft?.values||{});
   cvDetailIconColor=draft?.dot||cvProjectIconColor(p.dot);
   cvDetailOwnerSelected=draft?.ownerSelected||null;
   var members=cvPeopleInProject(p);
@@ -203,7 +203,6 @@ function cvRenderProjectDetail(resetDraft){
     +cvProjectDetailField('开始时间','start',values.start,p.start||'—',editable,false)
     +cvProjectDetailField('结束时间','end',values.end,p.end||'—',editable,false)
     +cvProjectDetailField('代码仓库','repo',values.repo,p.repo||'未设置',editable,true)
-    +cvProjectDetailField('项目目标','goal',values.goal,p.goal||'暂无',editable,true)
     +cvProjectDetailField('项目描述','desc',values.desc,p.desc||'暂无',editable,true)
     +(editable?'</form>':'</div>')+'</div>'
     +'<div class="pj-info-section pj-info-section--members"><div class="pj-info-section-head"><h2>成员信息 <small>'+members.length+' 人</small></h2>'+(cvCanManageProject(p)?'<button type="button" class="pj-members-open" data-pj-members-open aria-controls="cv-project-members-overlay">＋ 添加成员</button>':'')+'</div>'
@@ -255,11 +254,11 @@ function cvSaveProjectDetail(){
     ownerPerson=cvEnsureProjectPerson(cvDetailOwnerSelected);
     if(!ownerPerson||ownerPerson.status==='disabled'){toast('无法保存项目负责人','error');return;}
   }
-  var fields=['name','status','priority','owner','defaultTeam','start','end','repo','goal','desc','dot'];
+  var fields=['name','status','priority','owner','defaultTeam','start','end','repo','desc','dot'];
   var before=Object.fromEntries(fields.map(function(field){return [field,project[field]||''];}));
   var previousMembers=(project.members||[]).slice();
   project.name=name;project.status=get('status');project.priority=get('priority');project.owner=ownerName;project.defaultTeam=teamId;
-  project.start=get('start');project.end=get('end');project.repo=repo;project.goal=get('goal');project.desc=get('desc');project.dot=cvDetailIconColor;
+  project.start=get('start');project.end=get('end');project.repo=repo;project.desc=get('desc');project.dot=cvDetailIconColor;
   if(ownerPerson)project.members=Array.from(new Set(previousMembers.concat(ownerPerson.id)));
   if(!cvPersistProjects()){
     fields.forEach(function(field){project[field]=before[field];});project.members=previousMembers;

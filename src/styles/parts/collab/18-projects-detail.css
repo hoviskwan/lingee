@@ -108,16 +108,17 @@
 #view-collab #cv-proj-detail .pj-members-open:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 #view-collab #cv-proj-detail .pj-members-open:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab #cv-proj-detail .pj-detail-main{flex:1;min-height:0;overflow-y:auto;padding:8px 24px 24px;background:#fff;display:flex;flex-direction:column}
-#view-collab #cv-proj-detail .pj-info-section{flex:none;padding:18px 0 22px;background:transparent}
+#view-collab #cv-proj-detail .pj-info-section{box-sizing:border-box;flex:none;width:100%;max-width:880px;padding:14px 0 18px;background:transparent}
 #view-collab #cv-proj-detail .pj-info-section h2{margin:0;font-size:15px;font-weight:600;color:var(--text)}
 #view-collab #cv-proj-detail .pj-info-section h2 small{margin-left:6px;font-size:12px;font-weight:400;color:var(--text-soft)}
-#view-collab #cv-proj-detail .pj-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-#view-collab #cv-proj-detail .pj-info-field{display:flex;flex-direction:column;gap:6px;min-width:0;padding:11px 13px;border-radius:8px;background:var(--fill-1)}
+#view-collab #cv-proj-detail .pj-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#view-collab #cv-proj-detail .pj-info-field{display:flex;flex-direction:column;gap:5px;min-width:0;padding:8px 10px;border-radius:8px;background:var(--fill-1)}
 #view-collab #cv-proj-detail .pj-info-field--wide{grid-column:1/-1}
 #view-collab #cv-proj-detail .pj-info-grid span,#view-collab #cv-proj-detail .pj-info-grid label{font-size:12px;line-height:1.5;color:var(--text-soft)}
+#view-collab #cv-proj-detail .pj-info-grid .pj-required-mark{color:var(--danger)}
 #view-collab #cv-proj-detail .pj-info-grid b{overflow-wrap:anywhere;font-size:13px;line-height:1.5;font-weight:500;color:var(--text)}
 #view-collab #cv-proj-detail .pj-info-field input,#view-collab #cv-proj-detail .pj-info-field select,#view-collab #cv-proj-detail .pj-info-field textarea{box-sizing:border-box;width:100%;min-width:0;min-height:34px;padding:7px 9px;border:1px solid var(--border-hover);border-radius:6px;background:#fff;color:var(--text);font:inherit;font-size:13px;outline:none}
-#view-collab #cv-proj-detail .pj-info-field textarea{min-height:64px;resize:vertical;line-height:1.5}
+#view-collab #cv-proj-detail .pj-info-field textarea{min-height:54px;resize:vertical;line-height:1.5}
 #view-collab #cv-proj-detail .pj-info-field input:focus,#view-collab #cv-proj-detail .pj-info-field select:focus,#view-collab #cv-proj-detail .pj-info-field textarea:focus{border-color:var(--brand)}
 #view-collab #cv-proj-detail .pj-detail-icon-options{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-height:34px}
 #view-collab #cv-proj-detail .pj-detail-icon-options .pj-icon-option{width:28px;height:28px}
@@ -128,7 +129,7 @@
 #view-collab #cv-proj-detail .pj-detail-owner-results button b{font-size:12px}
 #view-collab #cv-proj-detail .pj-detail-owner-results button small,#view-collab #cv-proj-detail .pj-detail-owner-empty{color:var(--text-soft);font-size:11px}
 #view-collab #cv-proj-detail .pj-detail-owner-empty{padding:8px}
-#view-collab #cv-proj-detail .pj-info-section--members{padding-top:8px}
+#view-collab #cv-proj-detail .pj-info-section--members{padding-top:6px}
 #view-collab #cv-proj-detail .pj-info-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 #view-collab #cv-proj-detail .pj-info-section-head h2{margin:0}
 #view-collab #cv-proj-detail .pj-detail-members{display:flex;flex-direction:column;gap:6px;max-height:214px;overflow-y:auto}
