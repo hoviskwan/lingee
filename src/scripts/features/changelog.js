@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'57',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新建任务默认按专家团生成执行计划并预填各阶段负责人，任务开始执行直接发起会话，看板新增已办列展示本人已转出的任务。'},
+  {id:'57',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：新建任务默认按专家团生成执行计划并预填阶段负责人，开始执行即发起会话，看板增加已办列；项目成员改在独立弹窗逐人设置角色，项目表单随内容调整高度。'},
   {id:'56',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务执行会话支持连续流式输出，展示专家团头像和可恢复产物；产物生成后自动转待审核，并同步显示任务状态。'},
   {id:'55',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新版任务与项目支持成员权限、项目删除及阶段流转，执行会话按项目归档并模拟流式输出、关联任务与产物，本机开发服务新增 SQLite 局域网共享数据。'},
   {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情在阶段节点集中展示处理人、专家头像、状态与可展开的产物；新建任务刷新后可恢复，项目卡片进度实时更新。'},
