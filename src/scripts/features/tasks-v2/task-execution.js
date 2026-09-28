@@ -16,8 +16,13 @@ function stagePlan(task, stageId, status) {
 
 export function taskStageHandoffPatch(task, assigneeId) {
   var waiting = !!task.executionStageId && task.status === 'in_progress';
+  /* 流转覆盖当前处理人前记录历史处理人，「已办」视图据此识别本人处理过的任务。 */
+  var previousAssignee = task.assignee;
   return {
     assignee:assigneeId, flowAssignee:'',
+    ...(previousAssignee && previousAssignee !== assigneeId
+      ? {assigneeHistory:(task.assigneeHistory || []).concat(previousAssignee)}
+      : {}),
     ...(waiting ? {status:'backlog'} : {}),
     ...(Array.isArray(task.executionPlan) ? {executionPlan:task.executionPlan.map(function (stage) {
       return stage.id === task.executionStageId
@@ -86,6 +91,13 @@ export function scheduleTaskStageStartedNotice(taskId, stageId) {
   pendingStageReviews.set(taskId, timer);
 }
 
+function flowTimestamp() {
+  var now = new Date();
+  function pad(value) { return String(value).padStart(2, '0'); }
+  return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' '
+    + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+}
+
 export function reviewTaskStage(task, approved) {
   if (task?.status !== 'in_review') return {ok:false};
   var stages = taskExecutionStages(task);
@@ -99,8 +111,19 @@ export function reviewTaskStage(task, approved) {
   if (approved && next && plan) plan = plan.map(function (row) { return row.id === next.id ? {...row,assigneeId:nextAssignee,status:'pending'} : row; });
   var patch = {status:approved ? next ? 'backlog' : 'done' : 'in_progress',
     executionStageId:approved && next ? next.id : stage.id, executionPlan:plan};
-  if (approved && next) { patch.assignee = nextAssignee; patch.flowAssignee = ''; }
   if (approved) {
+    /* 通过即流转：上一处理人与审核人记入历史处理人（「已办」据此识别），并追加与手动流转一致的动态记录。 */
+    var reviewerId = tkCurrentUserId();
+    var history = (task.assigneeHistory || []).slice();
+    [task.assignee, reviewerId].forEach(function (id) {
+      if (id && id !== nextAssignee && !history.includes(id)) history.push(id);
+    });
+    patch.assigneeHistory = history;
+    if (next) {
+      patch.assignee = nextAssignee;
+      patch.flowAssignee = '';
+      patch.comments = (task.comments || []).concat([{kind:'flow', authorId:reviewerId, createdAt:flowTimestamp(), fromStatus:'in_review', fromAssignee:task.assignee, status:'backlog', assignee:nextAssignee, text:''}]);
+    }
     var artifacts = (task.executionArtifacts || []).map(function (artifact) {
       return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact;
     });

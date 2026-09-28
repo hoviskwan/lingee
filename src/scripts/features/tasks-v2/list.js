@@ -157,7 +157,7 @@ function handleCardAction(act, aid) {
   }
 }
 
-function getFilteredTasks() {
+function getFilteredTasks(skipField) {
   var tasks = tkGetTasks();
   tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
@@ -173,7 +173,7 @@ function getFilteredTasks() {
     });
   }
   if (!taskViewState.showSubtasks) tasks = tasks.filter(function (t) { return !t.parentId; });
-  var fields = [...new Set(taskViewState.filters.map(function (f) { return f.field; }))];
+  var fields = [...new Set(taskViewState.filters.map(function (f) { return f.field; }).filter(function (field) { return field !== skipField; }))];
   fields.forEach(function (field) {
     var choices = taskViewState.filters.filter(function (f) { return f.field === field; });
     tasks = tasks.filter(function (t) { return choices.some(function (f) { return matchFilter(t, f); }); });
@@ -843,7 +843,8 @@ var filterSections = [
 ];
 
 function filterOptionsFor(section) {
-  var tasks = tkGetTasks();
+  /* 计数与列表实际结果同口径：按当前视图可见基准统计（跳过本分类已选筛选） */
+  var tasks = getFilteredTasks(section);
   if (section === 'status') return [
     ['planned','待规划'],['backlog','待办'],['in_progress','进行中'],['in_review','审核中'],
     ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],

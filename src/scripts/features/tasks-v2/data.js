@@ -38,7 +38,7 @@ export function tkSyncPeople() {
     var person = CV_MEMBERS.find(function (row) { return row.id === id; });
     return person && person.status !== 'disabled' ? { id:person.id, name:person.name, avatar:person.name.slice(0, 1), color:TK_PERSON_COLORS[index % TK_PERSON_COLORS.length] } : null;
   }).filter(Boolean));
-  TK_FILTER_FIELDS.find(function (field) { return field.id === 'assignee'; }).options = TK_PEOPLE.map(function (person) { return { value:person.id, label:person.name }; });
+  TK_FILTER_FIELDS.find(function (field) { return field.id === 'assignee'; }).options = [{ value:'all', label:'全部' }].concat(TK_PEOPLE.map(function (person) { return { value:person.id, label:person.name }; }));
   TK_FILTER_FIELDS.find(function (field) { return field.id === 'project'; }).options = tkProjectsForCurrentUser().map(function (project) { return { value:project.id, label:project.name }; });
   if (typeof _tasks !== 'undefined') _tasks.forEach(function (task) {
     var people = tkPeopleInProject(task.project);
@@ -79,10 +79,21 @@ export function tkWasTaskHandler(task) {
     || (task.assigneeHistory || []).includes(me)
     || (task.executionPlan || []).some(function (stage) { return stage && (stage.assigneeId === me || stage.reviewerId === me); }));
 }
-/* 已办：处理过某个执行阶段（含审核），但当前已流转给其他人处理。 */
+/* 已办是个人视图：有实际处理或审核记录，且已不再是当前阶段处理人。 */
 export function tkIsHandledByMe(task) {
   var me = tkCurrentUserId();
-  return !!me && !!task && tkWasTaskHandler(task) && tkCurrentStageHandlerId(task) !== me;
+  if (!me || !task || tkCurrentStageHandlerId(task) === me) return false;
+  var completedStage = (task.executionPlan || []).some(function (stage) {
+    return stage?.status === 'done' && (stage.assigneeId === me || stage.reviewerId === me);
+  });
+  var approvedReview = (task.statusHistory || []).some(function (entry) {
+    return entry?.from === 'in_review' && entry.authorId === me && ['backlog', 'done'].includes(entry.to);
+  });
+  var handedOffWork = (task.comments || []).some(function (comment) {
+    return comment?.kind === 'flow' && comment.fromAssignee === me && comment.assignee !== me
+      && ['in_progress', 'in_review', 'blocked'].includes(comment.fromStatus);
+  });
+  return completedStage || approvedReview || handedOffWork;
 }
 /* 项目成员仅能查看自己参与的任务；项目负责人可查看本项目全部任务。 */
 export function tkParticipatesCurrentUser(task) {
@@ -98,6 +109,12 @@ export function tkCanViewTask(task) {
   if (!project) return false;
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
   return project.owner === me?.name || tkParticipatesCurrentUser(task);
+}
+/* 项目负责人（管理员）拥有整项目数据的查看权限；任务页默认仅显示自己参与的任务，
+   通过筛选「负责人」的「全部」选项查看所有人，普通成员不显示该选项。 */
+export function tkIsProjectOwner() {
+  var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
+  return !!me && CV_PROJECTS.some(function (project) { return project.owner === me.name; });
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
@@ -143,7 +160,7 @@ export const TK_VIEWS = [
 
 /* ---------- 筛选字段定义 ---------- */
 export const TK_FILTER_FIELDS = [
-  { id: 'status',    name: '状态',   type: 'select', options: TK_STATUSES.map(s => ({ value: s.id, label: s.name })) },
+  { id: 'status',    name: '状态',   type: 'select', options: TK_STATUSES.map(s => ({ value: s.id, label: s.name })).concat([{ value: 'handled', label: '已办' }]) },
   { id: 'priority',  name: '优先级', type: 'select', options: TK_PRIORITIES.map(p => ({ value: p.id, label: p.name })) },
   { id: 'assignee',  name: '处理人', type: 'select', options: TK_PEOPLE.map(p => ({ value: p.id, label: p.name })) },
   { id: 'project',   name: '项目',   type: 'select', options: TK_PROJECTS.map(p => ({ value: p.id, label: p.name })) },
@@ -257,22 +274,175 @@ function tkConvertCvTasks(projectId, startId) {
     };
   });
 }
-TK_TASKS.push(...tkConvertCvTasks('lingee-prototype', 53).slice(0, 20));
-TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75));
+/* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「进行中」预置数量。 */
+const TK_COSMIC_TRIM_CODES = new Set(['T1000077', 'T1000092', 'T1000095']);
+TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) { return !TK_COSMIC_TRIM_CODES.has(task.code); }));
 
-/* 团队任务按人分配；编号固定，便于已保存的本地数据一次性补种。 */
-const TK_TEAM_ASSIGN_IDS = ['p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
-const TK_PERSONAL_DEMO_TASKS = TK_TEAM_ASSIGN_IDS.flatMap(function (personId, index) {
-  return [
-    { id:1001 + index * 2, code:'T100' + String(1001 + index * 2), title:'梳理任务需求与验收条件',
-      desc:'核对当前负责范围、输入资料和验收条件。', status:'backlog', priority:'medium', assignee:personId,
-      createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-08' },
-    { id:1002 + index * 2, code:'T100' + String(1002 + index * 2), title:'完成方案协作记录',
-      desc:'整理已参与的方案讨论与交付记录。', status:'done', priority:'low', assignee:TK_TEAM_ASSIGN_IDS[(index + 1) % TK_TEAM_ASSIGN_IDS.length],
-      createdBy:personId, project:'lingee-prototype', labels:['需求'], createDate:'2026-09-20', dueDate:'2026-09-26' },
-  ];
-});
-TK_TASKS.push(...TK_PERSONAL_DEMO_TASKS);
+/* 吴晓锋 · 苍穹应用开发：参考 designer-metamodel 工程的种子任务，覆盖全部状态与执行阶段；
+   各阶段负责人从项目成员轮换，需求分析固定为吴晓锋本人，流转后即进入其「已办」。 */
+const TK_COSMIC_WUXF_TASKS = [
+  { id:1200, code:'T1001200', title:'设计器属性元模型抽取范围确认', status:'backlog', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-26', dueDate:'2026-10-12',
+    desc:'梳理 bos-metadata-8.0.jar 离线抽取范围：839 条属性 style 记录（820 定义 + 19 局部覆盖）、708 个属性名、34 个模型类型的资源继承链；确认 mcombo 逗号连接取值域与 btnedit 复杂属性（ide_* 参数表单）的边界，以及 37 个取值域随模型类型变化的属性清单。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认抽取范围、验收条件与模型类型继承链口径', assigneeId:'p23', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计属性 style 解析与局部覆盖合并方案', assigneeId:'p30', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'拆解 extract_designer_metamodel.py 的解析步骤与依赖', assigneeId:'p31', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现 *Property.xml 解析与 out 产物生成', assigneeId:'p32', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对 839 条记录与 extraction-report 失败项', assigneeId:'p33', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产物归档并输出使用说明', assigneeId:'p40', status:'pending' },
+    ] },
+  { id:1201, code:'T1001201', title:'操作元模型四张注册表抽取方案设计', status:'in_progress', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-24', dueDate:'2026-10-15',
+    desc:'设计操作元模型抽取方案：256 个操作类型（20 个云）、92 个平台预置操作、174 个操作业务规则类型、33 个校验器类型；确定 mservice/lib 与 mservice-cosmic/lib 双运行时差异的记录策略，以及 38 条「操作类型 → 参数类」官方映射的集成方式。已完成需求梳理，正在产出方案设计文档。',
+    executionStageId:'s2',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-25 10:20:00', authorId:'p23' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认四张注册表的范围与双运行时差异口径', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计扫描策略与注册表集成方案', assigneeId:'p30', status:'running' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划 extract_operation_metamodel.py 步骤', assigneeId:'p31', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现操作元数据类扫描与槽位抽取', assigneeId:'p35', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对 256 个操作类型与 66 个类槽位', assigneeId:'p37', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 operation-metamodel.json 并归档', assigneeId:'p39', status:'pending' },
+    ] },
+  { id:1202, code:'T1001202', title:'编辑器提交形状与 EntryId 冲突裁决实现', status:'in_progress', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-22', dueDate:'2026-10-10',
+    desc:'实现 9 类编辑器（checkbox/btnedit/combo/text/integer/ecombo/dimension/mcombo/color，共 789 条 style）的设计器提交形状与校验规则；对接 btnedit 参数表单入参协议，处理 alias 只读契约与 EntryId 冲突裁决，关闭 359 条未证实取值域。来源为 bos-platform 前端源码而非 jar。已完成前三阶段，正在编码实现。',
+    executionStageId:'s4',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-23 09:40:00', authorId:'p23' },
+    ],
+    comments:[
+      { kind:'flow', authorId:'p23', createdAt:'2026-09-26 15:10:00', fromStatus:'in_review', fromAssignee:'p23', status:'in_progress', assignee:'p32', text:'方案与规划审核通过，流转编码实现。' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认 9 类编辑器的提交形状范围', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计提交形状与校验规则的抽取方案', assigneeId:'p30', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划 extract_editor_value_shapes.py 步骤', assigneeId:'p36', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现编辑器形状抽取与冲突裁决', assigneeId:'p32', status:'running' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证 789 条 style 与关闭项清单', assigneeId:'p33', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 editor-value-shapes.json 并归档', assigneeId:'p40', status:'pending' },
+    ] },
+  { id:1203, code:'T1001203', title:'规则动作类型序列化槽位验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-18', dueDate:'2026-10-08',
+    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已提交，等待审核。',
+    executionStageId:'s5',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-19 11:00:00', authorId:'p23' },
+      { from:'in_progress', to:'in_review', time:'2026-09-27 16:30:00', authorId:'p32' },
+    ],
+    comments:[
+      { kind:'flow', authorId:'p23', createdAt:'2026-09-24 14:20:00', fromStatus:'in_review', fromAssignee:'p23', status:'in_progress', assignee:'p32', text:'槽位结构方案审核通过，流转编码实现。' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认规则动作槽位验证范围与清单来源', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计字节码注解槽位的验证方案', assigneeId:'p31', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划 gen_rule_excel.py 与交叉核对步骤', assigneeId:'p29', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现槽位抽取与清单生成', assigneeId:'p35', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'交叉核对清单并验证序列化形状', assigneeId:'p37', status:'review' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 rule-action-types.json 并归档', assigneeId:'p39', status:'pending' },
+    ] },
+  { id:1204, code:'T1001204', title:'扩展表单属性锁定规则解析修复', status:'blocked', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['缺陷'], createDate:'2026-09-20', dueDate:'2026-10-06',
+    desc:'解析 ExtendControl/ExtPropertyConfig.json 的 545 条扩展表单属性锁定规则（lock 341 / unlock 160 / speciallock 44）；speciallock 44 条语义平台组尚未确认，解析暂时阻塞，等待确认后恢复。',
+    executionStageId:'s4',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-21 09:30:00', authorId:'p23' },
+      { from:'in_progress', to:'blocked', time:'2026-09-28 10:05:00', authorId:'p32' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认 545 条锁定规则的解析范围', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计三种锁定类型的解析方案', assigneeId:'p36', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划解析器步骤与异常处理', assigneeId:'p29', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现规则解析，speciallock 语义待确认', assigneeId:'p35', status:'blocked' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对解析结果与锁定规则计数', assigneeId:'p38', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 extension-locked-properties.json', assigneeId:'p40', status:'pending' },
+    ] },
+  { id:1205, code:'T1001205', title:'采购订单规则配置清单交付', status:'in_progress', priority:'low', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-16', dueDate:'2026-10-04',
+    desc:'将规则动作类型与取值形状集成到采购订单规则配置清单（xlsx），附使用说明与字段口径，归档证据到 evidence 目录；前五个阶段已完成，正在执行交付收口。',
+    executionStageId:'s6',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-17 10:00:00', authorId:'p23' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认清单字段口径与交付范围', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计清单结构与取值形状映射', assigneeId:'p31', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划 xlsx 生成与归档步骤', assigneeId:'p36', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现清单生成脚本', assigneeId:'p32', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证清单与规则动作一致性', assigneeId:'p33', status:'done' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'交付清单并归档证据', assigneeId:'p39', status:'running' },
+    ] },
+  { id:1206, code:'T1001206', title:'属性元模型与 app-build 契约交叉比对集成', status:'done', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-12', dueDate:'2026-09-30',
+    desc:'完成 compare_with_app_build.py 交叉比对：产出 appbuild-crosscheck.json 差异清单，与 property-input-index.json 及 property-guides 的差异全部闭环，用平台声明的事实替换此前靠实测探测 + FI 语料反推得到的近似契约。',
+    executionStageId:'s6',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-13 09:00:00', authorId:'p23' },
+      { from:'in_progress', to:'in_review', time:'2026-09-24 15:00:00', authorId:'p32' },
+      { from:'in_review', to:'done', time:'2026-09-26 17:20:00', authorId:'p23' },
+    ],
+    comments:[
+      { kind:'flow', authorId:'p23', createdAt:'2026-09-26 17:20:00', fromStatus:'in_review', fromAssignee:'p37', status:'done', assignee:'p23', text:'验证结论审核通过，任务完成。' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认比对基准与差异闭环口径', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计交叉比对与差异清单方案', assigneeId:'p30', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划 compare_with_app_build.py 步骤', assigneeId:'p31', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现比对脚本与差异报告', assigneeId:'p32', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证差异清单与闭环结果', assigneeId:'p33', status:'done' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'集成差异清单到 app-build 契约', assigneeId:'p40', status:'done' },
+    ] },
+  { id:1207, code:'T1001207', title:'属性继承链取值域合并验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
+    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已提交，等待审核。',
+    executionStageId:'s5',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-26 09:20:00', authorId:'p23' },
+      { from:'in_progress', to:'in_review', time:'2026-09-28 11:10:00', authorId:'p32' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认取值域覆盖合并的验证范围与判定口径', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计继承链覆盖优先级与断链检测方案', assigneeId:'p30', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划合并验证脚本与产物清单步骤', assigneeId:'p29', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现继承链合并与交叉核对脚本', assigneeId:'p35', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对 37 个属性合并结果与两张映射表', assigneeId:'p37', status:'review' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 domain-value-merge-report.json 并归档', assigneeId:'p39', status:'pending' },
+    ] },
+  { id:1208, code:'T1001208', title:'复杂属性参数表单与转换器映射核对', status:'in_review', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-24', dueDate:'2026-10-11',
+    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已提交，等待审核。',
+    executionStageId:'s5',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-25 10:40:00', authorId:'p23' },
+      { from:'in_progress', to:'in_review', time:'2026-09-27 15:35:00', authorId:'p32' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认映射核对范围与关闭项判定标准', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计参数表单与转换器的核对方案', assigneeId:'p31', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划映射核对脚本与清单输出步骤', assigneeId:'p36', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现映射核对与未证实项标记', assigneeId:'p32', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'抽查映射结论与 complex-property-routes 一致性', assigneeId:'p33', status:'review' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 converter-mapping-check.json 并归档', assigneeId:'p40', status:'pending' },
+    ] },
+  { id:1209, code:'T1001209', title:'操作元模型注册表数据字典编制', status:'backlog', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-27', dueDate:'2026-10-16',
+    desc:'把操作元模型四张注册表（256 个操作类型、92 个平台预置操作、174 个操作业务规则类型、33 个校验器类型）整理成可查询的数据字典：含操作类型 → 参数类官方映射、云归属、双运行时差异标注与挂载业务规则说明，输出 operation-data-dictionary.json 与使用说明，供设计器操作目录直接消费。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认字典字段口径、消费方与查询场景', assigneeId:'p23', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计注册表到字典条目的映射方案', assigneeId:'p30', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划字典生成脚本与校验步骤', assigneeId:'p31', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现字典生成与结构校验脚本', assigneeId:'p32', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对四张注册表计数与映射完整性', assigneeId:'p33', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'产出字典与使用说明并归档', assigneeId:'p40', status:'pending' },
+    ] },
+  { id:1210, code:'T1001210', title:'设计器元模型抽取工程接入 CI 校验', status:'backlog', priority:'low', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-27', dueDate:'2026-10-18',
+    desc:'将 extract_designer_metamodel.py 等抽取脚本接入 CI 流水线：产物 JSON 变更需通过计数与结构校验（属性 style 记录 839 条、模型类型 34 个、操作类型 256 个），校验失败阻断合并；产物随流水线归档，出现漂移时自动生成差异报告并通知负责人。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认校验范围、阈值与阻断策略', assigneeId:'p23', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计流水线接入与产物校验方案', assigneeId:'p36', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划校验脚本与差异报告生成步骤', assigneeId:'p29', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现计数与结构校验及漂移检测', assigneeId:'p35', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证漂移检测与差异报告输出', assigneeId:'p37', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'接入流水线并归档校验基线', assigneeId:'p39', status:'pending' },
+    ] },
+];
+TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
 /* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
@@ -337,32 +507,14 @@ try {
   var savedTasks = JSON.parse(localStorage.getItem(TASKS_STORAGE_KEY) || 'null');
   if (Array.isArray(savedTasks) && savedTasks.every(function (task) { return task && Number.isInteger(task.id) && typeof task.project === 'string'; })) _tasks = savedTasks;
 } catch (e) { /* 存储数据损坏时使用演示任务 */ }
-/* 只补充缺失的示例任务，不改写本地已有任务或人员分工。 */
+/* Lingee Build 项目任务数据已整体去除：把已保存到本地的该项目任务一次性清掉（幂等）。 */
 try {
-  if (!localStorage.getItem('lingee_tasks_personal_seed_v1')) {
-    var existingCodes = new Set(_tasks.map(function (task) { return task.code; }));
-    _tasks.push(...TK_PERSONAL_DEMO_TASKS.filter(function (task) { return !existingCodes.has(task.code); }));
+  if (!localStorage.getItem('lingee_tasks_remove_lingee_v1')) {
+    _tasks = _tasks.filter(function (task) { return task.project !== 'lingee-prototype'; });
     persistTasks();
-    localStorage.setItem('lingee_tasks_personal_seed_v1', '1');
+    localStorage.setItem('lingee_tasks_remove_lingee_v1', '1');
   }
-} catch (e) { /* 本地存储不可用时保留内存中的示例任务 */ }
-/* 清理已补种到本地或共享存储中的旧标题，只匹配原始演示文案，保留用户改过的标题。 */
-var personalDemoTitles = new Map(TK_PERSONAL_DEMO_TASKS.map(function (task) { return [task.code, task.title]; }));
-var personalDemoNames = new Set(TK_TEAM_ASSIGN_IDS.map(function (id) {
-  return CV_MEMBERS.find(function (member) { return member.id === id; })?.name;
-}).filter(Boolean));
-var personalTitlesChanged = false;
-_tasks.forEach(function (task) {
-  var plainTitle = personalDemoTitles.get(task.code);
-  if (!plainTitle || typeof task.title !== 'string') return;
-  var separator = task.title.indexOf('：');
-  if (separator < 0 || task.title.slice(separator + 1) !== plainTitle || !personalDemoNames.has(task.title.slice(0, separator))) return;
-  task.title = plainTitle;
-  personalTitlesChanged = true;
-});
-if (personalTitlesChanged) {
-  try { persistTasks(); } catch (e) { /* 存储不可用时仍更新当前页面 */ }
-}
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
 /* p34（早期误建的重复记录）名下任务归并到 p23（吴晓锋）；幂等，人员已并入后不会再出现 */
 _tasks.forEach(function (task) { if (task.assignee === 'p34') task.assignee = 'p23'; });
 try {
@@ -371,6 +523,38 @@ try {
     localStorage.setItem('lingee_tasks_merge_p34_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时跳过持久化 */ }
+/* 吴晓锋苍穹任务重置：清掉旧的演示数据，按 designer-metamodel 工程重新补种（幂等）。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_cosmic_wuxf_v1')) {
+    _tasks = _tasks.filter(function (task) {
+      return !(task.project === 'cosmic-app-dev' && (task.assignee === 'p23' || (task.id >= 1200 && task.id < 1207)));
+    });
+    var wuxfExistingIds = new Set(_tasks.map(function (task) { return task.id; }));
+    _tasks.push(...TK_COSMIC_WUXF_TASKS.filter(function (task) { return !wuxfExistingIds.has(task.id); }));
+    persistTasks();
+    localStorage.setItem('lingee_tasks_cosmic_wuxf_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时跳过 */ }
+/* 「审核中/待办」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
+try {
+  var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210']);
+  var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));
+  var wuxfReviewAdds = TK_COSMIC_WUXF_TASKS.filter(function (task) { return wuxfReviewCodes.has(task.code) && !wuxfExistingCodes.has(task.code); });
+  if (wuxfReviewAdds.length) {
+    _tasks.push(...wuxfReviewAdds);
+    persistTasks();
+  }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 「进行中」预置任务精简：从已保存的本地数据一次性移除三条与吴晓锋种子重叠的团队任务（幂等）。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_trim_cosmic_overlap_v1')) {
+    var trimCodes = TK_COSMIC_TRIM_CODES;
+    var trimBefore = _tasks.length;
+    _tasks = _tasks.filter(function (task) { return !trimCodes.has(task.code); });
+    if (_tasks.length !== trimBefore) persistTasks();
+    localStorage.setItem('lingee_tasks_trim_cosmic_overlap_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));
   if (typeof document !== 'undefined') document.dispatchEvent(new Event('lingee:tasks-changed'));

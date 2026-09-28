@@ -136,47 +136,6 @@ var CV_TASKS = [
   {boardId:'epic-purchase-flow',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-PURFLOW',status:'未开始',title:'采购流程优化',desc:'采购入库反审核与价格审批链的流程重构',acceptance:'反审核关联校验通过，价格审批按金额分级并留痕',files:[],assignee:'李工',priority:'中',project:'purchase',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-supply-collab',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-SUPCOLLAB',status:'进行中',title:'供应商协同对接',desc:'供应商门户对接与交期变更消息推送',acceptance:'订单确认与交期回复状态可正确回写，推送失败可重试',files:[],assignee:'赵琳',priority:'低',project:'supply',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-supply-rating',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-SUPRATE',status:'未开始',title:'供应商评级与档案',desc:'供应商评级定时任务与资质到期提醒',acceptance:'评级任务分片执行不超时，资质到期前可提前提醒',files:[],assignee:'赵琳',priority:'低',project:'supply',progress:0,artifacts:[],activity:[]},
-  /* Lingee Build：父任务与子任务 */
-  {boardId:'epic-lingee-ui',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEUI',status:'进行中',title:'原型界面与交互',desc:'原型整体页面架构、样式统一与交互细节优化',acceptance:'核心页面布局完整、样式一致、交互流畅',files:[],assignee:'吴晓锋',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-collab',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEECOLLAB',status:'进行中',title:'协作开发模块',desc:'协作开发页面拆分、任务管理、人员与专家管理',acceptance:'页面按归属拆分、任务与人员管理链路完整',files:[],assignee:'吴晓锋',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-data',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEDATA',status:'进行中',title:'数据与任务管理',desc:'项目数据持久化、筛选联动与产物中心',acceptance:'数据持久化可靠、筛选联动正确、产物按项目沉淀',files:[],assignee:'吴晓锋',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-auth',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEAUTH',status:'已完成',title:'用户认证与登录',desc:'登录页、账号密码验证与会话保持',acceptance:'登录验证安全可靠，会话不过期',files:[],assignee:'周杰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-sidebar',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESIDEBAR',status:'已完成',title:'侧边栏导航系统',desc:'左侧导航菜单、用户信息展示与页面切换',acceptance:'导航层级清晰，页面切换无闪烁',files:[],assignee:'何欣',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-workbench',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEWORKBENCH',status:'进行中',title:'工作台首页',desc:'工作台任务概览、统计面板与快捷入口',acceptance:'统计数据实时准确，快捷入口直达功能',files:[],assignee:'李工',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-taskboard',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEETASKBOARD',status:'进行中',title:'任务看板与流转',desc:'任务看板拖拽、状态流转与详情展开',acceptance:'拖拽流畅、状态流转有动画、详情可折叠',files:[],assignee:'宋宇',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-review',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEREVIEW',status:'未开始',title:'待评审模块',desc:'评审列表、筛选与评审详情',acceptance:'评审列表按类型筛选准确，详情展示完整',files:[],assignee:'赵琳',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-persons',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEPERSONS',status:'进行中',title:'协作人员管理',desc:'人员列表、角色管理与权限分配',acceptance:'人员增删改查完整，角色权限可配置',files:[],assignee:'赵琳',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-experts',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEEXPERTS',status:'未开始',title:'专家管理',desc:'专家列表、专家详情与项目绑定',acceptance:'专家信息完整，项目绑定关系正确',files:[],assignee:'陈晨',priority:'低',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-squads',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESQUADS',status:'未开始',title:'专家团管理',desc:'专家团列表、成员配置与默认绑定',acceptance:'专家团可配置成员，项目可绑定默认专家团',files:[],assignee:'陈晨',priority:'低',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-settings',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESETTINGS',status:'进行中',title:'项目设置与配置',desc:'项目信息编辑、成员管理与工作区配置',acceptance:'设置项完整，保存后即时生效',files:[],assignee:'吴芳',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-changelog',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEECHANGELOG',status:'已完成',title:'更新日志与通知',desc:'更新日志独立页面、系统通知铃铛与筛选',acceptance:'日志按类型筛选准确，铃铛通知实时',files:[],assignee:'吴芳',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-design-system',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEDS',status:'已完成',title:'设计系统组件库',desc:'基础、布局、导航等6大类67个组件文档',acceptance:'组件预览完整，设计令牌展示准确',files:[],assignee:'冯远',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-app-dev',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEAPPDEV',status:'进行中',title:'应用开发预览',desc:'苍穹应用开发列表、历史版本与预览面板',acceptance:'应用列表展示完整，版本可回退',files:[],assignee:'张工',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-chat',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEECHAT',status:'进行中',title:'AI 对话与会话管理',desc:'会话输入、消息模拟与任务执行联动',acceptance:'对话流畅，任务执行模拟真实',files:[],assignee:'宋宇',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-artifacts',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEART',status:'未开始',title:'产物与交付物中心',desc:'产物按项目沉淀、附件展示与产物管理',acceptance:'产物按项目分类，附件可预览下载',files:[],assignee:'王工',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-search',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEESEARCH',status:'待评审',title:'全局搜索与筛选',desc:'任务搜索、人员搜索与多维筛选联动',acceptance:'搜索结果准确，筛选联动无遗漏',files:[],assignee:'蒋雯',priority:'低',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-perf',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEPERF',status:'进行中',title:'性能优化与加载体验',desc:'模块懒加载、DOM 复用与渲染性能优化',acceptance:'首屏加载 < 2s，交互无卡顿',files:[],assignee:'梁平',priority:'中',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {boardId:'epic-lingee-build',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-LINGEEBUILD',status:'已完成',title:'构建工具与打包流程',desc:'Vite 构建、单文件打包与模块自检工具',acceptance:'构建产物可独立打开，自检覆盖全模块',files:[],assignee:'周杰',priority:'高',project:'lingee-prototype',progress:0,artifacts:[],activity:[]},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-001',exec:'专家团',status:'进行中',collab:'人人协作',title:'原型整体页面架构设计',desc:'设计原型首页、工作台、协作开发等核心页面布局与导航',assignee:'吴晓锋',progress:45,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-002',exec:'专家团',status:'未开始',collab:'人人协作',title:'协作开发页面拆分重构',desc:'将协作开发按页面拆分 HTML、CSS 和 JS 独立文件',assignee:'王工',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9001',exec:'自动执行',status:'已完成',collab:'无需协作',title:'侧边栏用户名显示错乱',desc:'侧边栏在不同分辨率下用户名被截断',assignee:'郑凯',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'任务',size:'大',source:'Jira',sourceId:'LINGEE-003',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'任务看板拖拽流转实现',desc:'实现任务看板的状态拖拽和流转动画效果',assignee:'吴晓锋',progress:62,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-020',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'任务详情交互优化',desc:'优化任务详情展开折叠与折叠记忆',assignee:'陈晨',progress:35,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-004',exec:'专家团',status:'待评审',collab:'人人协作',title:'专家管理与专家团功能开发',desc:'开发专家管理、专家团列表与项目绑定',assignee:'赵琳',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9002',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'弹窗ESC关闭未生效',desc:'部分表单弹窗按 ESC 键无法关闭',assignee:'郑凯',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'任务',size:'小',source:'API',sourceId:'API-40',exec:'自动执行',status:'已完成',collab:'无需协作',title:'项目数据持久化方案实现',desc:'项目数据 localStorage 持久化与恢复机制',assignee:'梁平',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'需求',size:'大',source:'飞书',sourceId:'FS-60',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'更新日志页面重构',desc:'更新日志从顶部铃铛改为用户菜单独立页面',assignee:'吴晓锋',progress:52,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'改进',size:'大',source:'Jira',sourceId:'LINGEE-005',exec:'专家团',status:'未开始',collab:'人人协作',title:'CSS变量统一与样式拆分',desc:'统一样式为 CSS 变量并按页面拆分 CSS 文件',assignee:'冯远',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9003',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'任务列表排序失效',desc:'任务列表按状态排序时偶发乱序',assignee:'钱涛',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-006',exec:'专家团',status:'进行中',collab:'人人协作',title:'人员管理与权限体系',desc:'开发协作人员管理与角色权限管理',assignee:'赵琳',progress:45,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-021',exec:'自动执行',status:'已完成',collab:'无需协作',title:'任务来源标签样式统一',desc:'统一任务来源标签的视觉样式',assignee:'何欣',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'改进',size:'小',source:'API',sourceId:'API-41',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'任务筛选器联动优化',desc:'优化任务统计卡与筛选器联动逻辑',assignee:'蒋雯',progress:38,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'需求',size:'大',source:'Jira',sourceId:'LINGEE-007',exec:'专家团',status:'未开始',collab:'人人协作',title:'产物中心交付物管理',desc:'开发产物按项目沉淀与展示功能',assignee:'王工',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-9004',exec:'自动执行',status:'已完成',collab:'无需协作',title:'项目列表分页异常',desc:'项目列表分页时数据重复显示',assignee:'刘洋',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
-  {type:'任务',size:'大',source:'Jira',sourceId:'LINGEE-008',exec:'专家团',status:'进行中',collab:'人人协作',title:'工作台任务概览开发',desc:'开发工作台任务统计与概览面板',assignee:'李工',progress:55,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'需求',size:'大',source:'飞书',sourceId:'FS-61',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'任务执行模拟与对话流转',desc:'实现任务执行模拟和会话对话切换',assignee:'宋宇',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-collab'},
-  {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-022',exec:'自动执行',status:'未开始',collab:'无需协作',title:'任务卡操作按钮优化',desc:'优化任务卡操作按钮排版与间距',assignee:'许诺',progress:0,project:'lingee-prototype',parentTaskId:'epic-lingee-ui'},
-  {type:'任务',size:'小',source:'API',sourceId:'API-42',exec:'自动执行',status:'已完成',collab:'人Agent协作',title:'模块自检工具开发',desc:'开发 npm run check 模块自检脚本',assignee:'周杰',progress:100,project:'lingee-prototype',parentTaskId:'epic-lingee-data'},
   /* 苍穹应用开发：基于 designer-metamodel 产物的父任务与子任务 */
   {boardId:'epic-cosmic-property',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-COSPROP',status:'进行中',title:'属性元模型抽取与集成',desc:'从 bos-metadata jar 离线抽取 839 条属性 style 记录（708 个属性名），建立属性→编辑器类型→取值域→序列化形状的完整契约',acceptance:'属性元模型覆盖 708 个属性名与 34 个模型类型，编辑器类型与取值域可查',files:[],assignee:'冯远',priority:'高',project:'cosmic-app-dev',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-cosmic-operation',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-COSOP',status:'进行中',title:'操作元模型抽取与集成',desc:'扫描 5300+ jar 提取 256 个操作类型、92 个预置操作、174 个业务规则类型与 33 个校验器类型，建立操作目录与参数形状',acceptance:'操作注册表完整，参数形状可查，操作可配置',files:[],assignee:'冯远',priority:'高',project:'cosmic-app-dev',progress:0,artifacts:[],activity:[]},
@@ -660,6 +619,21 @@ export function cvRemoveZhangAutoProjectMember(){
     project.members=project.members.filter(function(id){return id!=='p30';});
     if(!cvPersistProjects())return;
   }
+  try{localStorage.setItem(key,'1');}catch(e){}
+}
+
+/* 一次性清理：Lingee Build 项目任务数据已整体去除，同步清掉本地保存的任务与看板快照。 */
+export function cvRemoveLingeePrototypeTasks(){
+  var key='lingee-collab-remove-lingee-tasks-v1';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  ['lingee_task_board_v1','build_tasks'].forEach(function(storeKey){
+    try{
+      var rows=JSON.parse(localStorage.getItem(storeKey)||'null');
+      if(!Array.isArray(rows))return;
+      var next=rows.filter(function(row){return row&&row.project!=='lingee-prototype';});
+      if(next.length!==rows.length)localStorage.setItem(storeKey,JSON.stringify(next));
+    }catch(e){ /* 快照损坏时跳过该键 */ }
+  });
   try{localStorage.setItem(key,'1');}catch(e){}
 }
 

@@ -47,6 +47,12 @@
 .tk-filter-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
 .tk-filter-btn.has-filters{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
 
+/* 责任人筛选（项目负责人专属）：默认「我」，「全部」查看所有人任务 */
+.tk-assignee-filter{height:30px;box-sizing:border-box;padding:4px 26px 4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
+.tk-assignee-filter:hover{border-color:var(--border-hover)}
+.tk-assignee-filter:focus{border-color:var(--border-focus);outline:none}
+.tk-assignee-filter[hidden]{display:none}
+
 /* 显示设置按钮 */
 .tk-display-btn{display:flex;align-items:center;justify-content:center;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
 .tk-display-btn:hover{border-color:var(--border-hover);color:var(--text)}
@@ -679,8 +685,6 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-exec-card .tk-feed-stage-overview-head{margin:15px 0 12px;padding-top:14px;border-top:1px solid var(--divider)}
 .tk-exec-card .tk-feed-stage-current{flex:none;font-size:11px;font-weight:600}
 .tk-exec-card .tk-feed-stage-list{padding-bottom:9px}
-.tk-exec-card .tk-feed-stage-overview-head{justify-content:space-between}
-.tk-feed-stage-count{color:var(--text-soft);font-size:11px;font-variant-numeric:tabular-nums}
 .tk-exec-card .tk-feed-stage-list{display:flex;flex-direction:column;gap:7px;padding:0;overflow:visible}
 .tk-exec-card .tk-feed-stage{display:grid;grid-template-columns:16px minmax(100px,1fr) minmax(88px,130px) auto auto auto;grid-template-rows:auto;align-items:center;justify-items:stretch;gap:10px;min-height:42px;padding:7px 10px;border-radius:8px;background:var(--fill-1);font-size:12px;text-align:left}
 .tk-exec-card .tk-feed-stage.is-current{background:var(--brand-fill)}
@@ -1299,7 +1303,7 @@ input[type=date].tk-mc-pill{width:auto}
 .niu-person-popup{position:fixed;z-index:340;width:250px;max-height:300px;overflow:auto;padding:6px;border:1px solid #d7e2f1;border-radius:10px;background:#fff;box-shadow:0 16px 38px rgba(24,45,81,.2)}
 .niu-person-popup input{box-sizing:border-box;width:100%;height:34px;margin-bottom:4px;padding:7px 9px;border:1px solid #d6e0ed;border-radius:7px;outline:none;color:#263449;font:inherit;font-size:12px}
 .niu-person-popup input:focus{border-color:#3970df}.niu-person-popup button{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;border:0;border-radius:6px;background:transparent;color:#314059;font:inherit;font-size:13px;text-align:left;cursor:pointer}.niu-person-popup button:hover,.niu-person-popup button[aria-selected=true]{background:#f0f5ff}.niu-person-popup button b{margin-left:auto;color:#3970df}.niu-person-popup p{margin:8px;color:#8292a8;font-size:12px}.niu-person-avatar{display:grid;width:22px;height:22px;place-items:center;border-radius:50%;background:#e5eeff;color:#3970df;font-size:11px;font-weight:700}
-.niu-create-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 20px;border-top:1px solid #e6ebf2;color:#8794a8;font-size:12px}
+.niu-create-foot{display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:11px 20px;border-top:1px solid #e6ebf2;color:#8794a8;font-size:12px}
 .niu-create-foot>div,.niu-plan-head-actions{display:flex;align-items:center;gap:9px}
 .niu-button{min-height:39px;padding:0 16px;border:1px solid #d7e0eb;border-radius:8px;background:#fff;color:#52657e;font:inherit;font-size:13px;font-weight:650;white-space:nowrap;cursor:pointer}
 .niu-button:hover{border-color:#9bb7e5;background:#f3f7fd}
@@ -1399,3 +1403,18 @@ input[type=date].tk-mc-pill{width:auto}
 @media(max-width:800px){.niu-plan-layout{grid-template-columns:1fr;overflow:auto}.niu-plan-aside{min-height:150px}.niu-plan-main{overflow:visible}.niu-plan{height:90vh}.niu-create-foot{align-items:flex-end}}
 @media(max-width:640px){.niu-overlay{padding:8px}.niu-create{height:min(620px,calc(100vh - 16px))}.niu-create-head,.niu-plan-head{padding:17px}.niu-create-columns{grid-template-columns:1fr;height:auto}.niu-create-writing,.niu-create-properties,.niu-create-plan-pane,.niu-plan-content{padding:18px}.niu-create-writing .niu-field textarea{min-height:180px}.niu-create-properties{border-left:0;border-top:1px solid #e8edf4}.niu-create-foot{padding:14px 18px}.niu-plan-layout{padding:0 8px 8px}.niu-plan-head{align-items:flex-start}.niu-plan-head-actions{flex-wrap:wrap;justify-content:flex-end}.niu-plan-head-actions .niu-button{min-height:32px;padding:0 8px;font-size:11px}.niu-stage-columns{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 26px}.niu-stage-columns span:last-child{display:none}.niu-stage{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 26px}.niu-stage-owner{grid-column:2 / 4;width:auto}.niu-stage-remove{grid-column:4;grid-row:1 / 3;align-self:center}.niu-tabs{gap:15px;padding:0 14px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.niu-overlay *{scroll-behavior:auto!important;transition:none!important}}
+
+/* 执行计划的状态流转说明入口与图表弹窗。 */
+.tk-flow-help-heading{display:inline-flex;align-items:center;gap:3px}
+.tk-flow-help-trigger{display:inline-grid;place-items:center;box-sizing:border-box;width:18px;height:18px;flex:none;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--text-secondary);line-height:1;vertical-align:middle;cursor:pointer}
+.tk-flow-help-trigger svg{display:block;width:14px;height:14px;flex:none}
+.tk-flow-help-trigger:hover,.tk-flow-help-trigger:focus-visible{background:var(--brand-fill);color:var(--brand)}
+.tk-flow-help-trigger:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tk-flow-help-overlay{position:fixed;inset:0;z-index:380;display:grid;place-items:center;padding:20px;background:var(--tb-backdrop,rgba(32,44,65,.46))}
+.tk-flow-help-overlay[hidden]{display:none!important}
+.tk-flow-help-dialog{display:flex;flex-direction:column;width:min(100%,1280px);max-height:min(90vh,940px);overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.tk-flow-help-dialog header{display:flex;flex:none;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.tk-flow-help-dialog h2{margin:0;color:var(--text);font-size:17px}
+.tk-flow-help-close{display:grid;place-items:center;width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);font-size:24px;cursor:pointer}
+.tk-flow-help-close:hover{background:var(--fill-1);color:var(--text)}
+.tk-flow-help-dialog iframe{width:100%;height:0;min-height:0;flex:0 1 auto;border:0;background:#fff}

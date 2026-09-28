@@ -15,8 +15,16 @@ var input=$('#composerInput');
 var navItems=$$('.sb-scroll .nav-item');
 var navByName={};
 
+/* 导航项文本匹配须排除菜单徽标（如协作开发审核数），否则徽标出现后点击即失灵 */
+function navText(n){
+  if(!n.querySelector('.menu-badge')) return n.textContent.trim();
+  var clone=n.cloneNode(true);
+  var badge=clone.querySelector('.menu-badge');
+  if(badge) badge.remove();
+  return clone.textContent.trim();
+}
 function setNavActive(name){
-  navItems.forEach(function(n){ n.classList.toggle('active', n.textContent.trim()===name); });
+  navItems.forEach(function(n){ n.classList.toggle('active', navText(n)===name); });
 }
 function applyMode(mode,fromChip){
   modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
@@ -82,7 +90,7 @@ export function initViewSwitch() {
     var text=this.textContent||'';
     if(text.trim()===''){ this.innerHTML=''; }
   });
-  navItems.forEach(function(n){ navByName[n.textContent.trim()]=n; });
+  navItems.forEach(function(n){ navByName[navText(n)]=n; });
   modeItems.forEach(function(item){
     item.addEventListener('click',function(){
       applyMode(item.getAttribute('data-val'),true);
@@ -94,7 +102,7 @@ export function initSidebarNav() {
   /* ---------- sidebar nav ---------- */
   navItems.forEach(function(n){
     n.addEventListener('click',function(){
-      var name=n.textContent.trim();
+      var name=navText(n);
       setNavActive(name);
       if(name==='应用开发' || name==='苍穹应用'){
         showView('apps');
@@ -119,7 +127,7 @@ export function initSidebarNav() {
 
   /* ---------- 右键"协作开发"：平铺任务菜单 ---------- */
   var navCtxMenu=$('#navCtxMenu');
-  var collabNav=Array.prototype.find.call(navItems,function(n){return n.textContent.trim()==='协作开发';});
+  var collabNav=Array.prototype.find.call(navItems,function(n){return navText(n)==='协作开发';});
   if(collabNav && navCtxMenu){
     collabNav.addEventListener('contextmenu',function(e){
       e.preventDefault();

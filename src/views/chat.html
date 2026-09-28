@@ -12,6 +12,10 @@
         <button class="header-btn" id="togglePreviewBtn" data-tooltip="显示预览" aria-label="切换预览" aria-pressed="false" tabindex="0">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
         </button>
+        <!-- 任务会话：执行结束确认产物并流转下一阶段；最后节点为「完成」 -->
+        <button class="chat-stage-confirm hidden" id="chatStageConfirmBtn" type="button" data-tooltip="确认产物，流转下一阶段" disabled>
+          <span class="chat-stage-confirm-label" id="chatStageConfirmLabel">确认</span>
+        </button>
       </div>
       <div class="chat-messages" id="chatMessages">
         <div class="messages-list" id="messagesList">
@@ -580,5 +584,15 @@
       <div class="preview-body hidden" id="previewBodyMcp">
         <div class="mcp-list" id="mcpList"></div>
       </div>
+    </div>
+    <!-- 会话产物预览：占位挤开式右侧面板（嵌入分栏，不覆盖会话），内容渲染与任务详情产物一致 -->
+    <div class="chat-doc-viewer" id="chatDocViewer" hidden aria-label="产物预览">
+      <div class="chat-doc-viewer-resize" id="chatDocViewerResize" role="separator" aria-orientation="vertical" aria-label="调整产物预览宽度" tabindex="0"></div>
+      <div class="chat-doc-viewer-head">
+        <span class="chat-doc-viewer-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+        <div class="chat-doc-viewer-title"><strong id="chatDocViewerTitle"></strong><span id="chatDocViewerMeta"></span></div>
+        <button type="button" class="chat-doc-viewer-close" id="chatDocViewerClose" aria-label="关闭产物预览" data-tooltip="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="chat-doc-viewer-body" id="chatDocViewerBody"></div>
     </div>
   </div>

@@ -11,8 +11,9 @@ import { EX, pendingInputs, xav, xesc } from './expert/data.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_PROJECTS } from './collab/data.js';
-import { tkGetTasks } from './tasks-v2/data.js';
-import { submitTaskStage } from './tasks-v2/task-execution.js';
+import { tkGetTasks, tkGetTaskArtifacts } from './tasks-v2/data.js';
+import { renderArtifactPreview } from './collab/run-artifacts.js';
+import { reviewTaskStage, submitTaskStage, taskExecutionStages } from './tasks-v2/task-execution.js';
 /* 输入框、发送、＋按钮下拉菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -30,6 +31,7 @@ function closeTaskExceptionHistory() {
   var panel = document.getElementById('taskExceptionHistory');
   var back = document.getElementById('taskExceptionBack');
   viewChat.classList.remove('task-exception-open');
+  closeChatDocViewer();
   if (panel) panel.remove();
   if (back) back.remove();
   if (taskExceptionPreviousTitle) $('#chatTitle').textContent = taskExceptionPreviousTitle;
@@ -207,6 +209,7 @@ function openChatSession(sessionId) {
   showView('chat');
   $('#chatHeaderTask')?.classList.add('hidden');
   messagesList.innerHTML = '';
+  closeChatDocViewer();
   document.getElementById('chatTaskArtifacts').innerHTML = '<span class="chat-task-pending">对话完成后显示产物</span>';
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
@@ -240,6 +243,7 @@ function renderChatTaskSide() {
   side.hidden = !task;
   viewChat.classList.toggle('task-context-open', !!task);
   if (task) viewChat.classList.remove('preview-open');
+  refreshChatStageConfirm();
   if (!task) return;
   var link = document.getElementById('chatTaskLink');
   link.dataset.taskId = String(task.id);
@@ -255,7 +259,49 @@ function renderChatTaskSide() {
   var completed = session?.exchanges.filter(function (exchange) { return exchange.done && !exchange.waiting; }).at(-1);
   var output = document.getElementById('chatTaskArtifacts');
   output.innerHTML = completed ? '' : '<span class="chat-task-pending">执行完成后显示产物</span>';
-  if (completed) output.appendChild(createTaskArtifactCard(task, completed.prompt));
+  if (completed) renderChatDocCards(task);
+}
+/* ---------- 任务会话「确认」按钮：执行结束确认产物、流转下一阶段 ---------- */
+/* 显示：当前会话关联的任务正在执行（in_progress）或已提交待审核（in_review）；
+   可点击：执行结束（待审核且本轮回复完成）；点击与任务详情「通过审核」同一条流转链路。 */
+function chatStageConfirmInfo() {
+  if (viewChat.classList.contains('task-exception-open')) return null;
+  var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  if (!task) return null;
+  var stages = taskExecutionStages(task);
+  var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
+  if (index < 0 && task.executionPlan?.length) index = stages.findIndex(function (stage) { return task.executionPlan.find(function (row) { return row.id === stage.id; })?.status !== 'done'; });
+  if (index < 0) return null;
+  var visible = ['in_progress', 'in_review'].includes(task.status);
+  if (!visible) return null;
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  var lastExchange = session?.exchanges.at(-1);
+  var ready = task.status === 'in_review' && !!lastExchange && lastExchange.done && !lastExchange.waiting;
+  return { task: task, ready: ready, isLastStage: !stages[index + 1] };
+}
+function refreshChatStageConfirm() {
+  var btn = document.getElementById('chatStageConfirmBtn');
+  if (!btn) return;
+  var info = chatStageConfirmInfo();
+  btn.classList.toggle('hidden', !info);
+  if (!info) return;
+  var label = document.getElementById('chatStageConfirmLabel');
+  var isLast = info.isLastStage;
+  btn.disabled = !info.ready;
+  if (label) label.textContent = isLast ? '完成' : '确认';
+  btn.setAttribute('aria-label', isLast ? '确认产物，完成任务' : '确认产物，流转下一阶段');
+  btn.setAttribute('data-tooltip', isLast ? '确认产物，完成任务' : '确认产物，流转下一阶段');
+}
+function confirmChatStage() {
+  var info = chatStageConfirmInfo();
+  if (!info?.ready) return;
+  var reviewed = reviewTaskStage(info.task, true);
+  if (!reviewed.ok) {
+    if (reviewed.message) toast(reviewed.message, 'warning');
+    return;
+  }
+  /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
+  toast(reviewed.done ? '任务完成' : '流转成功', 'success');
 }
 function clearChatTaskSide() {
   activeSessionTaskId = null;
@@ -265,31 +311,124 @@ function clearChatTaskSide() {
   renderChatTaskSide();
   renderChatSessions();
 }
-function taskArtifactText(task, prompt) {
-  return '# ' + task.title + ' · 需求分析\n\n'
-    + '关联任务：' + (task.code || '') + '\n'
-    + '本轮指令：' + prompt + '\n\n'
-    + '## 任务背景\n' + (task.desc || task.title) + '\n\n'
-    + '## 建议下一步\n1. 确认业务范围与边界条件。\n2. 按任务描述拆分实现和验收项。\n3. 与任务负责人确认后进入下一阶段。\n';
-}
-function createTaskArtifactCard(task, prompt) {
-  var text = taskArtifactText(task, prompt);
+/* 会话产物：卡片点击后右侧占位弹出预览（挤开分栏，不覆盖会话），内容与任务详情产物渲染一致。 */
+function createChatDocCard(task, artifact) {
   var card = document.createElement('button');
   card.type = 'button';
   card.className = 'chat-task-artifact';
-  card.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>需求分析.md</span>';
-  function showDocument() {
-    var output = document.getElementById('chatTaskArtifacts');
-    if (!output || activeSessionTaskId !== task.id) return;
-    var doc = output.querySelector('.chat-task-document');
-    if (!doc) { doc = document.createElement('div'); doc.className = 'chat-task-document'; output.appendChild(doc); }
-    doc.textContent = text;
-  }
-  card.addEventListener('click', showDocument);
+  card.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>' + escapeHtml(artifact.type) + '</span>';
+  card.addEventListener('click', function () { openChatDocViewer(task, artifact); });
   return card;
 }
-function appendTaskArtifact(result, task, prompt) {
-  result.appendChild(createTaskArtifactCard(task, prompt));
+function renderChatDocCards(task) {
+  var output = document.getElementById('chatTaskArtifacts');
+  /* 产物跟随阶段推进：显示已完成阶段与当前执行/待审核阶段的产物；
+     确认流转后下一阶段尚未开始，保留刚确认阶段的产物，不展示后续阶段交付物。 */
+  var stages = taskExecutionStages(task);
+  var stage = stages.find(function (row) { return row.id === task.executionStageId; })
+    || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
+    || stages[0];
+  var currentIndex = stage ? stages.indexOf(stage) : -1;
+  var active = ['in_progress', 'in_review'].includes(task.status);
+  var maxIndex = task.status === 'done' ? stages.length - 1 : active ? currentIndex : currentIndex - 1;
+  var plan = task.executionPlan || [];
+  var artifacts = currentIndex >= 0 ? tkGetTaskArtifacts(task).filter(function (artifact) {
+    var index = stages.findIndex(function (row) { return row.id === artifact.stageId; });
+    return index >= 0 && index <= maxIndex && plan.find(function (item) { return item.id === artifact.stageId; })?.status !== 'pending';
+  }) : [];
+  if (artifacts.length) {
+    artifacts.forEach(function (artifact) { output.appendChild(createChatDocCard(task, artifact)); });
+  } else {
+    output.innerHTML = '<span class="chat-task-pending">当前阶段暂无产物</span>';
+  }
+}
+var chatDocViewerCloseTimer = null;
+function openChatDocViewer(task, artifact) {
+  var viewer = document.getElementById('chatDocViewer');
+  if (!viewer) return;
+  clearTimeout(chatDocViewerCloseTimer);
+  document.getElementById('chatDocViewerTitle').textContent = task.title + ' · ' + artifact.type;
+  document.getElementById('chatDocViewerMeta').textContent =
+    (artifact.author ? artifact.author + ' · ' : '') + (artifact.date || '') + (artifact.status ? ' · ' + artifact.status : '');
+  document.getElementById('chatDocViewerBody').innerHTML = renderArtifactPreview(artifact);
+  viewer.hidden = false;
+  viewChat.classList.add('doc-open');
+  if (viewer.classList.contains('show')) { setChatDocViewerWidth(viewer); return; }
+  viewer.style.width = '';
+  requestAnimationFrame(function () {
+    setChatDocViewerWidth(viewer);
+    viewer.classList.add('show');
+  });
+}
+function closeChatDocViewer() {
+  var viewer = document.getElementById('chatDocViewer');
+  if (!viewer || viewer.hidden) return;
+  clearTimeout(chatDocViewerCloseTimer);
+  viewer.classList.remove('show');
+  viewChat.classList.remove('doc-open');
+  chatDocViewerCloseTimer = setTimeout(function () {
+    viewer.hidden = true;
+    viewer.style.width = '';
+  }, 250);
+}
+/* 占位弹出宽度：会话区保底 360px、会话信息侧栏按实际宽预留，预览取剩余空间并封顶 880px。 */
+function chatDocViewerWidthBounds() {
+  var view = document.getElementById('view-chat');
+  var side = document.getElementById('chatTaskSide');
+  var reserved = 360 + (side && !side.hidden ? side.offsetWidth : 0);
+  return { min: 320, max: Math.max(320, view.clientWidth - reserved) };
+}
+function setChatDocViewerWidth(viewer) {
+  var bounds = chatDocViewerWidthBounds();
+  viewer.style.width = Math.min(880, bounds.max) + 'px';
+}
+function initChatDocViewerResize(handle, viewer) {
+  handle.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    var pointerId = e.pointerId;
+    var startX = e.clientX;
+    var startWidth = viewer.getBoundingClientRect().width;
+    handle.setPointerCapture(pointerId);
+    viewer.classList.add('resizing');
+    function move(ev) {
+      if (ev.pointerId !== pointerId) return;
+      var bounds = chatDocViewerWidthBounds();
+      viewer.style.width = Math.round(Math.min(bounds.max, Math.max(bounds.min, startWidth + startX - ev.clientX))) + 'px';
+    }
+    function end(ev) {
+      if (ev.pointerId !== pointerId) return;
+      handle.releasePointerCapture(pointerId);
+      viewer.classList.remove('resizing');
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', end);
+      handle.removeEventListener('pointercancel', end);
+    }
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  });
+  handle.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    var bounds = chatDocViewerWidthBounds();
+    var current = viewer.getBoundingClientRect().width;
+    viewer.style.width = Math.round(Math.min(bounds.max, Math.max(bounds.min, current + (e.key === 'ArrowLeft' ? 24 : -24)))) + 'px';
+  });
+}
+function appendTaskArtifact(result, task) {
+  var artifacts = tkGetTaskArtifacts(task);
+  if (artifacts.length) result.appendChild(createChatResultArtifactCard(task, artifacts[0]));
+}
+/* 任务会话结果产物卡片：视觉与采购订单会话的 artifact-card 保持一致，点击打开产物预览。 */
+function createChatResultArtifactCard(task, artifact) {
+  var card = document.createElement('div');
+  card.className = 'artifact-card';
+  card.innerHTML = '<div class="artifact-preview"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>'
+    + '<div class="artifact-info"><div class="artifact-title">' + escapeHtml(artifact.type) + '</div></div>'
+    + '<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></div>';
+  card.addEventListener('click', function () { openChatDocViewer(task, artifact); });
+  return card;
 }
 export function setComposerTaskReference(taskId) {
   conversationTaskId = taskId == null ? null : Number(taskId);
@@ -576,7 +715,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     timeline.appendChild(result);
     var artifact=task ? null : createArtifactCard();
     result.querySelector('.markdown-content').innerHTML=renderMarkdown(task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)]);
-    if(task)appendTaskArtifact(result,task,prompt || '');else result.appendChild(artifact);
+    if(task)appendTaskArtifact(result,task);else result.appendChild(artifact);
     scrollChatBottom();
     if(!task)syncPreviewOpen(artifact);
     finishRun();
@@ -600,7 +739,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
       cancelStream=streamText(mc,text,function(){
         if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
-        if (task) appendTaskArtifact(result,task,prompt || '');
+        if (task) appendTaskArtifact(result,task);
         else result.appendChild(createArtifactCard());
         scrollChatBottom();
         finishRun();
@@ -654,6 +793,7 @@ function doSend(automatic){
   messagesList.innerHTML = '';
   activeSessionTaskId = linkedTask ? linkedTask.id : null;
   activeResponseRun++;
+  closeChatDocViewer();
   document.getElementById('chatTaskArtifacts').innerHTML = '<span class="chat-task-pending">对话完成后显示产物</span>';
   $('#chatTitle').textContent = linkedTask ? linkedTask.title : t.slice(0, 60);
   var session = createChatSession($('#chatTitle').textContent, activeSessionTaskId);
@@ -1003,10 +1143,23 @@ export function initComposer() {
     if (event.detail?.task?.id === conversationTaskId) renderConversationTaskReference();
     if (event.detail?.task?.id === activeSessionTaskId) renderChatTaskSide();
   });
+  document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
   document.getElementById('chatTaskLink').addEventListener('click', function () {
     if (activeSessionTaskId == null) return;
     import('./tasks-v2/index.js').then(function (module) { module.openTaskDetailFromSession(activeSessionTaskId); });
   });
+  var chatDocViewer = document.getElementById('chatDocViewer');
+  if (chatDocViewer) {
+    document.getElementById('chatDocViewerClose').addEventListener('click', closeChatDocViewer);
+    var chatDocResize = document.getElementById('chatDocViewerResize');
+    if (chatDocResize) initChatDocViewerResize(chatDocResize, chatDocViewer);
+    window.addEventListener('resize', function () {
+      if (!chatDocViewer.hidden) setChatDocViewerWidth(chatDocViewer);
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !chatDocViewer.hidden) closeChatDocViewer();
+    });
+  }
   document.addEventListener('lingee:new-conversation', function () { setComposerTaskReference(null); });
   document.addEventListener('click', function (event) {
     if (event.target.closest('#ntTags [data-clear-task-ref], #chatTags [data-clear-task-ref]')) setComposerTaskReference(null);

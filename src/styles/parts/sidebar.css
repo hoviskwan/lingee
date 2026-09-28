@@ -105,6 +105,7 @@
   .nav-item:hover{background:var(--hover)}
   .nav-item.active{background:var(--active)}
   .nav-item .ic{color:#3a3a3d}
+  .nav-item .menu-badge{margin-left:auto;height:14px;min-width:14px;box-sizing:border-box;padding:0 2px;border-radius:9px;font-size:9px;line-height:14px;background:var(--danger);color:var(--bg)}
 
   .section-label{
     display:flex;align-items:center;justify-content:space-between;

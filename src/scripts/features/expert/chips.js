@@ -155,7 +155,7 @@ function refloatTkFormMenu(){
   if(menu.offsetHeight>maxH){ menu.style.maxHeight=maxH+'px'; if(list) list.style.maxHeight=(maxH-56)+'px'; }
   refloatMenu(dd);
 }
-function openExpertPicker(pfx){
+export function openExpertPicker(pfx){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
   var si=$('#'+pfx+'ExpertSearchInput');
   closeAll(null);

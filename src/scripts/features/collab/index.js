@@ -10,7 +10,7 @@ import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmM
 import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
 import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
-import { cvRemoveZhangAutoProjectMember } from './data.js';
+import { cvRemoveLingeePrototypeTasks, cvRemoveZhangAutoProjectMember } from './data.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
@@ -52,6 +52,7 @@ var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  cvRemoveLingeePrototypeTasks();
   initTaskBoard();
   initTaskChat();
   initNewTask();

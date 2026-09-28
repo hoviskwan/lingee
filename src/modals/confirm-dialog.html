@@ -1,0 +1,16 @@
+<!-- 通用确认弹窗（不依赖 .modal-overlay 类，避免 CSS 层叠冲突） -->
+<div id="confirmOverlay" class="confirm-overlay" style="display:none">
+  <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogBody">
+    <div class="confirm-header">
+      <div class="confirm-title" id="confirmDialogTitle">确认操作</div>
+      <button class="confirm-close" id="confirmDialogClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="confirm-body" id="confirmDialogBody">
+      <p id="confirmDialogMsg"></p>
+    </div>
+    <div class="confirm-footer">
+      <button class="confirm-btn confirm-btn--cancel" id="confirmDialogCancel" type="button">取消</button>
+      <button class="confirm-btn confirm-btn--ok" id="confirmDialogOk" type="button">确认删除</button>
+    </div>
+  </div>
+</div>
