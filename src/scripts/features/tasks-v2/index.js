@@ -668,7 +668,7 @@ function renderCard(t, opts) {
   }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + (isBacklog && tkCanStartTask(t)
-      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行" aria-label="开始执行">' + TASK_START_PLAY_ICON + '</button>'
+      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始执行"><span>开始执行</span></button>'
       : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
@@ -902,6 +902,7 @@ function render() {
   renderFilterChips(); updateBulkBar(); updateCheckAll();
   syncDrawerClickaway();
   persistViewState();
+  updateCollabReviewBadge();
 }
 
 /* 项目详情复用视图、筛选与布局控制器，离开后恢复任务页布局。 */
@@ -3968,12 +3969,14 @@ function initColumnResize() {
 }
 
 /* ---------- 初始化 ---------- */
-/* 协作开发菜单徽标：与看板「审核中」列同口径——顶层任务、未被「已办」列接管、当前用户可见。 */
+/* 协作开发菜单徽标与任务看板「审核中」列使用相同的筛选和已办分组口径。 */
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
-  var count = tkGetTasks().filter(function (task) { return task.status === 'in_review' && !task.parentId && !tkIsHandledByMe(task) && tkCanViewTask(task); }).length;
-  badge.textContent = count > 99 ? '99+' : String(count);
+  var count = getFilteredTasks().filter(function (task) {
+    return task.status === 'in_review' && !tkIsHandledByMe(task);
+  }).length;
+  badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
   badge.setAttribute('data-tooltip', count + ' 个任务审核中');
   badge.setAttribute('aria-label', count + ' 个任务审核中');

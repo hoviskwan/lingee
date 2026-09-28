@@ -433,7 +433,7 @@ function renderCard(t, opts) {
   }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + (isBacklog && tkCanStartTask(t)
-      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行" aria-label="开始执行">' + TASK_START_PLAY_ICON + '</button>'
+      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始执行"><span>开始执行</span></button>'
       : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'

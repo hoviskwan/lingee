@@ -122,6 +122,11 @@
     position:relative;
   }
   .group-head:hover{background:var(--hover)}
+  .sb-project-folder-icons{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;flex:none;color:var(--neutral-500)}
+  .sb-project-folder-icons svg{width:15px;height:15px}
+  .sb-project-folder-icons .sb-folder-closed{display:none}
+  .sb-proj-head.collapsed .sb-folder-open{display:none}
+  .sb-proj-head.collapsed .sb-folder-closed{display:block}
   .group-toggle{
     display:flex;align-items:center;gap:3px;min-width:0;flex:1;
     border:none;background:none;padding:0;cursor:pointer;font-family:inherit;
@@ -139,7 +144,9 @@
   }
   .group-head:hover .group-chevron{opacity:1}
   .group-chevron .ic{width:14px;height:14px}
-  .group-chevron.collapsed .ic{transform:rotate(-90deg)}
+  .group-chevron .ic-down{transition:transform .18s ease}
+  .group-chevron .ic-right{display:none}
+  .group-chevron.collapsed .ic-down{transform:rotate(-90deg)}
   .grp-actions{
     display:flex;align-items:center;gap:2px;margin-left:auto;
     opacity:0;transition:opacity .15s;pointer-events:none;
@@ -188,9 +195,11 @@
   .chat-project-title{display:flex;align-items:center;gap:5px;width:100%;padding:6px 9px;border:0;border-radius:8px;background:transparent;color:var(--neutral-500);font:inherit;font-size:12px;text-align:left;cursor:pointer}
   .chat-project-title:hover{background:var(--hover)}
   .chat-project-icon{width:15px;height:15px;flex:none}
-  .chat-project-title .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-project-chevron{width:14px;flex:none;text-align:center;transition:transform .15s}
-  .chat-project-folder.collapsed .chat-project-chevron{transform:rotate(-90deg)}
+  .chat-project-title .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chat-project-chevron{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:none;opacity:0;transition:opacity .15s}
+  .chat-project-title:hover .chat-project-chevron{opacity:1}
+  .chat-project-chevron svg{width:14px;height:14px;transition:transform .18s ease}
+  .chat-project-folder.collapsed .chat-project-chevron svg{transform:rotate(-90deg)}
   .chat-project-folder.collapsed .chat-project-sessions{display:none}
   .chat-project-sessions .chat-session-entry{padding-left:24px}
   .dot{width:7px;height:7px;border-radius:50%;flex:none}

@@ -245,7 +245,7 @@ export function initSidebarIcons() {
     var groupByMenu=$('#groupByMenu');
     var GROUP_LABELS={project:'Project',date:'Date',none:'None'};
     var DATE_BUCKETS=[{key:'today',label:'今天'},{key:'thisWeek',label:'本周'},{key:'earlier',label:'更早'}];
-    var CHEVRON='<span class="group-chevron"><svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M11.8619 5.5287C12.1223 5.26835 12.5443 5.26835 12.8046 5.5287C13.0649 5.78905 13.065 6.21109 12.8046 6.47141L9.03706 10.239C8.46432 10.8117 7.53562 10.8117 6.96284 10.239L3.19526 6.47141C2.93491 6.21106 2.93491 5.78905 3.19526 5.5287C3.45561 5.26835 3.87762 5.26835 4.13797 5.5287L7.90555 9.29628C7.95763 9.34825 8.04232 9.34831 8.09435 9.29628L11.8619 5.5287Z" fill="currentColor"/></svg></span>';
+    var CHEVRON='<span class="group-chevron"><svg class="ic ic-down" viewBox="0 0 16 16" fill="none"><path d="M11.8619 5.5287C12.1223 5.26835 12.5443 5.26835 12.8046 5.5287C13.0649 5.78905 13.065 6.21109 12.8046 6.47141L9.03706 10.239C8.46432 10.8117 7.53562 10.8117 6.96284 10.239L3.19526 6.47141C2.93491 6.21106 2.93491 5.78905 3.19526 5.5287C3.45561 5.26835 3.87762 5.26835 4.13797 5.5287L7.90555 9.29628C7.95763 9.34825 8.04232 9.34831 8.09435 9.29628L11.8619 5.5287Z" fill="currentColor"/></svg><svg class="ic ic-right" viewBox="0 0 16 16" fill="none"><path d="M5.52827 3.19537C5.78862 2.93505 6.21064 2.93503 6.47098 3.19537L10.2386 6.96294C10.8113 7.53571 10.8113 8.46441 10.2386 9.03716L6.47098 12.8047C6.21065 13.0651 5.78862 13.065 5.52827 12.8047C5.26792 12.5444 5.26792 12.1224 5.52827 11.862L9.29585 8.09445C9.34786 8.0424 9.34784 7.95771 9.29585 7.90565L5.52827 4.13807C5.26792 3.87772 5.26792 3.45571 5.52827 3.19537Z" fill="currentColor"/></svg></span>';
 
     /* 可重排的行，以及每个父节点原本的子节点顺序——切回「按项目」时原样还原。
        只移动节点、不重建，事件监听因此不会丢。 */
@@ -278,7 +278,7 @@ export function initSidebarIcons() {
           h.innerHTML='<button class="group-toggle" type="button"><span class="group-label">'+b.label+'</span>'+CHEVRON+'</button>';
           g.appendChild(h);
           bucket.forEach(function(r){ g.appendChild(r); });
-          h.addEventListener('click',function(){ g.classList.toggle('collapsed'); });
+          h.addEventListener('click',function(){ g.classList.toggle('collapsed'); $('.group-chevron',h)?.classList.toggle('collapsed',g.classList.contains('collapsed')); });
           dateHost.appendChild(g);
         });
       }
@@ -337,12 +337,18 @@ export function initSegmentedTabs() {
     if(!head) return;
     head.addEventListener('click',function(){
       g.classList.toggle('collapsed');
+      head.classList.toggle('collapsed',g.classList.contains('collapsed'));
+      $('.group-chevron',head)?.classList.toggle('collapsed',g.classList.contains('collapsed'));
       var c=$('.caret',head); if(c) c.classList.toggle('rot', g.classList.contains('collapsed'));
     });
   });
   // standalone second group-head (rotate its caret only)
   $$('.sb-scroll > .group-head').forEach(function(h){
-    h.addEventListener('click',function(){ var c=$('.caret',h); if(c) c.classList.toggle('rot'); });
+    h.addEventListener('click',function(){
+      h.classList.toggle('collapsed');
+      $('.group-chevron',h)?.classList.toggle('collapsed');
+      var c=$('.caret',h); if(c) c.classList.toggle('rot');
+    });
   });
 }
 
