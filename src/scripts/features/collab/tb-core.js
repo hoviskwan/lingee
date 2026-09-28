@@ -10,7 +10,7 @@ import { toast } from '../../core/toast.js';
 export const tbColumns = [
   ['待规划', '待规划', 'backlog', '◌', '未开始', '搁置。把任务移到这里不会启动智能体。'],
   ['待办', '待办', 'pending', '○', '未开始', '排队中。把任务移到这里会启动指派的智能体。'],
-  ['进行中', '进行中', 'running', '◐', '已开始', '正在进行。'],
+  ['进行中', '执行中', 'running', '◐', '已开始', '正在进行。'],
   ['审核中', '审核中', 'review', '◉', '已开始', '已交付，等待人工审核。会结束自动化运行。'],
   ['已阻塞', '已阻塞', 'blocked', '⊘', '已开始', '被外部依赖阻塞。'],
   ['已完成', '已完成', 'done', '✓', '已完成', '已完成。'],
@@ -64,7 +64,7 @@ export function tbTeamStages(team) {
 }
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
 /* 任务是否已启动：待规划与待办视为未启动，目标与分工仍可编辑；
-   进入进行中及之后的状态即为启动，详情页转为只读。 */
+   进入执行中及之后的状态即为启动，详情页转为只读。 */
 export function tbIsStarted(t) { return !!t && !['待规划', '待办'].includes(t.status); }
 export function tbSave() {
   try { localStorage.setItem(storageKey, JSON.stringify(CV_TASKS)); return true; }

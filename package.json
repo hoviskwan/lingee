@@ -11,7 +11,8 @@
     "postinstall": "node scripts/fix-nosync.mjs",
     "check": "node build/check-modules.mjs",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
-    "standalone": "node scripts/build-standalone.cjs"
+    "standalone": "node scripts/build-standalone.cjs",
+    "preview": "node scripts/preview-server.mjs"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

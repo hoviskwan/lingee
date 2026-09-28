@@ -45,7 +45,7 @@ let ntParentTaskId = '';
 let ntParentIsGroup = false;
 let ntDraftReady = false;
 
-const NT_STATUS_LABELS = { '待规划': '待规划', '待办': '待办', '进行中': '进行中', '审核中': '审核中', '已完成': '已完成', '已阻塞': '已阻塞', '已取消': '已取消' };
+const NT_STATUS_LABELS = { '待规划': '待规划', '待办': '待办', '进行中': '执行中', '审核中': '审核中', '已完成': '已完成', '已阻塞': '已阻塞', '已取消': '已取消' };
 
 function ntRenderFiles() {
   const el = document.getElementById('cv-nt-file-list');

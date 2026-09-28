@@ -11,7 +11,7 @@ import { buildTaskArtifactDocs } from './artifact-docs.js';
 export const TK_STATUSES = [
   { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
   { id: 'backlog',     name: '待办',   color: 'gray',   icon: 'circle' },
-  { id: 'in_progress', name: '进行中', color: 'orange', icon: 'half' },
+  { id: 'in_progress', name: '执行中', color: 'orange', icon: 'half' },
   { id: 'in_review',  name: '审核中', color: 'green',  icon: 'three_quarters' },
   { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
   { id: 'done',       name: '已完成', color: 'blue',   icon: 'check' },
@@ -155,7 +155,7 @@ export function tkGetTaskArtifacts(task) {
 export const TK_VIEWS = [
   { id: 'all',        name: '全部',    scope: 'all',       builtin: true },
   { id: 'members',    name: '我负责',  scope: 'my_assigned', builtin: true },
-  { id: 'agents',     name: '进行中',  scope: 'in_progress', builtin: true },
+  { id: 'agents',     name: '执行中',  scope: 'in_progress', builtin: true },
 ];
 
 /* ---------- 筛选字段定义 ---------- */
@@ -274,7 +274,7 @@ function tkConvertCvTasks(projectId, startId) {
     };
   });
 }
-/* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「进行中」预置数量。 */
+/* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「执行中」预置数量。 */
 const TK_COSMIC_TRIM_CODES = new Set(['T1000077', 'T1000092', 'T1000095']);
 TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) { return !TK_COSMIC_TRIM_CODES.has(task.code); }));
 
@@ -545,7 +545,7 @@ try {
     persistTasks();
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
-/* 「进行中」预置任务精简：从已保存的本地数据一次性移除三条与吴晓锋种子重叠的团队任务（幂等）。 */
+/* 「执行中」预置任务精简：从已保存的本地数据一次性移除三条与吴晓锋种子重叠的团队任务（幂等）。 */
 try {
   if (!localStorage.getItem('lingee_tasks_trim_cosmic_overlap_v1')) {
     var trimCodes = TK_COSMIC_TRIM_CODES;

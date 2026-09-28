@@ -6,7 +6,7 @@ import { tkCurrentUserId } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
 export const TASK_SESSION_ORIGINS = { start:'开始执行', revise:'退回修改', retry:'重试执行', manual:'发起会话' };
-export const TASK_SESSION_STATUS = { active:'进行中', ended:'已结束', failed:'执行异常' };
+export const TASK_SESSION_STATUS = { active:'执行中', ended:'已结束', failed:'执行异常' };
 
 const SESSIONS_STORAGE_KEY = 'lingee_task_sessions_v1';
 var _sessions = [];

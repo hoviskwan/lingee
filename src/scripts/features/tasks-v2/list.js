@@ -23,6 +23,7 @@ var viewBeforeProjectList = null;
 var collapsedParents = new Set();
 
 var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
+var CARD_PROP_REV = 2; /* 与 index.js 保持同值：卡片显示属性默认值版本 */
 
 function persistViewState() {
   try {
@@ -38,6 +39,7 @@ function persistViewState() {
       collapsedTaskIds:Array.from(collapsedParents),
       collapsedBoardGroups:Array.from(taskViewState.collapsedBoardGroups),
       cardProperties:taskViewState.cardProperties,
+      cardPropRev:CARD_PROP_REV,
       listFieldOrder:taskViewState.listFieldOrder,
       listFieldVisibility:taskViewState.listFieldVisibility,
     }));
@@ -69,6 +71,10 @@ function restoreViewState() {
     Object.keys(taskViewState.cardProperties).forEach(function (key) {
       if (typeof saved.cardProperties[key] === 'boolean') taskViewState.cardProperties[key] = saved.cardProperties[key];
     });
+  }
+  if (saved.cardPropRev !== CARD_PROP_REV) {
+    /* v2：卡片项目名改默认不显示，旧存量配置一次性回落新默认；此后用户显式开启仍被尊重 */
+    taskViewState.cardProperties.project = false;
   }
   if (Array.isArray(saved.listFieldOrder)) {
     taskViewState.listFieldOrder = Array.from(new Set(saved.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !saved.listFieldOrder.includes(id); }));
@@ -330,7 +336,8 @@ function getGroupedTasks(tasks) {
   if (taskViewState.groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
   var groups = {}, keys = [];
   if (taskViewState.groupBy === 'status') {
-    TK_STATUSES.forEach(function (s) { groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
+    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待办」列 */
+    TK_STATUSES.forEach(function (s) { if (s.id === 'planned') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
   } else if (taskViewState.groupBy === 'priority') {
     TK_PRIORITIES.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
   } else if (taskViewState.groupBy === 'assignee') {
@@ -342,6 +349,7 @@ function getGroupedTasks(tasks) {
   }
   tasks.forEach(function (t) {
     var k = t[taskViewState.groupBy];
+    if (taskViewState.groupBy === 'status' && k === 'planned') k = 'backlog';
     if (!k) {
       if (taskViewState.groupBy === 'assignee') k = 'unassigned';
       else if (taskViewState.groupBy === 'project') k = 'none';
@@ -350,7 +358,9 @@ function getGroupedTasks(tasks) {
     if (!groups[k]) { groups[k] = { name: k, color: 'gray', tasks: [] }; keys.push(k); }
     groups[k].tasks.push(t);
   });
-  return keys.filter(function (k) { return groups[k].tasks.length > 0; }).map(function (k) {
+  /* 按状态分组时保留空列：状态卡片即使没有任务也显示，便于了解全部状态并拖拽流转 */
+  var keepEmptyGroups = taskViewState.groupBy === 'status';
+  return keys.filter(function (k) { return keepEmptyGroups || groups[k].tasks.length > 0; }).map(function (k) {
     return { key: k, name: groups[k].name, color: groups[k].color, tasks: groups[k].tasks };
   });
 }
@@ -370,7 +380,7 @@ function renderBoard() {
     var collapsed = taskViewState.collapsedBoardGroups.has(g.key);
     var toggleLabel = collapsed ? '展开分组' : '折叠分组';
     var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
-    return '<div class="tk-board-col" data-group-key="' + g.key + '">'
+    return '<div class="tk-board-col' + (collapsed ? ' is-collapsed' : '') + '" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
       + '<span class="tk-board-col-dot tk-st-' + (g.color || 'gray') + '"></span>'
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
@@ -846,7 +856,7 @@ function filterOptionsFor(section) {
   /* 计数与列表实际结果同口径：按当前视图可见基准统计（跳过本分类已选筛选） */
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
-    ['planned','待规划'],['backlog','待办'],['in_progress','进行中'],['in_review','审核中'],
+    ['planned','待规划'],['backlog','待办'],['in_progress','执行中'],['in_review','审核中'],
     ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
@@ -1648,8 +1658,10 @@ els.tkListBody.addEventListener('keydown', function (e) {
 els.tkBoardScroll.addEventListener('click', function (e) {
     var toggleBtn = e.target.closest('[data-toggle-col]');
     if (toggleBtn) {
-      var body = toggleBtn.closest('.tk-board-col').querySelector('.tk-board-col-body');
+      var col = toggleBtn.closest('.tk-board-col');
+      var body = col.querySelector('.tk-board-col-body');
       body.classList.toggle('collapsed');
+      col.classList.toggle('is-collapsed');
       var toggleLabel = body.classList.contains('collapsed') ? '展开分组' : '折叠分组';
       toggleBtn.setAttribute('data-tooltip', toggleLabel);
       toggleBtn.setAttribute('aria-label', toggleLabel);

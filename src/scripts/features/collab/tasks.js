@@ -179,7 +179,7 @@ function cvConfirmExec(){
   if(card){
     var titleEl=card.querySelector('.card-title');if(titleEl)taskTitle=titleEl.textContent;
     card.setAttribute('data-status','进行中');
-    var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--running';sb.innerHTML='<span class="badge-status-dot"></span>进行中';}
+    var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--running';sb.innerHTML='<span class="badge-status-dot"></span>执行中';}
     var node=card.querySelector('.card-node');if(node)node.innerHTML='<span class="card-node-dot" style="background:var(--dot-blue)"></span>开发实现';
     card.querySelector('.card-actions')&&(card.querySelector('.card-actions').style.display='none');
   }

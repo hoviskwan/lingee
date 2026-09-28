@@ -7,7 +7,7 @@ import { initToast } from './core/toast.js';
 import { initChangelog } from './features/changelog.js';
 import { initHoverDropdowns, initFormDropdowns } from './features/dropdown.js';
 import { initAttachApp, initAttachModal } from './features/attach-app.js';
-import { initViewSwitch, initSidebarNav, initHomeCards, showView, setNavActive } from './core/view.js';
+import { initViewSwitch, initSidebarNav, initHomeCards } from './core/view.js';
 import { initPreview, initHistoryPanel } from './features/chat.js';
 import { initEnvConfig, initEnvAuth, initEnvDisconnect } from './features/env.js';
 import { initApps, initNewAppModal, initAppsNewDropdown } from './features/apps.js';
@@ -32,7 +32,6 @@ import { initCollabProjects } from './features/collab/projects.js';
 import { initPersonPicker } from './features/collab/person-picker.js';
 import { initCollabConfig } from './features/collab/config.js';
 import { initCollab } from './features/collab/index.js';
-import { cvSwitchView } from './features/collab/view.js';
 import { initTasksV2 } from './features/tasks-v2/index.js';
 import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
@@ -99,13 +98,6 @@ initTasksV2();                    /* 任务管理 v2 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
 initTeamSession();                /* 侧边栏演示会话：苍穹应用开发专家团 */
-
-/* 双击任务管理标题切换到旧版 */
-document.addEventListener('dblclick', function (e) {
-  if (e.target.closest('[data-dblclick-tasks]')) {
-    showView('collab'); setNavActive('协作开发'); initCollab(); cvSwitchView('tasks');
-  }
-});
 
 /* 全局 ESC 关闭弹窗：找到最上层的可见 overlay，触发其关闭按钮点击 */
 document.addEventListener('keydown', function (e) {

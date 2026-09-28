@@ -12,6 +12,7 @@ import { activePick, pickValid, set_activePick, teamById } from './expert/store.
 import { set__prevWishW } from './sidebar.js';
 import { CV_PROJECTS } from './collab/data.js';
 import { tkGetTasks, tkGetTaskArtifacts } from './tasks-v2/data.js';
+import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
 import { reviewTaskStage, submitTaskStage, taskExecutionStages } from './tasks-v2/task-execution.js';
 /* 输入框、发送、＋按钮下拉菜单
@@ -164,8 +165,12 @@ function renderChatSessions() {
   });
   folders.innerHTML = Array.from(groups, function (entry) {
     var id = entry[0], name = projectName(id), collapsed = collapsedChatProjects.has(id);
+    /* 折叠时用关闭的文件夹（assets/icons/chat/ui-folder-16.svg），展开时用打开的文件夹 */
+    var folderIcon = collapsed
+      ? '<svg class="chat-project-icon" viewBox="0 0 16 16" fill="none"><path d="M6.26036 2C7.03874 2.00002 7.77849 2.34003 8.2851 2.93099L9.08783 3.86784C9.34114 4.1633 9.71102 4.33333 10.1002 4.33333H12.5136C12.5637 4.33334 12.6125 4.33912 12.6594 4.34961C14.0645 4.50628 15.1265 5.75221 15.0195 7.19727L14.649 12.1973C14.5457 13.5896 13.3857 14.6666 11.9895 14.6667H3.70437C2.30813 14.6667 1.14815 13.5897 1.04487 12.1973L0.674423 7.19727C0.600705 6.20208 1.08157 5.30192 1.84695 4.78646V4.66667C1.84695 3.19391 3.04086 2 4.51361 2H6.26036ZM3.33393 5.66667C2.5588 5.66667 1.94734 6.32532 2.0045 7.09831L2.37429 12.0983C2.42587 12.7946 3.0062 13.3333 3.70437 13.3333H11.9895C12.6876 13.3333 13.268 12.7945 13.3196 12.0983L13.6894 7.09831C13.7465 6.32536 13.135 5.66673 12.36 5.66667H3.33393ZM4.51361 3.33333C3.89154 3.33333 3.3705 3.75975 3.22325 4.33594C3.25991 4.33445 3.29688 4.33333 3.33393 4.33333H7.73041L7.27273 3.79883C7.01943 3.50337 6.64953 3.33335 6.26036 3.33333H4.51361Z" fill="currentColor"/></svg>'
+      : '<svg class="chat-project-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1.5 4.5h4l1.4 1.5h7.6v6.5H1.5z"/><path d="M1.5 4.5V3h4.8l1.4 1.5"/></svg>';
     return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + escapeHtml(String(id)).replace(/"/g, '&quot;') + '">'
-      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '"><span class="chat-project-chevron">⌄</span><svg class="chat-project-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1.5 4.5h4l1.4 1.5h7.6v6.5H1.5z"/><path d="M1.5 4.5V3h4.8l1.4 1.5"/></svg><span class="txt">' + escapeHtml(name) + '</span></button>'
+      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '"><span class="chat-project-chevron">⌄</span>' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span></button>'
       + '<div class="chat-project-sessions">' + entry[1].map(sessionHtml).join('') + '</div></div>';
   }).join('');
 }
@@ -218,7 +223,7 @@ function openChatSession(sessionId) {
   session.exchanges.forEach(function (exchange, index) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
-    var response = appendAssistantMessage(resolveChatTeam(session, task));
+    var response = appendAssistantMessage(task ? null : resolveChatTeam(session, task));
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
   });
   renderChatSessions();
@@ -229,12 +234,12 @@ function getConversationTask() {
 }
 function renderConversationTaskReference() {
   var task = getConversationTask();
-  ['ntTags', 'chatTags'].forEach(function (id) {
-    var tags = document.getElementById(id);
-    if (!tags) return;
+  /* 任务发起的会话详情（聊天页）输入框不显示任务标签：任务上下文由右侧「会话信息」面板与标题承载 */
+  var tags = document.getElementById('ntTags');
+  if (tags) {
     tags.classList.toggle('hidden', !task);
     tags.innerHTML = task ? '<span class="ctag" data-task-ref-id="' + task.id + '"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(task.code || '') + ' ' + escapeHtml(task.title || '') + '</span><button type="button" class="ctag-x" data-clear-task-ref aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>' : '';
-  });
+  }
   if (task && !viewChat.classList.contains('hidden')) $('#chatTitle').textContent = task.title;
 }
 function renderChatTaskSide() {
@@ -244,6 +249,8 @@ function renderChatTaskSide() {
   viewChat.classList.toggle('task-context-open', !!task);
   if (task) viewChat.classList.remove('preview-open');
   refreshChatStageConfirm();
+  /* 任务会话确认流转/完成后任务不再处于执行态，隐藏输入区；任务重新执行时恢复。 */
+  document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !['in_progress', 'in_review'].includes(task.status));
   if (!task) return;
   var link = document.getElementById('chatTaskLink');
   link.dataset.taskId = String(task.id);
@@ -477,14 +484,14 @@ function createWorkStep(title,status){
   return step;
 }
 
-function createFinalResult(){
+function createFinalResult(withHeader){
   var result=document.createElement('div');
-  result.className='work-step done final-step';
-  result.innerHTML='<div class="step-header">'
+  result.className='work-step done final-step' + (withHeader ? '' : ' bare');
+  result.innerHTML=(withHeader?'<div class="step-header">'
     +'<div class="step-left">'
     +'<svg class="step-icon done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
     +'<span class="step-title">生成结果</span></div>'
-    +'</div>'
+    +'</div>':'')
     +'<div class="markdown-content"></div>';
   return result;
 }
@@ -623,8 +630,12 @@ function renderMarkdown(text){
   return out.join('\n');
 }
 
-function streamText(targetEl,text,onDone){
+/* 任务会话结果较长，流式节奏需比普通会话慢，避免整段内容一闪而过 */
+var TASK_STREAM_PACE={chunkSize:8,interval:80};
+function streamText(targetEl,text,onDone,pace){
   var idx=0;
+  var chunkSize=pace&&pace.chunkSize?Math.max(1,pace.chunkSize):0;
+  var interval=(pace&&pace.interval)||60;
   var cursor=document.createElement('span');
   cursor.className='cursor-blink';
   cursor.textContent='▌';
@@ -646,11 +657,13 @@ function streamText(targetEl,text,onDone){
     if(done) return;
     if(!targetEl.isConnected){done=true;return;}
     if(idx<text.length){
-      var chunk=text.slice(idx,idx+Math.max(2,Math.ceil(text.length/16)));
+      var chunk=chunkSize
+        ? text.slice(idx,idx+chunkSize)
+        : text.slice(idx,idx+Math.max(2,Math.ceil(text.length/16)));
       cursor.insertAdjacentText('beforebegin',chunk);
       idx+=chunk.length;
       scrollChatBottom();
-      timer=setTimeout(typeNext,60);
+      timer=setTimeout(typeNext,interval);
     }else{
       finish();
     }
@@ -680,14 +693,35 @@ function syncPreviewOpen(artifact){
   /* 初始化中若有其它逻辑改动了面板，再以存储值校正一次 */
   requestAnimationFrame(apply);
 }
+/* 任务会话结果汇报：按任务数据生成正文，需求点数、待确认问题数等口径与产物文档一致 */
+function buildTaskResultText(task){
+  var stages=taskExecutionStages(task);
+  var stage=stages.find(function(s){return s.id===task.executionStageId;})||stages[0]||{};
+  var nextStage=stages[stages.indexOf(stage)+1];
+  var doc=tkGetTaskArtifacts(task)[0];
+  var points=requirementPoints(task);
+  var core=String(task.desc||'').split(/[。；;\n]/)[0].trim()||('完成「'+task.title+'」主流程');
+  var frLast='FR-'+String(points.length).padStart(2,'0');
+  var openIssues=openIssueCount(task);
+  return '关联任务 **'+task.code+' '+task.title+'** 的「'+(stage.name||'需求分析')+'」已完成，整理要点如下。\n\n'
+    +'**范围与目标**\n'
+    +'- 核心诉求：'+core+'。\n'
+    +'- 本阶段目标：'+(stage.desc||stage.name||'确认范围与验收标准')+'。\n\n'
+    +'**产出要点**\n'
+    +'- 梳理 3 类用户角色（业务操作员、业务主管、项目负责人）的使用场景与频次\n'
+    +'- 拆分功能需求 '+points.length+' 条（FR-01 ~ '+frLast+'），前 2 条为 P0，逐条附验收标准\n'
+    +'- 非功能需求覆盖性能、权限、兼容与审计\n'
+    +'- 登记 '+openIssues+' 个待确认问题（历史数据迁移、导出规格等），需要你拍板\n\n'
+    +'产物：需求分析.md'+(doc?'（'+doc.docNo+' '+doc.version+'，'+doc.status+'）':'（原型模拟）')+'，点击下方产物卡片可查看全文。'
+    +'建议重点看第 3 节功能需求与第 6 节待确认问题；'
+    +(nextStage?'确认后进入「'+nextStage.name+'」阶段。':'确认后即可归档收尾。');
+}
+
 function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   var run = activeResponseRun;
-  var steps=task ? [
-    {title:'读取关联任务', detail:'已读取 ' + (task.code || '') + '「' + task.title + '」。\n任务背景：' + String(task.desc || task.title).slice(0, 140) + (String(task.desc || '').length > 140 ? '…' : '')},
-    {title:'梳理需求与范围', detail:'本轮指令：' + String(prompt || '开始分析').slice(0, 120) + '\n正在整理目标、范围和待确认项。'},
-    {title:'整理分析产物', detail:'已形成需求分析草稿，包含任务背景、本轮指令和建议下一步。'}
-  ] : [{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
-  var taskResultText=task ? '关联任务 **' + task.code + ' ' + task.title + '** 的需求分析已整理完成。\n\n产物：需求分析.md（原型模拟）。点击产物可查看具体内容。' : '';
+  /* 任务会话不展示执行步骤，直接流式输出结果 */
+  var steps=task ? [] : [{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
+  var taskResultText=task ? buildTaskResultText(task) : '';
   var timeline=document.createElement('div');
   timeline.className='work-steps';
   responseEl.appendChild(timeline);
@@ -711,7 +745,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     if(cancelStream)cancelStream();
     timeline.replaceChildren();
     steps.forEach(function(step){timeline.appendChild(createWorkStep(step.title,'done'));});
-    var result=createFinalResult();
+    var result=createFinalResult(!task);
     timeline.appendChild(result);
     var artifact=task ? null : createArtifactCard();
     result.querySelector('.markdown-content').innerHTML=renderMarkdown(task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)]);
@@ -733,17 +767,23 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   function addNextStep(){
     if (run !== activeResponseRun || !responseEl.isConnected) return;
     if(currentStepIdx>=steps.length){
-      var result=createFinalResult();
-      timeline.appendChild(result);
-      var mc=result.querySelector('.markdown-content');
-      var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
-      cancelStream=streamText(mc,text,function(){
+      function beginStream(){
         if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
-        if (task) appendTaskArtifact(result,task);
-        else result.appendChild(createArtifactCard());
-        scrollChatBottom();
-        finishRun();
-      });
+        var result=createFinalResult(!task);
+        timeline.appendChild(result);
+        var mc=result.querySelector('.markdown-content');
+        var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
+        cancelStream=streamText(mc,text,function(){
+          if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
+          if (task) appendTaskArtifact(result,task);
+          else result.appendChild(createArtifactCard());
+          scrollChatBottom();
+          finishRun();
+        }, task ? TASK_STREAM_PACE : null);
+      }
+      /* 任务会话没有步骤铺垫，输出前留一个接收任务的间隙 */
+      if (task) setTimeout(beginStream, 500);
+      else beginStream();
       return;
     }
     var step=createWorkStep(steps[currentStepIdx].title,'running');
@@ -760,12 +800,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       currentStepIdx++;
       setTimeout(addNextStep,120);
     }
-    if (task) {
-      var detail=document.createElement('div');
-      detail.className='step-detail streaming-content';
-      step.appendChild(detail);
-      cancelStream=streamText(detail,steps[currentStepIdx].detail,finishStep);
-    } else setTimeout(finishStep,350);
+    setTimeout(finishStep,350);
   }
   addNextStep();
 }
@@ -812,7 +847,7 @@ function doSend(automatic){
     saveChatSessions();
     renderChatSessions();
   }else{
-    var responseEl=appendAssistantMessage(resolveChatTeam(session, linkedTask));
+    var responseEl=appendAssistantMessage(linkedTask ? null : resolveChatTeam(session, linkedTask));
     simulateAIResponse(responseEl,false,linkedTask,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   }
   chatInput.innerHTML='';
@@ -862,9 +897,10 @@ function chatDoSend(){
   if(empty) empty.remove();
   appendUserMessage(t);
   chatInput.innerHTML=''; refreshChatSend();
-  var responseEl=appendAssistantMessage(resolveChatTeam(session, tkGetTasks().find(function (task) { return task.id === activeSessionTaskId; })));
+  var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  var responseEl=appendAssistantMessage(task ? null : resolveChatTeam(session, task));
   activeResponseRun++;
-  simulateAIResponse(responseEl,false,tkGetTasks().find(function (task) { return task.id === activeSessionTaskId; }),t,function () { finishSessionExchange(session.id, exchangeIndex); });
+  simulateAIResponse(responseEl,false,task,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   chatInput.focus();
 }
 /* ---------- ＋按钮下拉菜单 ---------- */
@@ -1162,7 +1198,7 @@ export function initComposer() {
   }
   document.addEventListener('lingee:new-conversation', function () { setComposerTaskReference(null); });
   document.addEventListener('click', function (event) {
-    if (event.target.closest('#ntTags [data-clear-task-ref], #chatTags [data-clear-task-ref]')) setComposerTaskReference(null);
+    if (event.target.closest('#ntTags [data-clear-task-ref]')) setComposerTaskReference(null);
   });
   input.addEventListener('input',refreshSend);
   input.addEventListener('keydown',function(e){

@@ -16,7 +16,7 @@ function resourceOf(text) {
 }
 
 /* 把任务描述切成可逐条验收的需求点；描述过短时补齐通用需求点。 */
-function requirementPoints(task) {
+export function requirementPoints(task) {
   var points = String(task.desc || '')
     .split(/[。；;\n]/)
     .map(function (s) { return s.replace(/^[\s\d.、]+/, '').trim(); })
@@ -33,6 +33,11 @@ function requirementPoints(task) {
 function blockedReason(task) {
   var m = String(task.desc || '').match(/阻塞原因[:：]([^。]+)/);
   return m ? m[1].trim() : '';
+}
+
+/* 需求文档「待确认问题」行数：固定两行，任务描述带阻塞原因时追加一行 */
+export function openIssueCount(task) {
+  return 2 + (blockedReason(task) ? 1 : 0);
 }
 
 function addDays(base, days) {

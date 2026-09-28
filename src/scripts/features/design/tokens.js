@@ -45,7 +45,7 @@ function renderGlobalStyles(){
       T('--warning-bg','Warning BG','警示浅背景'),
       T('--danger','Danger','危险色，同时用于金额强调'),
       T('--danger-bg','Danger BG','危险浅背景'),
-      T('--dot-blue','Dot Blue','蓝点，进行中'),
+      T('--dot-blue','Dot Blue','蓝点，执行中'),
       T('--dot-orange','Dot Orange','橙点，等待中'),
       T('--dot-green','Dot Green','绿点，已完成')
     ]},

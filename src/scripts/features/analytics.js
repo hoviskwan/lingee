@@ -31,7 +31,7 @@ var errorData=[
   {page:'删除确认弹窗',button:'确认删除',error:'该记录已被引用，无法删除',count:38},
   {page:'应用开发',button:'生成代码',error:'模板解析失败：字段映射不完整',count:36},
   {page:'技能开发',button:'导出技能',error:'未选择导出格式，无法导出',count:28},
-  {page:'会话',button:'停止生成',error:'当前无进行中的任务',count:22},
+  {page:'会话',button:'停止生成',error:'当前无执行中的任务',count:22},
   {page:'协作开发',button:'提交评审',error:'评审人不能为空',count:18}
 ];
 

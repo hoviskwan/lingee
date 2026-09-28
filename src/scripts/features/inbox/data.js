@@ -39,7 +39,7 @@ function initialItems() {
     ['in_review',1,'review_requested',5.1,'测试验证结束，待审核测试结果和回归记录。','agent'],
     ['blocked',1,'task_failed',6.3,'执行时发现接口返回字段与方案设计不一致，需要先更新数据契约。','agent'],
     ['backlog',0,'issue_assigned',8,'任务已分配给你，请确认目标和截止时间。'],
-    ['in_progress',2,'status_changed',10,'状态由「待办」变更为「进行中」，专家团开始处理。'],
+    ['in_progress',2,'status_changed',10,'状态由「待办」变更为「执行中」，专家团开始处理。'],
     ['done',1,'task_completed',12,'专家团已完成全部交付阶段，负责人确认后归档。','agent'],
     ['in_review',2,'new_comment',15,'评审意见已补充：请检查权限边界和异常处理。'],
     ['planned',0,'priority_changed',20,'优先级调整，请重新安排本周计划。'],

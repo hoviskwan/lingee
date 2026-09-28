@@ -1,10 +1,10 @@
   <!-- ===================== 任务管理 v2 ===================== -->
-  <div class="view hidden" id="view-tasks" data-list-version="latest">
+  <div class="view hidden" id="view-tasks">
     <div class="tk-project-context hidden" id="tkProjectContext"><button type="button" id="tkProjectBack">项目</button><span>›</span><strong id="tkProjectContextName"></strong><span>›</span><b>项目任务</b></div>
     <!-- 页头 -->
     <div class="list-page-header tk-header">
       <div class="list-page-heading">
-        <h2 data-dblclick-tasks style="cursor:pointer" title="双击切换到旧版">任务</h2>
+        <h2>任务</h2>
       </div>
     </div>
 
@@ -277,7 +277,7 @@
           </div>
           <div class="tk-form-row">
             <label for="tkSaveViewScope">任务范围</label>
-            <select id="tkSaveViewScope"><option value="all">全部任务</option><option value="my_assigned">我负责</option><option value="in_progress">进行中</option><option value="members">分配给成员</option><option value="agents">分配给智能体</option></select>
+            <select id="tkSaveViewScope"><option value="all">全部任务</option><option value="my_assigned">我负责</option><option value="in_progress">执行中</option><option value="members">分配给成员</option><option value="agents">分配给智能体</option></select>
           </div>
           <div class="tk-form-row">
             <label for="tkSaveViewLayout">布局</label>
@@ -313,7 +313,7 @@
     <!-- 批量操作下拉 -->
     <div class="tk-popover" id="tkBulkStatusMenu">
       <div class="tk-popover-item" data-status="backlog">待处理</div>
-      <div class="tk-popover-item" data-status="in_progress">进行中</div>
+      <div class="tk-popover-item" data-status="in_progress">执行中</div>
       <div class="tk-popover-item" data-status="in_review">评审中</div>
       <div class="tk-popover-item" data-status="done">已完成</div>
       <div class="tk-popover-item" data-status="blocked">已阻塞</div>

@@ -199,7 +199,8 @@
 .tk-board-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
 .tk-board-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
 
-.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px)}
+.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px);height:100%}
+.tk-board-col.is-collapsed{height:auto}
 .tk-board-col-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--divider);flex-shrink:0}
 .tk-board-col-head-left{display:flex;align-items:center;gap:6px}
 .tk-board-col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -638,9 +639,6 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-feed-stage-overview{padding:13px 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
 .tk-feed-stage-overview-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;font-size:12px}
 .tk-feed-stage-overview-head strong{color:var(--text)}
-.tk-feed-stage-current{padding:2px 7px;border-radius:10px;background:var(--fill-2);color:var(--text-secondary);font-size:10px;white-space:nowrap}
-.tk-feed-stage-current.is-running,.tk-feed-stage-current.is-review{background:var(--brand-fill);color:var(--brand)}
-.tk-feed-stage-current.is-blocked{background:var(--danger-bg,var(--fill-2));color:var(--danger)}
 .tk-feed-stage-history-toggle{margin-left:auto;padding:2px 0;border:0;background:none;color:var(--brand);font:inherit;font-size:11px;white-space:nowrap;cursor:pointer}
 .tk-feed-stage-history-toggle:hover{text-decoration:underline}
 .tk-feed-stage-list{display:grid;grid-template-columns:repeat(6,minmax(82px,1fr));gap:0;margin:0;padding:3px 0 7px;list-style:none;overflow-x:auto;scrollbar-width:thin;overscroll-behavior-inline:contain}
@@ -674,7 +672,6 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-exec-card-head{display:flex;align-items:center;gap:11px;min-width:0}
 .tk-exec-card>.tk-agent-report-head{display:flex;align-items:center;gap:11px;min-height:36px}
 .tk-exec-card>.tk-agent-report-head .tk-agent-report-heading{flex:1;min-width:0}
-.tk-exec-card>.tk-agent-report-head .tk-agent-report-state{margin-left:auto}
 .tk-exec-card-mark{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:18px}
 .tk-exec-team-avatars{display:inline-flex;align-items:center;flex:none;padding-right:8px;min-height:34px}
 .tk-exec-team-avatars img,.tk-exec-team-avatars-more{display:grid;place-items:center;flex:none;width:30px;height:30px;margin-right:-8px;border:2px solid var(--bg);border-radius:9px;object-fit:cover;box-sizing:border-box;background:var(--brand-fill)}
@@ -683,7 +680,6 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-exec-card-identity strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:14px;font-weight:600}
 .tk-exec-card-identity span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:11px}
 .tk-exec-card .tk-feed-stage-overview-head{margin:15px 0 12px;padding-top:14px;border-top:1px solid var(--divider)}
-.tk-exec-card .tk-feed-stage-current{flex:none;font-size:11px;font-weight:600}
 .tk-exec-card .tk-feed-stage-list{padding-bottom:9px}
 .tk-exec-card .tk-feed-stage-list{display:flex;flex-direction:column;gap:7px;padding:0;overflow:visible}
 .tk-exec-card .tk-feed-stage{display:grid;grid-template-columns:16px minmax(100px,1fr) minmax(88px,130px) auto auto auto;grid-template-rows:auto;align-items:center;justify-items:stretch;gap:10px;min-height:42px;padding:7px 10px;border-radius:8px;background:var(--fill-1);font-size:12px;text-align:left}
@@ -1159,8 +1155,8 @@ input[type=date].tk-mc-pill{width:auto}
 .tk-just-expanded .tk-card--child{animation:tkCardExpandIn .28s cubic-bezier(.34,1.3,.64,1) both;transform-origin:top center}
 .tk-card.tk-leaving{animation:tkCardExpandOut .22s cubic-bezier(.4,0,.2,1) both;transform-origin:top center}
 
-/* 新版移除视图方案整行；已保存版本保留原布局。 */
-#view-tasks[data-list-version="latest"] #tkViewBar{display:none}
+/* 任务页固定为最新版布局：视图方案整行不再显示。 */
+#view-tasks #tkViewBar{display:none}
 
 /* ---------- 任务详情「我的会话」：只列当前用户的会话标题，默认折叠 ---------- */
 .tk-my-sessions{margin:0 0 32px}

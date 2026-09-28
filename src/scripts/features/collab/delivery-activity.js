@@ -86,7 +86,7 @@ export function createDeliveryActivity(task, project, options = {}) {
     if (status === 'in_progress' && index === activeIndex && !task.statusHistory?.length) {
       activity.push(
         {stageId:'status-flow', stage:'状态流转', author:options.creator || project?.owner || '项目成员',
-         text:`状态从「待办」流转至「进行中」，开始${stage.name}。`, time:`${date} 09:30`, state:'done'},
+         text:`状态从「待办」流转至「执行中」，开始${stage.name}。`, time:`${date} 09:30`, state:'done'},
         {stageId:'assignee', stage:'处理人分配', author:options.creator || project?.owner || '项目成员',
          text:`分配处理人「${options.assigneeName || '待分配'}」，协同${expert.name}完成${stage.name}。`, time:`${date} 09:35`, state:'done'},
       );

@@ -190,7 +190,8 @@
 .tk-board-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
 .tk-board-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
 
-.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px)}
+.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px);height:100%}
+.tk-board-col.is-collapsed{height:auto}
 .tk-board-col-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--divider);flex-shrink:0}
 .tk-board-col-head-left{display:flex;align-items:center;gap:6px}
 .tk-board-col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
