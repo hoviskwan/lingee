@@ -92,11 +92,11 @@ async function startSharedStorage(snapshot) {
           conflicts.set(row.key,value === undefined ? null : value);
           try { nativeSet.call(localStorage,'lingee-shared-conflict-' + Date.now() + '-' + row.key,JSON.stringify({key:row.key,value})); } catch (_) {}
         });
-        notice(status === 409 ? '共享数据已被其他人修改，本次更改未覆盖对方。请先下载本地未保存内容，再刷新核对。' : '共享数据保存被拒绝（' + (result?.error || status) + '），请下载未保存内容并核对。',{label:'下载未保存数据',click:downloadConflicts});
+        notice(status === 409 ? '共享数据已被其他人修改，本次更改未覆盖对方。请先下载本地未保存内容，再刷新核对。' : '共享数据保存被拒绝（' + (result?.message || result?.error || status) + '），请下载未保存内容并核对。',{label:'下载未保存数据',click:downloadConflicts});
       } else { throw new Error(result?.error || '保存失败'); }
     } catch (error) {
       keys.forEach(key => dirty.add(key));
-      notice('SQLite 连接中断，本次更改尚未保存；连接恢复后会重试。');
+      notice('共享数据库暂时无法保存，本次更改尚未保存；服务恢复后会自动重试。');
       sending = false;
       schedule(3000);
       return;

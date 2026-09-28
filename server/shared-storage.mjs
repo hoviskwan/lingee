@@ -5,6 +5,7 @@ import { SHARED_STORAGE_KEYS } from '../src/scripts/core/shared-keys.js';
 
 const allowed = new Set(SHARED_STORAGE_KEYS);
 const maxValueBytes = 10 * 1024 * 1024;
+const maxRequestBytes = allowed.size * maxValueBytes + 64 * 1024;
 
 function send(res, status, payload) {
   res.writeHead(status, { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' });
@@ -16,7 +17,11 @@ async function readJson(req) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > maxValueBytes + 4096) throw new Error('请求数据过大');
+    if (size > maxRequestBytes) {
+      const error = new Error('批量请求数据超过上限');
+      error.code = 'payload_too_large';
+      throw error;
+    }
     chunks.push(chunk);
   }
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -109,7 +114,14 @@ export function createSharedStorage(dbPath) {
         return { revision:get.get(body.key).revision };
       });
       send(res, result.conflict ? 409 : 200, result);
-    } catch (error) { send(res, 400, { error:'invalid_request', message:error.message }); }
+    } catch (error) {
+      if (error.code === 'payload_too_large') send(res, 413, { error:error.code, message:error.message });
+      else if (error instanceof SyntaxError) send(res, 400, { error:'invalid_json', message:'请求格式无效' });
+      else {
+        console.error('共享数据库保存失败:',error);
+        send(res, 500, { error:'storage_error', message:'SQLite 写入失败，请检查本地服务终端日志' });
+      }
+    }
   }
 
   return { middleware, close:() => db.close() };
