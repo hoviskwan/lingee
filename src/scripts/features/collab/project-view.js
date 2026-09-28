@@ -620,9 +620,18 @@ function cvProjectMemberRoleLabel(role){
   if(role==='owner')return '项目负责人';
   return CV_PROJECT_MEMBER_ROLES.find(function(option){return option[0]===role;})?.[1]||'待设置';
 }
+function cvProjectMemberRoleValue(project,person){
+  var assigned=project.memberRoles?.[person.id];
+  if(CV_PROJECT_MEMBER_ROLES.some(function(option){return option[0]===assigned;}))return assigned;
+  var roles=(person.roles||[]).map(function(role){return role.text;});
+  if(roles.includes('产品')||roles.includes('需求')||person.dept==='产品部')return 'product';
+  if(roles.includes('测试')||person.dept==='测试部')return 'testing';
+  if(roles.includes('开发')||roles.includes('架构')||person.dept==='研发部')return 'development';
+  return '';
+}
 function cvProjectMemberRoleHtml(project,person){
   if(person.name===project.owner)return '<span class="pj-detail-member-role">项目负责人</span>';
-  var role=project.memberRoles?.[person.id]||'';
+  var role=cvProjectMemberRoleValue(project,person);
   if(!cvCanManageProject(project))return '<span class="pj-detail-member-role">'+xesc(cvProjectMemberRoleLabel(role))+'</span>';
   return '<select class="pj-member-role-select" data-pj-member-role="'+xesc(person.id)+'" aria-label="'+xesc(person.name)+'的项目角色">'
     +'<option value=""'+(!role?' selected':'')+'>待设置</option>'
