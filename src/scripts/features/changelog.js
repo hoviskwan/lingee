@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'56',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务执行会话支持连续流式输出，并展示所选专家团及成员头像，完成后在右侧显示可恢复的产物。'},
   {id:'55',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新版任务与项目支持成员权限、项目删除及阶段流转，执行会话按项目归档并模拟流式输出、关联任务与产物，本机开发服务新增 SQLite 局域网共享数据。'},
   {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情在阶段节点集中展示处理人、专家头像、状态与可展开的产物；新建任务刷新后可恢复，项目卡片进度实时更新。'},
   {id:'53',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'项目管理',author:'Joe',body:'项目列表默认卡片视图，整卡进入详情；项目概览仅负责人可修改，其他人只读，代码仓库和描述必填，项目编码不可修改；新建任务须明确所属项目。'},
@@ -53,6 +54,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '56':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="12" r="3"/><circle cx="17" cy="8" r="3"/><path d="M2 21v-2a5 5 0 0 1 10 0v2m0 0v-3a5 5 0 0 1 10 0v3"/></svg>',
   '55':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 14h5"/><path d="M17 13v5m-2.5-2.5h5"/></svg>',
   '54':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
   '53':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/><path d="M8 14h8m-4-4v8"/></svg>',

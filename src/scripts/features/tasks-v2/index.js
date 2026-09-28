@@ -20,7 +20,7 @@ import { initTkFormExpertPicker } from './expert-picker.js';
 import { initTaskListVersion } from './list-version.js';
 import { $, $$ } from '../../core/dom.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
-import { setComposerTaskReference } from '../composer.js';
+import { setComposerTaskReference, startTaskConversationSimulation } from '../composer.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
@@ -230,6 +230,7 @@ function openTaskConversationWithTask(taskId, origin) {
   var teamId = t.teamId || (project && project.defaultTeam);
   if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   setComposerTaskReference(t.id);
+  if (origin === 'start') { startTaskConversationSimulation(t.id); return; }
   input.focus();
 }
 function retryBlockedTask(task) {

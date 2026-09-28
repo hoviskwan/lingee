@@ -7,8 +7,8 @@ import { syncTogglePreviewBtn } from './chat.js';
 import { closeAll } from './dropdown.js';
 import { appendAskCard, appendAutoNote, autoMatch } from './expert/automatch.js';
 import { renderExpertChips } from './expert/chips.js';
-import { pendingInputs } from './expert/data.js';
-import { pickValid, set_activePick } from './expert/store.js';
+import { EX, pendingInputs, xav, xesc } from './expert/data.js';
+import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_PROJECTS } from './collab/data.js';
 import { tkGetTasks } from './tasks-v2/data.js';
@@ -169,7 +169,9 @@ function renderChatSessions() {
 function createChatSession(title, taskId) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   var projectId = task?.project || '';
-  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, projectId: projectId, exchanges: [] };
+  var project = CV_PROJECTS.find(function (row) { return row.id === projectId; });
+  var teamId = task?.teamId || project?.defaultTeam || (activePick.kind === 'team' ? activePick.id : '');
+  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, projectId: projectId, teamId: teamId, exchanges: [] };
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
   chatSessions = chatSessions.slice(0, 30);
@@ -212,7 +214,7 @@ function openChatSession(sessionId) {
   session.exchanges.forEach(function (exchange, index) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
-    var response = appendAssistantMessage();
+    var response = appendAssistantMessage(resolveChatTeam(session, task));
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
   });
   renderChatSessions();
@@ -241,6 +243,15 @@ function renderChatTaskSide() {
   var link = document.getElementById('chatTaskLink');
   link.dataset.taskId = String(task.id);
   link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>' + escapeHtml(String(task.code || '')) + ' ' + escapeHtml(String(task.title || '')) + '</span>';
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  var team = resolveChatTeam(session, task);
+  var teamSection = document.getElementById('chatTaskTeamSection');
+  teamSection.hidden = !team;
+  if (team) document.getElementById('chatTaskTeam').innerHTML = teamAvatarHtml(team) + '<span>' + escapeHtml(team.name) + '</span>';
+  var completed = session?.exchanges.filter(function (exchange) { return exchange.done && !exchange.waiting; }).at(-1);
+  var output = document.getElementById('chatTaskArtifacts');
+  output.innerHTML = completed ? '' : '<span class="chat-task-pending">执行完成后显示产物</span>';
+  if (completed) output.appendChild(createTaskArtifactCard(task, completed.prompt));
 }
 function clearChatTaskSide() {
   activeSessionTaskId = null;
@@ -257,7 +268,7 @@ function taskArtifactText(task, prompt) {
     + '## 任务背景\n' + (task.desc || task.title) + '\n\n'
     + '## 建议下一步\n1. 确认业务范围与边界条件。\n2. 按任务描述拆分实现和验收项。\n3. 与任务负责人确认后进入下一阶段。\n';
 }
-function appendTaskArtifact(result, task, prompt) {
+function createTaskArtifactCard(task, prompt) {
   var text = taskArtifactText(task, prompt);
   var card = document.createElement('button');
   card.type = 'button';
@@ -271,13 +282,10 @@ function appendTaskArtifact(result, task, prompt) {
     doc.textContent = text;
   }
   card.addEventListener('click', showDocument);
-  result.appendChild(card);
-  if (activeSessionTaskId === task.id) {
-    var output = document.getElementById('chatTaskArtifacts');
-    output.innerHTML = '';
-    output.appendChild(card.cloneNode(true));
-    output.firstChild.addEventListener('click', showDocument);
-  }
+  return card;
+}
+function appendTaskArtifact(result, task, prompt) {
+  result.appendChild(createTaskArtifactCard(task, prompt));
 }
 export function setComposerTaskReference(taskId) {
   conversationTaskId = taskId == null ? null : Number(taskId);
@@ -293,10 +301,21 @@ function appendUserMessage(text){
   scrollChatBottom();
 }
 
-function appendAssistantMessage(){
+function resolveChatTeam(session, task){
+  var project = CV_PROJECTS.find(function (row) { return row.id === (task?.project || session?.projectId); });
+  return teamById(session?.teamId || task?.teamId || project?.defaultTeam || '');
+}
+function teamAvatarHtml(team){
+  var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);
+  return '<span class="chat-team-avatars" role="img" aria-label="' + xesc(team.name) + '成员头像">'
+    + members.map(function (member) { return '<img src="' + xesc(xav(member.k)) + '" alt="" title="' + xesc(member.name) + '">'; }).join('') + '</span>';
+}
+function appendAssistantMessage(team){
   var msg=document.createElement('div');
   msg.className='message assistant';
-  msg.innerHTML='<div class="message-content"><div class="assistant-response"></div></div>';
+  msg.innerHTML='<div class="message-content">'
+    + (team ? '<div class="chat-agent-identity">' + teamAvatarHtml(team) + '<strong>' + escapeHtml(team.name) + '</strong><span class="chat-agent-state">执行中</span></div>' : '')
+    + '<div class="assistant-response"></div></div>';
   messagesList.appendChild(msg);
   return msg.querySelector('.assistant-response');
 }
@@ -482,16 +501,19 @@ function streamText(targetEl,text,onDone){
   }
   function typeNext(){
     if(done) return;
+    if(!targetEl.isConnected){done=true;return;}
     if(idx<text.length){
-      cursor.insertAdjacentText('beforebegin',text.slice(idx,idx+10));
-      idx+=10;
+      var chunk=text.slice(idx,idx+Math.max(2,Math.ceil(text.length/16)));
+      cursor.insertAdjacentText('beforebegin',chunk);
+      idx+=chunk.length;
       scrollChatBottom();
-      timer=setTimeout(typeNext,30);
+      timer=setTimeout(typeNext,60);
     }else{
       finish();
     }
   }
   typeNext();
+  return function(){done=true;clearTimeout(timer);};
 }
 
 /* 预览区开关状态：以 localStorage 为唯一来源，默认收起 */
@@ -526,24 +548,38 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   var timeline=document.createElement('div');
   timeline.className='work-steps';
   responseEl.appendChild(timeline);
-
-  if(instant){
-    steps.forEach(function(s){
-      timeline.appendChild(createWorkStep(s.title,'done'));
-    });
+  var completed=false;
+  var cancelStream=null;
+  var watchdog=null;
+  function finishRun(){
+    if(completed)return;
+    completed=true;
+    clearTimeout(watchdog);
+    var state=responseEl.closest('.message')?.querySelector('.chat-agent-state');
+    if(state){state.textContent='已完成';state.classList.add('is-done');}
+    if(onDone)onDone();
+  }
+  function showCompletedResult(){
+    if(completed || run !== activeResponseRun || !responseEl.isConnected)return;
+    if(cancelStream)cancelStream();
+    timeline.replaceChildren();
+    steps.forEach(function(step){timeline.appendChild(createWorkStep(step.title,'done'));});
     var result=createFinalResult();
     timeline.appendChild(result);
-    var mc=result.querySelector('.markdown-content');
-    var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
-    mc.innerHTML=renderMarkdown(text);
     var artifact=task ? null : createArtifactCard();
-    if (task) appendTaskArtifact(result,task,prompt || ''); else result.appendChild(artifact);
-    scrollChatBottom(); /* 预览区保持收起，等待用户点击产物卡片 */
-    /* 预览区开关完全由 chatPreviewOpen 决定；默认收起 */
-    if (!task) syncPreviewOpen(artifact);
-    if (onDone) onDone();
+    result.querySelector('.markdown-content').innerHTML=renderMarkdown(task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)]);
+    if(task)appendTaskArtifact(result,task,prompt || '');else result.appendChild(artifact);
+    scrollChatBottom();
+    if(!task)syncPreviewOpen(artifact);
+    finishRun();
+  }
+
+  if(instant){
+    showCompletedResult();
     return;
   }
+
+  watchdog=setTimeout(showCompletedResult,8000);
 
   var currentStepIdx=0;
 
@@ -554,12 +590,12 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       timeline.appendChild(result);
       var mc=result.querySelector('.markdown-content');
       var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
-      streamText(mc,text,function(){
-        if (run !== activeResponseRun || !responseEl.isConnected) return;
+      cancelStream=streamText(mc,text,function(){
+        if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
         if (task) appendTaskArtifact(result,task,prompt || '');
         else result.appendChild(createArtifactCard());
         scrollChatBottom();
-        if (onDone) onDone();
+        finishRun();
       });
       return;
     }
@@ -581,19 +617,19 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       var detail=document.createElement('div');
       detail.className='step-detail streaming-content';
       step.appendChild(detail);
-      streamText(detail,steps[currentStepIdx].detail,finishStep);
+      cancelStream=streamText(detail,steps[currentStepIdx].detail,finishStep);
     } else setTimeout(finishStep,350);
   }
   addNextStep();
 }
 
-function doSend(){
+function doSend(automatic){
   var t=input.textContent.trim();
   if(!t){ input.focus(); return; }
   /* 苍穹应用模式未选择关联应用时拦截 */
   var modeEl=$('.mode-item.checked');
   var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
-  if(currentMode==='苍穹应用' && appChip.classList.contains('muted')){
+  if(automatic !== true && currentMode==='苍穹应用' && appChip.classList.contains('muted')){
     toast('请先选择关联应用','error');
     appDd.classList.remove('error');
     void appDd.offsetWidth;
@@ -621,14 +657,14 @@ function doSend(){
   appendUserMessage(t);
   if(autoPicked) appendAutoNote();
   input.innerHTML=''; refreshSend();
-  var pend=pendingInputs(t);
+  var pend=linkedTask ? [] : pendingInputs(t);
   if(pend.length && appendAskCard(pend)){
     /* 缺输入就停在追问上，确认完再执行 */
     session.exchanges[exchangeIndex].waiting = true;
     saveChatSessions();
     renderChatSessions();
   }else{
-    var responseEl=appendAssistantMessage();
+    var responseEl=appendAssistantMessage(resolveChatTeam(session, linkedTask));
     simulateAIResponse(responseEl,false,linkedTask,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   }
   chatInput.innerHTML='';
@@ -645,6 +681,14 @@ function doSend(){
   }
 }
 
+export function startTaskConversationSimulation(taskId) {
+  if (getConversationTask()?.id !== taskId) return;
+  var task = getConversationTask();
+  input.textContent = task.desc || task.title || '开始执行任务';
+  refreshSend();
+  doSend(true);
+}
+
 /* ---------- chat composer 发送 ---------- */
 var chatInput=$('#chatInput');
 var chatSendBtn=$('#chatSendBtn');
@@ -659,7 +703,7 @@ function chatDoSend(){
   if(empty) empty.remove();
   appendUserMessage(t);
   chatInput.innerHTML=''; refreshChatSend();
-  var responseEl=appendAssistantMessage();
+  var responseEl=appendAssistantMessage(resolveChatTeam(session, tkGetTasks().find(function (task) { return task.id === activeSessionTaskId; })));
   activeResponseRun++;
   simulateAIResponse(responseEl,false,tkGetTasks().find(function (task) { return task.id === activeSessionTaskId; }),t,function () { finishSessionExchange(session.id, exchangeIndex); });
   chatInput.focus();

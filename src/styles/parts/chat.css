@@ -23,6 +23,13 @@
   .chat-task-link:hover,.chat-task-artifact:hover{border-color:var(--brand);background:var(--brand-fill)}
   .chat-task-link svg,.chat-task-artifact svg{width:17px;height:17px;flex:none;color:var(--brand)}
   .chat-task-link span,.chat-task-artifact span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chat-task-team{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text);font-weight:500}
+  .chat-team-avatars{display:inline-flex;align-items:center;flex:none;padding-right:8px}
+  .chat-team-avatars img{width:25px;height:25px;margin-right:-8px;border:2px solid #fff;border-radius:50%;object-fit:cover;background:var(--brand-fill)}
+  .chat-agent-identity{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:13px;color:var(--text)}
+  .chat-agent-identity strong{font-weight:600}
+  .chat-agent-identity .chat-agent-state{color:var(--brand);font-size:12px}
+  .chat-agent-identity .chat-agent-state.is-done{color:var(--text-muted)}
   .chat-task-pending{font-size:12px;color:var(--text-muted)}
   .chat-task-document{margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--fill-2);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
   @media(max-width:760px){#view-chat .chat-task-side{width:220px;max-width:42%;padding:14px 10px}}
