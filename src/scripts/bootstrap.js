@@ -1,6 +1,7 @@
 import { SHARED_STORAGE_KEYS } from './core/shared-keys.js';
 
 const api = '/lingee/api/storage';
+const sharedStorageEnabled = import.meta.env.DEV && import.meta.env.VITE_SHARED_STORAGE === '1';
 const shared = new Set(SHARED_STORAGE_KEYS);
 const nativeGet = Storage.prototype.getItem;
 const nativeSet = Storage.prototype.setItem;
@@ -145,19 +146,17 @@ async function startSharedStorage(snapshot) {
 }
 
 async function boot() {
-  if (location.protocol !== 'file:') {
-    let sharedDetected = false;
+  window.lingeeStorageMode = 'local';
+  if (sharedStorageEnabled && location.protocol !== 'file:') {
     try {
       const response = await fetch(api,{cache:'no-store'});
-      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-        sharedDetected = true;
-        await startSharedStorage(await response.json());
-      } else if (import.meta.env.DEV) throw new Error('本地 SQLite 服务未启动');
-    } catch (error) {
-      if (sharedDetected || import.meta.env.DEV) {
-        notice('无法连接本地 SQLite 服务：' + error.message + '。请检查 npm run dev 的终端输出并刷新。');
-        throw error;
+      if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('本地 SQLite 服务未启动');
       }
+      await startSharedStorage(await response.json());
+    } catch (error) {
+      notice('无法连接本地 SQLite 服务：' + error.message + '。请检查 npm run dev:shared 的终端输出并刷新。');
+      throw error;
     }
   }
   await import('./main.js');
