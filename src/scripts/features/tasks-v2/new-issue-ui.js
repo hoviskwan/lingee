@@ -2,6 +2,7 @@
 import { escapeHtml } from './ui-utils.js';
 import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask } from './data.js';
 import { CV_PROJECTS } from '../collab/data.js';
+import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAMS } from '../expert/store.js';
 import { toast } from '../../core/toast.js';
 
@@ -52,7 +53,6 @@ function closeOverlays() {
 
 function closePersonPopup() {
   byId('niuPersonPopup').hidden = true;
-  byId('niuOwnerTrigger').setAttribute('aria-expanded', 'false');
   document.querySelectorAll('[data-niu-owner-stage]').forEach(button => button.setAttribute('aria-expanded', 'false'));
   personPopupTarget = '';
   personPopupStageId = '';
@@ -91,10 +91,11 @@ function selectProject(projectId) {
   selectedProjectId = projectId;
   byId('niuProject').value = projectId;
   byId('niuProjectName').textContent = projectId ? projectName(projectId) : '选择项目';
-  setOwner(projectId);
+  setDefaultStageOwner(projectId);
   if (!planLocked()) {
-    draftStages.forEach(stage => { stage.assigneeId = selectedOwnerId; });
+    draftStages = defaultPlanStages(projectId, selectedOwnerId);
     draftConfirmed = false;
+    byId('niuCreateStageCount').textContent = String(draftStages.length);
   }
   closePersonPopup();
   closeProjectPopup();
@@ -102,8 +103,8 @@ function selectProject(projectId) {
 }
 
 function renderPersonOptions() {
-  const projectId = personPopupTarget === 'stage' ? currentTask()?.project : byId('niuProject').value;
-  const chosen = personPopupTarget === 'stage' ? draftStages.find(stage => stage.id === personPopupStageId)?.assigneeId : selectedOwnerId;
+  const projectId = currentTask()?.project;
+  const chosen = draftStages.find(stage => stage.id === personPopupStageId)?.assigneeId;
   const query = byId('niuPersonSearch').value.trim().toLocaleLowerCase();
   const people = tkPeopleInProject(projectId).filter(person => person.name.toLocaleLowerCase().includes(query));
   byId('niuPersonOptions').innerHTML = people.length ? people.map(person => '<button type="button" role="option" aria-selected="' + (person.id === chosen) + '" data-niu-person="' + escapeHtml(person.id) + '"><span class="niu-person-avatar">' + escapeHtml(person.name.slice(0, 1)) + '</span><span>' + escapeHtml(person.name) + '</span><b>' + (person.id === chosen ? '✓' : '') + '</b></button>').join('') : '<p>没有匹配的项目成员</p>';
@@ -111,11 +112,11 @@ function renderPersonOptions() {
 
 function openPersonPopup(target, stageId) {
   if (target === 'stage' && planLocked()) return;
-  const projectId = target === 'stage' ? currentTask()?.project : byId('niuProject').value;
+  const projectId = currentTask()?.project;
   if (!projectId) { toast('请先选择项目', 'warning'); byId('niuProject').focus(); return; }
   personPopupTarget = target;
   personPopupStageId = stageId || '';
-  const trigger = target === 'stage' ? document.querySelector('[data-niu-owner-stage="' + CSS.escape(stageId) + '"]') : byId('niuOwnerTrigger');
+  const trigger = document.querySelector('[data-niu-owner-stage="' + CSS.escape(stageId) + '"]');
   if (!trigger) return;
   const popup = byId('niuPersonPopup');
   byId('niuPersonSearch').value = '';
@@ -128,11 +129,17 @@ function openPersonPopup(target, stageId) {
   byId('niuPersonSearch').focus();
 }
 
-function setOwner(projectId) {
+/* 执行计划阶段的默认负责人：当前用户属于项目成员时用本人。 */
+function setDefaultStageOwner(projectId) {
   const people = tkPeopleInProject(projectId);
   const creatorId = tkCurrentUserId();
   selectedOwnerId = people.some(person => person.id === creatorId) ? creatorId : '';
-  renderOwner(projectId);
+}
+
+/* 默认执行计划：项目关联专家团覆盖的全部阶段，负责人默认当前用户。 */
+function defaultPlanStages(projectId, ownerId) {
+  const team = TEAMS.find(item => item.id === CV_PROJECTS.find(project => project.id === projectId)?.defaultTeam) || null;
+  return tbTeamStages(team).map(stage => ({ id: crypto.randomUUID(), workType: stage.name, title: stage.name, description: stage.desc || '', assigneeId: ownerId || '', status: 'pending' }));
 }
 
 function renderOwner(projectId) {
@@ -162,9 +169,12 @@ export function openNewIssueCreate(projectId) {
   byId('niuType').value = '';
   byId('niuPriority').value = 'medium';
   byId('niuDue').value = '';
-  setOwner(selectedProjectId);
+  setDefaultStageOwner(selectedProjectId);
+  draftStages = selectedProjectId ? defaultPlanStages(selectedProjectId, selectedOwnerId) : [];
+  initialPlanSnapshot = JSON.stringify(draftStages);
+  byId('niuCreateStageCount').textContent = String(draftStages.length);
   byId('niuCreateHeading').textContent = '新建任务';
-  byId('niuCreateSubmit').textContent = '创建任务';
+  byId('niuCreateSubmit').textContent = '保存';
   byId('niuRequiredHint').textContent = '标 * 的字段必填，执行计划至少添加一个阶段';
   byId('niuCreateOverlay').hidden = false;
   selectCreateTab('info');
@@ -192,7 +202,6 @@ export function openNewIssueEdit(taskId) {
   byId('niuPriority').value = task.priority || 'medium';
   byId('niuDue').value = task.dueDate || '';
   selectedOwnerId = task.assignee || '';
-  renderOwner(task.project);
   byId('niuCreateHeading').textContent = '编辑任务';
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuRequiredHint').textContent = planLocked() && !draftStages.length
@@ -226,7 +235,6 @@ function createTask() {
   if (!description) { toast('请输入任务描述', 'warning'); selectCreateTab('info'); byId('niuDescription').focus(); return; }
   if (!issueType) { toast('请选择任务类型', 'warning'); selectCreateTab('info'); byId('niuType').focus(); return; }
   const owner = selectedOwnerId;
-  if (!tkPeopleInProject(project).some(person => person.id === owner)) { toast('请选择项目成员作为负责人', 'warning'); selectCreateTab('info'); byId('niuOwnerTrigger').focus(); return; }
   if (!planLocked() && !draftStages.length) { toast('请至少添加一个执行阶段', 'warning'); selectCreateTab('plan'); byId('niuCreateAdd').focus(); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
   if ((!planLocked() || project !== originalProject) && draftStages.some(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId))) { toast('执行计划中有负责人不属于当前项目', 'warning'); selectCreateTab('plan'); return; }
@@ -271,7 +279,6 @@ function renderPlan() {
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</span><select data-niu-work-type="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 阶段工作类型"' + disabled + '>' + options + '</select><input data-niu-description="' + escapeHtml(stage.id) + '" value="' + escapeHtml(stage.description || '') + '" placeholder="阶段工作说明" aria-label="第 ' + (index + 1) + ' 阶段工作说明"' + disabled + '><button type="button" class="niu-stage-owner" data-niu-owner-stage="' + escapeHtml(stage.id) + '" aria-haspopup="listbox" aria-expanded="false" aria-label="选择第 ' + (index + 1) + ' 阶段负责人"' + disabled + '>' + escapeHtml(personName(task.project, stage.assigneeId)) + '<span aria-hidden="true">⌄</span></button>' + (locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 阶段">×</button>') + '</div>';
   }).join('') : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>';
   if (activePlanScope === 'create') {
-    byId('niuCreateRecommend').disabled = locked;
     byId('niuCreateAdd').disabled = locked;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
     byId('niuCreatePlanBanner').innerHTML = banner;
@@ -287,7 +294,6 @@ function renderPlan() {
   byId('niuPlanSave').disabled = locked;
   if (locked) byId('niuPlanConfirm').disabled = true;
   byId('niuAddToggle').disabled = locked;
-  byId('niuRecommendToggle').disabled = locked;
   byId('niuPlanConfirm').textContent = draftConfirmed ? '已确认计划' : '确认计划';
   byId('niuStageList').innerHTML = stageList;
   const teamName = TEAMS.find(team => team.id === task.teamId)?.name || '未设置';
@@ -307,14 +313,6 @@ export function openNewIssuePlan(taskId) {
   renderPlan();
 }
 
-function recommendedTypes(task) {
-  const content = (task.title + ' ' + (task.desc || '')).toLocaleLowerCase();
-  if (task.issueType === '缺陷' || /bug|报错|故障|修复/.test(content)) return ['Bug 修复', '代码评审', '测试验证'];
-  if (task.issueType === '需求') return ['需求分析', '需求评审', '方案设计', '代码实现', '测试验证'];
-  if (task.issueType === '改进') return ['方案设计', '代码实现', '测试验证', '发布交付'];
-  return ['需求分析', '方案设计', '代码实现', '测试验证'];
-}
-
 function addStage(workType) {
   if (planLocked()) { toast('任务已启动，执行计划已锁定', 'warning'); return; }
   const task = currentTask();
@@ -327,17 +325,6 @@ function addStage(workType) {
     const list = byId(activePlanScope === 'create' ? 'niuCreateStageList' : 'niuStageList');
     list.querySelector('.niu-stage:last-child select')?.focus();
   }
-}
-
-function addRecommendations() {
-  if (planLocked()) { toast('任务已启动，执行计划已锁定', 'warning'); return; }
-  if (activePlanScope === 'create' && !byId('niuType').value) { toast('请先选择任务类型，再生成推荐阶段', 'warning'); selectCreateTab('info'); byId('niuType').focus(); return; }
-  const task = currentTask();
-  if (!task?.project) { toast('请先选择所属项目', 'warning'); selectCreateTab('info'); byId('niuProject').focus(); return; }
-  const existing = new Set(draftStages.map(stage => stage.workType));
-  const additions = recommendedTypes(task).filter(workType => !existing.has(workType));
-  additions.forEach(addStage);
-  toast(additions.length ? '已添加 ' + additions.length + ' 个建议阶段，可直接修改分录' : '建议阶段已在计划中', additions.length ? 'success' : 'info');
 }
 
 function savePlan(confirm) {
@@ -359,13 +346,10 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuProjectSearch').addEventListener('input', renderProjectOptions);
   byId('niuInfoTab').addEventListener('click', () => selectCreateTab('info'));
   byId('niuCreatePlanTab').addEventListener('click', () => selectCreateTab('plan'));
-  byId('niuOwnerTrigger').addEventListener('click', () => openPersonPopup('owner'));
   byId('niuPersonSearch').addEventListener('input', renderPersonOptions);
   byId('niuCreateSubmit').addEventListener('click', createTask);
   byId('niuAddToggle').addEventListener('click', () => addStage());
-  byId('niuRecommendToggle').addEventListener('click', addRecommendations);
   byId('niuCreateAdd').addEventListener('click', () => addStage());
-  byId('niuCreateRecommend').addEventListener('click', addRecommendations);
   byId('niuPlanSave').addEventListener('click', () => savePlan(false));
   byId('niuPlanConfirm').addEventListener('click', () => savePlan(true));
   document.addEventListener('input', event => {
@@ -391,17 +375,11 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   document.addEventListener('click', event => {
     const person = event.target.closest('[data-niu-person]');
     if (person && personPopupTarget) {
-      if (personPopupTarget === 'stage') {
-        if (planLocked()) { closePersonPopup(); return; }
-        const stage = draftStages.find(item => item.id === personPopupStageId);
-        if (stage) { stage.assigneeId = person.dataset.niuPerson; draftConfirmed = false; }
-        closePersonPopup();
-        renderPlan();
-      } else {
-        selectedOwnerId = person.dataset.niuPerson;
-        renderOwner(byId('niuProject').value);
-        closePersonPopup();
-      }
+      if (planLocked()) { closePersonPopup(); return; }
+      const stage = draftStages.find(item => item.id === personPopupStageId);
+      if (stage) { stage.assigneeId = person.dataset.niuPerson; draftConfirmed = false; }
+      closePersonPopup();
+      renderPlan();
       return;
     }
     const owner = event.target.closest('[data-niu-owner-stage]');
@@ -419,7 +397,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     if (projectOption) { selectProject(projectOption.dataset.niuProject); return; }
     const plan = event.target.closest('[data-niu-plan]');
     if (plan) openNewIssuePlan(plan.dataset.niuPlan);
-    if (personPopupTarget && !event.target.closest('#niuPersonPopup, #niuOwnerTrigger')) closePersonPopup();
+    if (personPopupTarget && !event.target.closest('#niuPersonPopup')) closePersonPopup();
     if (!byId('niuProjectPopup').hidden && !event.target.closest('#niuProjectPopup, #niuProjectTrigger')) closeProjectPopup();
   });
   document.addEventListener('keydown', event => {

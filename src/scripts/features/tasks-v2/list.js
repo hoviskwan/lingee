@@ -132,8 +132,8 @@ function startTaskExec(taskId) {
   if (!started.ok) { if (started.message) toast(started.message,'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);
   render();
-  openTaskConversationWithTask(taskId);
-  toast('已进入' + (started.stage?.name || '当前节点') + '，请在 AI 对话中推进','success');
+  openTaskConversationWithTask(taskId, true);
+  toast('已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中','success');
 }
 
 function handleCardAction(act, aid) {

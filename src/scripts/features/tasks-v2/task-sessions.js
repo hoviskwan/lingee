@@ -51,7 +51,8 @@ function createSession(task, ownerId, spec) {
   return session;
 }
 
-function openingMessage(task, origin, stageId) {
+/* 会话开场指令：登记会话与直接发起会话共用同一句，保证「我的会话」记录与聊天开场一致 */
+export function tkTaskSessionOpeningMessage(task, origin, stageId) {
   if (origin === 'revise') return '退回修改「' + stageName(stageId, task) + '」阶段，请按审核意见调整后重新提交。';
   if (origin === 'retry') return '重试执行「' + stageName(stageId, task) + '」阶段，沿用上次的输入与配置。';
   if (origin === 'start') return '执行「' + (stageName(stageId, task) || '当前节点') + '」：任务「' + task.title + '」；' + clip(task.desc, 60);
@@ -105,7 +106,7 @@ function seedDemoSessions(task, ownerId) {
     origin: 'start', title: sessionTitle(task, 'start', stageId), stageId: stageId, status: startStatus,
     startedAt: day + ' 10:20', lastAt: startStatus === 'active' ? minutesAgo(task.id % 40 + 6) : day + ' 11:02',
     messages: [
-      { role: 'user', text: openingMessage(task, 'start') },
+      { role: 'user', text: tkTaskSessionOpeningMessage(task, 'start') },
       { role: 'agent', text: '已接收任务，按「' + taskExecutionStages(task).map(function (stage) { return stage.name; }).join(' → ') + '」推进。' },
       { role: 'agent', text: progress },
     ],
@@ -113,7 +114,7 @@ function seedDemoSessions(task, ownerId) {
   if (status === 'in_review' && task.id % 3 === 0 && taskExecutionStages(task).findIndex(function (stage) { return stage.id === stageId; }) > 0) createSession(task, ownerId, {
     origin: 'revise', title: sessionTitle(task, 'revise', stageId), stageId: stageId, status: 'ended', startedAt: day + ' 15:10', lastAt: day + ' 15:36',
     messages: [
-      { role: 'user', text: openingMessage(task, 'revise', stageId) },
+      { role: 'user', text: tkTaskSessionOpeningMessage(task, 'revise', stageId) },
       { role: 'agent', text: '已根据审核意见补充遗漏的边界场景，并重新提交「' + stageName(stageId, task) + '」阶段产出。' },
     ],
   });
@@ -160,7 +161,7 @@ export function tkAddTaskSession(task, origin, stageId) {
   var now = minutesAgo(0);
   return createSession(task, ownerId, {
     origin: origin, title: sessionTitle(task, origin, stageId), stageId: stageId || null, status: 'active', startedAt: now, lastAt: now,
-    messages: [{ role: 'user', text: openingMessage(task, origin, stageId) }],
+    messages: [{ role: 'user', text: tkTaskSessionOpeningMessage(task, origin, stageId) }],
   });
 }
 

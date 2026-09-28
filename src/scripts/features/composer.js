@@ -634,10 +634,10 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
 function doSend(automatic){
   var t=input.textContent.trim();
   if(!t){ input.focus(); return; }
-  /* 苍穹应用模式未选择关联应用时拦截 */
+  /* 苍穹应用模式未选择关联应用时拦截；带任务关联的会话不依赖关联应用 */
   var modeEl=$('.mode-item.checked');
   var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
-  if(automatic !== true && currentMode==='苍穹应用' && appChip.classList.contains('muted')){
+  if(automatic !== true && currentMode==='苍穹应用' && appChip.classList.contains('muted') && !getConversationTask()){
     toast('请先选择关联应用','error');
     appDd.classList.remove('error');
     void appDd.offsetWidth;
@@ -695,6 +695,17 @@ export function startTaskConversationSimulation(taskId) {
   input.textContent = task.desc || task.title || '开始执行任务';
   refreshSend();
   doSend(true);
+}
+
+/* 任务「开始执行」等入口直接以指定文本发起会话：不进输入框，落到聊天页即运行中 */
+export function sendComposerText(text){
+  text=String(text||'').trim();
+  if(!text) return;
+  closeTaskExceptionHistory();
+  $('#chatHeaderTask')?.classList.add('hidden');
+  input.textContent=text;
+  refreshSend();
+  doSend();
 }
 
 /* ---------- chat composer 发送 ---------- */

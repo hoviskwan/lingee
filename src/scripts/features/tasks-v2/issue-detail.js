@@ -11,8 +11,8 @@ import { openTaskModal } from './create.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { set_activePick } from '../expert/store.js';
 import { renderExpertChips } from '../expert/chips.js';
-import { setComposerTaskReference } from '../composer.js';
-import { tkAddTaskSession } from './task-sessions.js';
+import { setComposerTaskReference, sendComposerText } from '../composer.js';
+import { tkAddTaskSession, tkTaskSessionOpeningMessage } from './task-sessions.js';
 import { taskStageHandoffPatch } from './task-execution.js';
 
 var drawerPreferredWidth = null;
@@ -50,10 +50,20 @@ function openTaskConversation() {
   setNavActive('新会话');
 }
 
-function openTaskConversationWithTask(taskId) {
+/* autoSend 为 true 时（任务「开始执行」）直接发起会话并进入运行中，不再跳输入框等手动发送 */
+function openTaskConversationWithTask(taskId, autoSend) {
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (t) tkAddTaskSession(t, 'start', t.executionStageId || null);
   closeDrawer();
+  if (t && autoSend) {
+    var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+    var teamId = t.teamId || (project && project.defaultTeam);
+    if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
+    setComposerTaskReference(t.id);
+    setNavActive('新会话');
+    sendComposerText(tkTaskSessionOpeningMessage(t, 'start', t.executionStageId || null));
+    return;
+  }
   openTaskConversation();
   if (!t) return;
   var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
@@ -441,6 +451,40 @@ function renderTaskComments(t) {
   }).join('');
 }
 
+/* 流转操作记录：kind 为 'flow'；历史数据没有 kind，用 assignee 字段识别。 */
+function isFlowRecord(entry) {
+  return entry && (entry.kind === 'flow' || (!entry.kind && entry.assignee));
+}
+function flowRecordAction(entry) {
+  var action = '将任务流转给「' + tkGetPerson(entry.assignee).name + '」';
+  if (entry.fromStatus && entry.status && entry.fromStatus !== entry.status) {
+    action = '状态从「' + tkGetStatusName(entry.fromStatus) + '」变更为「' + tkGetStatusName(entry.status) + '」，并流转给「' + tkGetPerson(entry.assignee).name + '」';
+  }
+  return entry.text ? action + '：' + entry.text : action;
+}
+function renderTaskChangelog(t) {
+  var entries = [{
+    time: t.createdAt || (t.createDate + ' 09:30'),
+    user: tkGetPerson(t.createdBy).name,
+    action: '创建了任务',
+  }];
+  (t.statusHistory || []).forEach(function (change) {
+    entries.push({
+      time: change.time,
+      user: tkGetPerson(change.authorId).name,
+      action: '状态从「' + tkGetStatusName(change.from) + '」变更为「' + tkGetStatusName(change.to) + '」',
+    });
+  });
+  (t.comments || []).forEach(function (entry) {
+    if (!isFlowRecord(entry)) return;
+    entries.push({ time: entry.createdAt, user: tkGetPerson(entry.authorId).name, action: flowRecordAction(entry) });
+  });
+  entries.sort(function (left, right) { return String(left.time).localeCompare(String(right.time)); });
+  return entries.map(function (entry) {
+    return '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(entry.time) + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(entry.user) + '</span>' + escapeHtml(entry.action) + '</div>';
+  }).join('');
+}
+
 function taskCommentTimestamp() {
   var now = new Date();
   function pad(value) { return String(value).padStart(2, '0'); }
@@ -498,10 +542,7 @@ function openDrawer(taskId) {
         '</div>' +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
-        '<div class="tk-drawer-changelog-list">' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 09:30:00') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>创建了任务</div>' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 10:15:30') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>状态变更为「' + escapeHtml(tkGetStatusName(t.status)) + '」</div>' +
-        '</div>' +
+        '<div class="tk-drawer-changelog-list">' + renderTaskChangelog(t) + '</div>' +
       '</div>' +
     '</div></div>' +
     '<div class="tk-drawer-sidebar" id="tkDrawerSidebar">' +
@@ -646,7 +687,7 @@ if (els.tkDrawerChat) {
       if (!taskViewState.drawerTaskId) return;
       var task = tkGetTasks().find(function (row) { return row.id === taskViewState.drawerTaskId; });
       if (task?.status === 'backlog' && !tkCanStartTask(task)) return;
-      openTaskConversationWithTask(taskViewState.drawerTaskId);
+      openTaskConversationWithTask(taskViewState.drawerTaskId, true);
     });
     var lastRightClickToggle = 0;
     function toggleTaskStartAction() {
@@ -774,7 +815,7 @@ els.tkDrawerBody.addEventListener('click', function (e) {
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10), true); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -882,15 +923,19 @@ els.tkDrawerBody.addEventListener('click', function (e) {
           }
           var commentInput = els.tkDrawerBody.querySelector('.tk-drawer-comment-input textarea');
           var commentText = commentInput ? commentInput.value.trim() : '';
+          var handoffPatch = taskStageHandoffPatch(flowTask, flowAssigneeDraft.assigneeId);
           var newComment = {
+            kind: 'flow',
             authorId: tkCurrentUserId(),
             createdAt: taskCommentTimestamp(),
-            status: flowTask.status,
+            fromStatus: flowTask.status,
+            fromAssignee: flowTask.assignee,
+            status: handoffPatch.status || flowTask.status,
             assignee: flowAssigneeDraft.assigneeId,
             text: commentText,
           };
           tkUpdateTask(taskViewState.drawerTaskId, {
-            ...taskStageHandoffPatch(flowTask, flowAssigneeDraft.assigneeId),
+            ...handoffPatch,
             comments: (flowTask.comments || []).concat(newComment),
           });
           if (commentInput) commentInput.value = '';

@@ -79,6 +79,11 @@ export function tkWasTaskHandler(task) {
     || (task.assigneeHistory || []).includes(me)
     || (task.executionPlan || []).some(function (stage) { return stage && (stage.assigneeId === me || stage.reviewerId === me); }));
 }
+/* 已办：处理过某个执行阶段（含审核），但当前已流转给其他人处理。 */
+export function tkIsHandledByMe(task) {
+  var me = tkCurrentUserId();
+  return !!me && !!task && tkWasTaskHandler(task) && tkCurrentStageHandlerId(task) !== me;
+}
 /* 项目成员仅能查看自己参与的任务；项目负责人可查看本项目全部任务。 */
 export function tkParticipatesCurrentUser(task) {
   var me = tkCurrentUserId();

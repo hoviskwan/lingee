@@ -220,8 +220,6 @@
 .tk-card-team-avatars .tk-card-team-avatar{width:20px;height:20px;margin-right:-6px;border:1.5px solid var(--bg)}
 .tk-card-team-avatars-more{display:grid;place-items:center;flex:none;width:20px;height:20px;margin-right:-6px;border:1.5px solid var(--bg);border-radius:50%;background:var(--fill-1);color:var(--text-secondary);font-size:9px;font-weight:600}
 .tk-card-stage{font-size:11px;color:var(--text-secondary);white-space:nowrap}
-.tk-card-working{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding-left:8px;white-space:nowrap;font-size:11px}
-.tk-card-working-duration{color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .tk-card-title{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px;word-break:break-word}
 .tk-card-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:var(--text-secondary);font-size:11px;line-height:1.4;margin-bottom:6px}
 .tk-card-project,.tk-card-child-progress{font-size:10px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
@@ -1367,7 +1365,7 @@ input[type=date].tk-mc-pill{width:auto}
 .niu-field textarea{line-height:1.65}
 .niu-field :is(input,textarea)::placeholder{color:var(--text-soft)}
 .niu-person-trigger{justify-content:flex-start;gap:9px;text-align:left}
-.niu-owner-avatar{display:grid;flex:none;width:23px;height:23px;place-items:center;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:11px;font-weight:700}
+.niu-plan-state{display:inline-flex;align-items:center;gap:6px}
 .niu-person-trigger #niuOwnerName,.niu-person-trigger #niuProjectName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .niu-person-trigger .niu-person-chevron{flex:none;color:var(--text-secondary);font-size:17px}
 .niu-person-popup{border-color:var(--border-hover);border-radius:14px;background:var(--bg);box-shadow:0 16px 38px rgba(25,37,65,.16)}
