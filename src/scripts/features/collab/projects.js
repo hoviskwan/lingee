@@ -163,6 +163,7 @@ function cvSearchProjectMembers(query){
 function cvResetProjectMemberPicker(){
   clearTimeout(cvMemberSearchTimer);cvMemberSearchSeq++;cvMemberSearchRows=[];cvSelectedProjectMembers.clear();
   var input=$('#cv-pe-member-search');if(input){input.value='';input.setAttribute('aria-expanded','false');}
+  var role=$('#cv-pe-member-role');if(role)role.value='';
   $('#cv-pe-member-results')?.classList.add('hidden');
   cvRenderProjectMemberSelection();
 }
@@ -234,6 +235,7 @@ function cvOpenProjEdit(id){
   if(!cvMayEditProject(p)){toast('只有项目负责人可以编辑项目','warning');return;}
   cvProjEditId=id;
   cvResetProjectMemberPicker();
+  $('#cv-pe-member-role-field').style.display='';
   cvSetProjectIcon(p.dot);
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name',p.name);set('desc',p.desc);set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
@@ -252,6 +254,7 @@ function cvOpenProjNew(){
   if(!cvCurrentUserName()){toast('请先登录再新建项目','warning');return;}
   cvProjEditId='';
   cvResetProjectMemberPicker();
+  $('#cv-pe-member-role-field').style.display='none';
   cvSetProjectIcon(CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length]);
   var currentName=cvCurrentUserName();
   var currentPerson=CV_MEMBERS.find(function(m){return m.name===currentName;});
@@ -305,18 +308,32 @@ function cvSaveProjEdit(){
     if(!member||member.status==='disabled'){toast('无法保存项目成员，请重新选择','error');return;}
     addedMembers.push(member.id);
   }
+  var currentPerson=CV_MEMBERS.find(function(person){return person.name===cvCurrentUserName();});
+  var memberRole=g('member-role');
+  var needsMemberRole=!isNew&&addedMembers.some(function(id){return id!==owner.id&&!(p.members||[]).includes(id);});
+  if(needsMemberRole&&!['product','development','testing'].includes(memberRole)){
+    toast('请选择新增成员的项目角色','warning');$('#cv-pe-member-role')?.focus();return;
+  }
   var fields=['name','desc','status','priority','owner','repo','dot','start','end','defaultTeam'];
   var before=p?Object.fromEntries(fields.map(function(field){return [field,p[field]||''];})):null;
+  var previousProject=p?{...p,members:(p.members||[]).slice(),memberRoles:p.memberRoles?{...p.memberRoles}:undefined}:null;
   if(p){
     p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.dot=cvSelectedProjectIcon;p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.updatedAt=Date.now();
+    p.memberRoles={...p.memberRoles};
+    addedMembers.forEach(function(id){if(id!==owner.id&&!(p.members||[]).includes(id))p.memberRoles[id]=memberRole;});
+    delete p.memberRoles[owner.id];
     p.members=Array.from(new Set((p.members||[]).concat(owner.id,addedMembers)));
   }else{
-    var currentPerson=CV_MEMBERS.find(function(person){return person.name===cvCurrentUserName();});
     if(!currentPerson){toast('未找到当前用户，无法创建项目','error');return;}
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers))),priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end'),updatedAt:Date.now()};
+    var memberIds=Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers)));
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:memberIds,memberRoles:{},priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end'),updatedAt:Date.now()};
     CV_PROJECTS.push(p);
   }
-  cvPersistProjects();
+  if(!cvPersistProjects()){
+    if(isNew)CV_PROJECTS.pop();
+    else{Object.assign(p,previousProject);if(previousProject.memberRoles===undefined)delete p.memberRoles;}
+    toast('项目保存失败，请重试','error');return;
+  }
   if(isNew)recordConfigAudit('project','创建项目「'+p.name+'」');
   else recordProjectConfigAudit(p,fields.filter(function(field){return before[field]!==String(p[field]||'');}),before.name);
   cvCloseProjEdit();

@@ -9,7 +9,7 @@ import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSe
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkCanStartTask, tkCanViewTask, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkSyncPeople } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -25,7 +25,7 @@ import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
-import { CV_PROJECTS } from '../collab/data.js';
+import { CV_PROJECTS, cvRestoreProjects, cvRestorePersons } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { renderArtifactBlocks } from '../collab/run-artifacts.js';
 import { AV_KEYS, EX, EXPERTS, PRESET_TEAMS, xav } from '../expert/data.js';
@@ -3928,8 +3928,9 @@ function initColumnResize() {
 
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
+  cvRestoreProjects();
+  cvRestorePersons();
   restoreTaskLabelCatalog();
-  tkPruneOrphanTasks();
   tkSyncPeople();
   cacheEls();
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
@@ -3963,7 +3964,6 @@ export function initTasksV2() {
     if (state.drawerTaskId === event.detail.taskId) openDrawer(event.detail.taskId);
   });
   document.addEventListener('cv-workspace-change',()=>{
-    tkPruneOrphanTasks();
     tkEnsureWorkspaceDemoTasks();
     Object.assign(taskViewState,{activeViewId:'all',scope:'all',filters:[],search:''});
     fillSelects();render();

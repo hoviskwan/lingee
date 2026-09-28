@@ -387,10 +387,12 @@ function persistViews() {
 
 export function tkGetTasks() { return _tasks; }
 export function tkSetTasks(arr) { _tasks = arr; persistTasks(); }
-export function tkPruneOrphanTasks() {
-  var projects=new Set(CV_PROJECTS.map(function(project){return project.id;}));
+/* 只在明确删除工作区后，按该工作区的项目 ID 清理任务；刷新时不能据未恢复的项目列表删数据。 */
+export function tkPruneOrphanTasks(projectIds) {
+  if(!Array.isArray(projectIds)||!projectIds.length)return;
+  var removed=new Set(projectIds);
   var previousLength=_tasks.length;
-  _tasks=_tasks.filter(function(task){return projects.has(task.project);});
+  _tasks=_tasks.filter(function(task){return !removed.has(task.project);});
   if(_tasks.length!==previousLength)persistTasks();
 }
 export function tkEnsureWorkspaceDemoTasks() {

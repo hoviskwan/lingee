@@ -5,6 +5,7 @@ import { forgetWorkspaceAudit, initConfigAudit, recordConfigAudit, renderAuditLo
 import { CV_WORKSPACES, cvCanAccessWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvPersistWorkspaces, cvWorkspace, cvWorkspaceById } from './data.js';
 import { cvIsWorkspaceAdmin, cvRenderWorkspaceEntry, cvRenderWsMenu, cvSetWorkspace } from './projects.js';
 import { cvSwitchView } from './view.js';
+import { tkPruneOrphanTasks } from '../tasks-v2/data.js';
 
 /* 设置：人员与第三方任务来源。单文件原型仅保存连接元数据，不保存应用密钥。 */
 const INTEGRATION_KEY='lingee-collab-integrations-v1';
@@ -42,6 +43,7 @@ function confirmWorkspaceDelete(){
   const name=workspace.name,id=workspace.id;
   const result=cvDeleteWorkspaceData(id);
   if(!result.ok){toast('删除失败，工作区数据未变更；请检查浏览器存储','error');return;}
+  tkPruneOrphanTasks(result.projectIds);
   mappings=mappings.filter(row=>(row.workspace||'ws-build')!==id);
   forgetWorkspaceAudit(id);
   dialog.close();
