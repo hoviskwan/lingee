@@ -3958,6 +3958,10 @@ export function initTasksV2() {
     render();
     if (state.drawerTaskId === event.detail.taskId) openDrawer(event.detail.taskId);
   });
+  document.addEventListener('lingee:task-stage-submitted',function (event) {
+    render();
+    if (state.drawerTaskId === event.detail.taskId) openDrawer(event.detail.taskId);
+  });
   document.addEventListener('cv-workspace-change',()=>{
     tkPruneOrphanTasks();
     tkEnsureWorkspaceDemoTasks();

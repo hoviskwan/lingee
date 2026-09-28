@@ -12,6 +12,7 @@ import { activePick, pickValid, set_activePick, teamById } from './expert/store.
 import { set__prevWishW } from './sidebar.js';
 import { CV_PROJECTS } from './collab/data.js';
 import { tkGetTasks } from './tasks-v2/data.js';
+import { submitTaskStage } from './tasks-v2/task-execution.js';
 /* 输入框、发送、＋按钮下拉菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -243,6 +244,9 @@ function renderChatTaskSide() {
   var link = document.getElementById('chatTaskLink');
   link.dataset.taskId = String(task.id);
   link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>' + escapeHtml(String(task.code || '')) + ' ' + escapeHtml(String(task.title || '')) + '</span>';
+  var status = document.getElementById('chatTaskStatus');
+  status.textContent = task.status === 'in_review' ? '待审核' : task.status === 'in_progress' ? '执行中' : task.status === 'done' ? '已完成' : '';
+  status.hidden = !status.textContent;
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
   var team = resolveChatTeam(session, task);
   var teamSection = document.getElementById('chatTaskTeamSection');
@@ -555,9 +559,13 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     if(completed)return;
     completed=true;
     clearTimeout(watchdog);
-    var state=responseEl.closest('.message')?.querySelector('.chat-agent-state');
-    if(state){state.textContent='已完成';state.classList.add('is-done');}
     if(onDone)onDone();
+    var currentTask = !instant && task && tkGetTasks().find(function (row) { return row.id === task.id; });
+    var submitted = currentTask?.status === 'in_progress' ? submitTaskStage(currentTask) : null;
+    if(submitted?.ok) document.dispatchEvent(new CustomEvent('lingee:task-stage-submitted', {detail:{taskId:task.id}}));
+    var state=responseEl.closest('.message')?.querySelector('.chat-agent-state');
+    var waitingReview = submitted?.ok || (task && tkGetTasks().find(function (row) { return row.id === task.id; })?.status === 'in_review');
+    if(state){state.textContent=waitingReview ? '待审核' : '已完成';state.classList.add(waitingReview ? 'is-review' : 'is-done');}
   }
   function showCompletedResult(){
     if(completed || run !== activeResponseRun || !responseEl.isConnected)return;
