@@ -165,8 +165,6 @@ export const TK_FILTER_FIELDS = [
   { id: 'priority',  name: '优先级', type: 'select', options: TK_PRIORITIES.map(p => ({ value: p.id, label: p.name })) },
   { id: 'assignee',  name: '处理人', type: 'select', options: TK_PEOPLE.map(p => ({ value: p.id, label: p.name })) },
   { id: 'project',   name: '项目',   type: 'select', options: TK_PROJECTS.map(p => ({ value: p.id, label: p.name })) },
-  { id: 'label',     name: '标签',   type: 'select', options: TK_LABELS.map(l => ({ value: l, label: l })) },
-  { id: 'dueDate',   name: '截止日期', type: 'date' },
   { id: 'keyword',   name: '关键词',   type: 'text' },
 ];
 

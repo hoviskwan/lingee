@@ -58,7 +58,7 @@ function restoreViewState() {
   if (['board','list'].includes(saved.layout)) taskViewState.layout = saved.layout;
   if (['slide','full','split'].includes(saved.viewMode)) taskViewState.viewMode = saved.viewMode;
   if (['status','priority','assignee','project','none'].includes(saved.groupBy)) taskViewState.groupBy = saved.groupBy;
-  if (['status','priority','dueDate','createDate','updatedAt','title','module','code','assignee','project'].includes(saved.sortBy)) taskViewState.sortBy = saved.sortBy;
+  if (['status','priority','createDate','updatedAt','title','module','code','assignee','project'].includes(saved.sortBy)) taskViewState.sortBy = saved.sortBy;
   if (['asc','desc'].includes(saved.sortDir)) taskViewState.sortDir = saved.sortDir;
   if (typeof saved.showSubtasks === 'boolean') taskViewState.showSubtasks = saved.showSubtasks;
   if (Array.isArray(saved.collapsedTaskIds)) {
@@ -85,7 +85,7 @@ function restoreViewState() {
     });
   }
   if (Array.isArray(saved.filters)) {
-    var fields = ['status','priority','dueDate','assignee','creator','project','label','keyword'];
+    var fields = ['status','priority','issueType','assignee','creator','project','keyword'];
     var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
     taskViewState.filters = saved.filters.slice(0, 30).filter(function (f) {
       return f && fields.includes(f.field) && operators.includes(f.op) && typeof f.value === 'string';
@@ -144,7 +144,6 @@ function startTaskExec(taskId) {
 
 function handleCardAction(act, aid) {
   if (act === 'chat') { startTaskExec(aid); }
-  else if (act === 'edit') { openDrawer(aid); }
   else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
   else if (act === 'copy') {
     var src = tkGetTasks().find(function(x){return x.id===aid;});
@@ -191,7 +190,6 @@ function getFilteredTasks(skipField) {
     var va, vb;
     switch (sortKey) {
       case 'priority': va = priWeight(a.priority); vb = priWeight(b.priority); break;
-      case 'dueDate': va = a.dueDate || '9999'; vb = b.dueDate || '9999'; break;
       case 'createDate': va = a.createDate || ''; vb = b.createDate || ''; break;
       case 'updatedAt': va = a.updatedAt || ''; vb = b.updatedAt || ''; break;
       case 'status': va = TK_STATUSES.findIndex(function (s) { return s.id === a.status; }); vb = TK_STATUSES.findIndex(function (s) { return s.id === b.status; }); break;
@@ -215,18 +213,9 @@ function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
   if (field === 'creator') return task.createdBy === val;
-  if (field === 'label' && op === 'eq') return (task.labels || []).includes(val);
   if (field === 'keyword') {
     if (op === 'contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) >= 0;
     if (op === 'not_contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) < 0;
-  }
-  if (field === 'dueDate') {
-    var d = task.dueDate;
-    if (!d) return false;
-    if (op === 'before') return d < val;
-    if (op === 'after') return d > val;
-    if (op === 'today') { var today = '2026-09-23'; return d === today; }
-    if (op === 'overdue') return isOverdue(d) && task.status !== 'done';
   }
   if (op === 'eq') return String(task[field]) === String(val);
   if (op === 'neq') return String(task[field]) !== String(val);
@@ -313,7 +302,6 @@ function renderListRow(t, opts, ctx) {
   var pri = tkGetPriorityObj(t.priority);
   var st = tkGetStatusObj(t.status);
   var person = tkGetPerson(t.assignee);
-  var overdue = ctx.isOverdue(t.dueDate) && t.status !== 'done';
   var sel = ctx.selectedIds.has(t.id) ? ' selected' : '';
   var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
   var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
@@ -327,9 +315,7 @@ function renderListRow(t, opts, ctx) {
     + '<td class="tk-col-priority"><span class="tk-row-priority">' + ctx.escapeHtml(pri.name) + '</span></td>'
 
     + '<td class="tk-col-project">' + ctx.escapeHtml(tkGetProjectName(t.project)) + '</td>'
-    + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? ctx.fmtDate(t.dueDate) : '—') + '</span></td>'
     + '<td class="tk-col-created">' + ctx.fmtDate(t.createDate) + '</td>'
-    + '<td class="tk-col-labels">' + ((t.labels || []).length ? t.labels.map(function(name) { return '<span class="tk-row-label">' + ctx.escapeHtml(name) + '</span>'; }).join('') : '—') + '</td>'
     + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
 }
 
@@ -405,9 +391,7 @@ function renderCard(t, opts) {
   var isCollapsed = !!opts.isCollapsed;
   var childCount = opts.childCount || 0;
   var pri = tkGetPriorityObj(t.priority);
-  var overdue = isOverdue(t.dueDate) && t.status !== 'done';
   var props = taskViewState.cardProperties;
-  var labels = props.labels ? (t.labels || []).map(function (l) { return '<span class="tk-card-label">' + escapeHtml(l) + '</span>'; }).join('') : '';
   var sel = taskViewState.selectedIds.has(t.id) ? ' selected' : '';
   var toggle = hasChildren ? '<button class="tk-card-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
@@ -422,10 +406,8 @@ function renderCard(t, opts) {
     teamAvatarHtml = members.length
       ? '<span class="tk-card-team-avatars">' + members.slice(0, 4).map(function(m){ return '<img class="tk-card-team-avatar" src="' + xav(m.k) + '" alt="" title="' + escapeHtml(m.name) + '">'; }).join('') + (members.length > 4 ? '<span class="tk-card-team-avatars-more">+' + (members.length - 4) + '</span>' : '') + '</span>'
       : (team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '');
-    footExtraHtml = (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
-      + (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
+    footExtraHtml = (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
       + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
-      + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
       + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '');
   } else {
     teamAvatarHtml = team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '';
@@ -699,7 +681,7 @@ function tkSetProjectListMode(active, projectId) {
 
 var cardPropertyOptions = [
   ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
-  ['dueDate','截止日期'],['project','项目'],['labels','标签'],['childProgress','子任务进度'],
+  ['project','项目'],['childProgress','子任务进度'],
 ];
 
 var displayGroupOptions = [
@@ -707,7 +689,7 @@ var displayGroupOptions = [
 ];
 
 var displaySortOptions = [
-  ['status','状态'],['priority','优先级'],['dueDate','截止日期'],['updatedAt','修改时间'],['createDate','创建时间'],
+  ['status','状态'],['priority','优先级'],['updatedAt','修改时间'],['createDate','创建时间'],
   ['code','#'],['title','标题'],['module','模块'],['project','项目'],
 ];
 
@@ -848,11 +830,10 @@ var filterSections = [
   ['status','状态','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>'],
   ['issueType','任务类型','<path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/>'],
   ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
-  ['dueDate','日期','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>'],
   ['assignee','处理人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
   ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
-  ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
+  /* 「日期」「标签」字段已去除，不提供筛选入口 */
 ];
 
 function filterOptionsFor(section) {
@@ -868,7 +849,6 @@ function filterOptionsFor(section) {
   if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
   if (section === 'project') return tkProjectsForCurrentUser().map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
-  if (section === 'label') return TK_LABELS.map(function (l) { return { value:l, label:l, count:tasks.filter(function (t) { return (t.labels || []).includes(l); }).length }; });
   return [];
 }
 
@@ -890,11 +870,6 @@ function renderFilterMenu() {
 function renderFilterSubmenu() {
   if (!activeFilterSection) { els.tkFilterSubmenu.classList.add('hidden'); return; }
   els.tkFilterSubmenu.classList.remove('hidden');
-  if (activeFilterSection === 'dueDate') {
-    var exact = taskViewState.filters.find(function (f) { return f.field === 'dueDate' && f.op === 'eq'; });
-    els.tkFilterSubmenu.innerHTML = '<div class="tk-filter-date"><label for="tkFilterDate">截止日期</label><input type="date" id="tkFilterDate" value="' + (exact ? escapeHtml(exact.value) : '') + '"><button type="button" data-filter-date="today">今天</button><button type="button" data-filter-date="overdue">已逾期</button></div>';
-    return;
-  }
   els.tkFilterSubmenu.innerHTML = filterOptionsFor(activeFilterSection).map(function (option) {
     var checked = taskViewState.filters.some(function (f) { return f.field === activeFilterSection && f.value === option.value; });
     return '<button type="button" class="tk-filter-option" data-filter-value="' + escapeHtml(option.value) + '" aria-pressed="' + checked + '"><span class="tk-filter-check">' + (checked ? '✓' : '') + '</span>' + (activeFilterSection === 'status' ? '<span class="tk-filter-status-icon ' + option.value + '"></span>' : '') + '<span>' + escapeHtml(option.label) + '</span>' + (option.count ? '<span class="tk-filter-count">' + option.count + ' 个任务</span>' : '') + '</button>';
@@ -1302,22 +1277,9 @@ els.tkFilterPanelBody.addEventListener('click', function (e) {
     }
   });
 els.tkFilterSubmenu.addEventListener('click', function (e) {
-    var option = e.target.closest('[data-filter-value]');
-    if (option) { toggleFilterValue(activeFilterSection, option.getAttribute('data-filter-value')); return; }
-    var dateBtn = e.target.closest('[data-filter-date]');
-    if (dateBtn) {
-      var op = dateBtn.getAttribute('data-filter-date');
-      taskViewState.filters = taskViewState.filters.filter(function (f) { return f.field !== 'dueDate'; });
-      taskViewState.filters.push({ field:'dueDate', op:op, value:'' });
-      updateFilterButton(); render(); renderFilterMenu();
-    }
-  });
-els.tkFilterSubmenu.addEventListener('change', function (e) {
-    if (e.target.id !== 'tkFilterDate') return;
-    taskViewState.filters = taskViewState.filters.filter(function (f) { return f.field !== 'dueDate'; });
-    if (e.target.value) taskViewState.filters.push({ field:'dueDate', op:'eq', value:e.target.value });
-    updateFilterButton(); render(); renderFilterMenu();
-  });
+  var option = e.target.closest('[data-filter-value]');
+  if (option) { toggleFilterValue(activeFilterSection, option.getAttribute('data-filter-value')); }
+});
 document.addEventListener('click', function (e) {
     if (!e.target.closest('#tkFilterPanel') && !e.target.closest('#tkFilterBtn')) closeFilterPanel();
   });
@@ -1534,7 +1496,7 @@ els.tkBoardScroll.addEventListener('click', function (e) {
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { startTaskExec(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { startTaskExec(parseInt(aid, 10)); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -1624,7 +1586,7 @@ els.tkListBody.addEventListener('click', function (e) {
     if (cardAct2) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
-      if (act2 === 'chat') { startTaskExec(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
+      if (act2 === 'chat') { startTaskExec(parseInt(aid2, 10)); }
       else if (act2 === 'delete') { tkDeleteTask(aid2); render(); }
       else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); } }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }

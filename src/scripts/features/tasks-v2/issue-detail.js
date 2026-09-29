@@ -815,7 +815,7 @@ els.tkDrawerBody.addEventListener('click', function (e) {
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10), true); } else if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10), true); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }

@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'64',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板、详情与会话的产物确认统一弹窗并直接流转，提示显示下一阶段处理人；任务列表与筛选移除截止日期、标签等旧入口。'},
   {id:'63',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：看板隐藏已办与已取消状态及筛选入口，显示设置的字段与筛选同新建弹窗对齐并新增任务类型列、描述列与任务类型筛选；会话侧栏超过五条的项目默认收起，项目筛选隐藏无匹配选项，任务删除改用独立确认弹窗。'},
   {id:'62',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务管理新增 Excel 模板下载与文件导入流程，导入字段支持执行阶段；新建任务执行计划支持逐阶段设置自动审核与执行人。'},
   {id:'61',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务产物重构为需求、技术、开发、测试与交付五份标准阶段文档并按阶段复用，会话提示语统一为「阶段已执行完成，请确认产物」且与产物卡片对齐；新建任务弹窗改为任务信息与执行计划页签并按阶段指定确认人，任务状态文案统一为待审核。'},
@@ -61,6 +62,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '64':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
   '63':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18"/><path d="M13 14l2 2 4-4"/></svg>',
   '62':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/><path d="m13 14 2 2 4-4"/></svg>',
   '61':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>',

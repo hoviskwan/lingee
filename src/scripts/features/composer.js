@@ -17,6 +17,7 @@ import { defaultStageAssigneeId } from './tasks-v2/stage-owner.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
 import { reviewTaskStage, submitTaskStage, taskExecutionStages } from './tasks-v2/task-execution.js';
+import { showTaskStageConfirm } from './tasks-v2/confirm.js';
 import { tkAnswerTaskSessionQuestion, tkGetMySessions, tkTaskSessionOpeningMessage } from './tasks-v2/task-sessions.js';
 /* 输入框、发送、＋按钮下拉菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -711,31 +712,35 @@ function refreshChatStageConfirm() {
 function confirmChatStage() {
   var info = chatStageConfirmInfo();
   if (!info?.ready) return;
-  var reviewed = reviewTaskStage(info.task, true);
-  if (!reviewed.ok) {
-    if (reviewed.message) toast(reviewed.message, 'warning');
-    return;
-  }
-  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
-  if (session && reviewed.stage) {
-    session.demoState = reviewed.done ? 'confirmed' : 'ended';
-    if (!Array.isArray(session.stageEndMarkers)) session.stageEndMarkers = [];
-    if (!session.stageEndMarkers.some(function (marker) { return marker.stageId === reviewed.stage.id; })) {
-      var marker = {
-        stageId: reviewed.stage.id,
-        stageName: reviewed.stage.name,
-        afterExchangeIndex: session.exchanges.length - 1,
-        afterQuestion: !!session.demoQuestion,
-      };
-      session.stageEndMarkers.push(marker);
-      saveChatSessions();
-      appendChatStageEndMarker(marker);
-      scrollChatBottom();
+  showTaskStageConfirm(info.task, function () {
+    var currentInfo = chatStageConfirmInfo();
+    if (!currentInfo?.ready || currentInfo.task.id !== info.task.id) return;
+    var reviewed = reviewTaskStage(currentInfo.task, true);
+    if (!reviewed.ok) {
+      toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning');
+      return;
     }
-    renderChatSessions();
-  }
-  /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
-  toast(reviewed.done ? '任务完成' : '流转成功', 'success');
+    var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+    if (session && reviewed.stage) {
+      session.demoState = reviewed.done ? 'confirmed' : 'ended';
+      if (!Array.isArray(session.stageEndMarkers)) session.stageEndMarkers = [];
+      if (!session.stageEndMarkers.some(function (marker) { return marker.stageId === reviewed.stage.id; })) {
+        var marker = {
+          stageId: reviewed.stage.id,
+          stageName: reviewed.stage.name,
+          afterExchangeIndex: session.exchanges.length - 1,
+          afterQuestion: !!session.demoQuestion,
+        };
+        session.stageEndMarkers.push(marker);
+        saveChatSessions();
+        appendChatStageEndMarker(marker);
+        scrollChatBottom();
+      }
+      renderChatSessions();
+    }
+    /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
+    toast(reviewed.done ? '任务完成' : '流转成功', 'success');
+  });
 }
 function clearChatTaskSide() {
   document.getElementById('chatTaskQuestionPanel')?.remove();

@@ -8,12 +8,14 @@
 .tk-confirm-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
 .tk-confirm-card{width:min(100%,360px);padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
 .tk-confirm-card h3{margin:0 0 10px;color:var(--text);font-size:16px;font-weight:600}
-.tk-confirm-card p{margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.tk-confirm-card p{margin:0;color:var(--text);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
 .tk-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
 .tk-confirm-actions button{min-width:76px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
 .tk-confirm-actions button:hover{background:var(--hover)}
 #tkConfirmOk{border-color:#d92d20;background:#d92d20;color:#fff}
 #tkConfirmOk:hover{background:#b42318}
+.tk-confirm-overlay[data-tone="primary"] #tkConfirmOk{border-color:var(--brand);background:var(--brand)}
+.tk-confirm-overlay[data-tone="primary"] #tkConfirmOk:hover{filter:brightness(.92)}
 
 #view-tasks{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
 #view-tasks.hidden{display:none}

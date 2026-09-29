@@ -3,8 +3,8 @@ var LIST_FIELDS = [
   { id:'code', name:'编号' }, { id:'title', name:'标题', required:true },
   { id:'module', name:'模块' }, { id:'status', name:'状态' }, { id:'type', name:'任务类型' },
   { id:'priority', name:'优先级' }, { id:'assignee', name:'处理人' },
-  { id:'project', name:'项目' }, { id:'due', name:'截止日期' },
-  { id:'created', name:'创建时间' }, { id:'labels', name:'标签' },
+  { id:'project', name:'项目' },
+  { id:'created', name:'创建时间' },
   { id:'desc', name:'描述' },
 ];
 
@@ -14,8 +14,8 @@ var taskViewState = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
-  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:false, labels:false, childProgress:true },
-  listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false, desc:false },
+  cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
+  listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
   collapsedBoardGroups: new Set(),
 };
