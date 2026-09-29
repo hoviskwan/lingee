@@ -18,8 +18,25 @@
           </section>
           <section class="niu-create-section niu-create-section--plan" id="niuCreatePlanPane" aria-label="执行计划" tabindex="-1" hidden>
             <span id="niuCreateStageCount" hidden>0</span>
-            <div class="niu-create-stage-columns" aria-hidden="true"><span>序号</span><span>执行阶段</span><span>审核人</span><span><button type="button" class="niu-button niu-create-add-btn" id="niuCreateAdd">＋ 添加节点</button></span></div>
-            <div class="niu-stage-list" id="niuCreateStageList"></div>
+            <table class="niu-create-stage-table">
+              <colgroup>
+                <col class="niu-col-index">
+                <col class="niu-col-stage">
+                <col class="niu-col-review">
+                <col class="niu-col-owner">
+                <col class="niu-col-action">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>序号</th>
+                  <th>执行阶段</th>
+                  <th>自动审核</th>
+                  <th>执行人</th>
+                  <th><button type="button" class="niu-button niu-create-add-btn" id="niuCreateAdd">＋ 添加节点</button></th>
+                </tr>
+              </thead>
+              <tbody id="niuCreateStageList"></tbody>
+            </table>
           </section>
           <section class="niu-create-section niu-smart-create" id="niuSmartPane" aria-labelledby="niuCreateHeading" tabindex="-1" hidden>
             <div class="niu-smart-fields">

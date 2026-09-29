@@ -111,7 +111,7 @@ function selectProject(projectId) {
   if (planLocked() && draftStages.some(stage => !tkPeopleInProject(projectId).some(person => person.id === stage.assigneeId))) {
     const task = tkGetTasks().find(item => item.id === editingTaskId);
     if (task) projectId = task.project;
-    toast('执行计划已锁定，阶段确认人不属于新项目', 'warning');
+    toast('执行计划已锁定，阶段执行人不属于新项目', 'warning');
   }
   selectedProjectId = projectId;
   byId('niuProject').value = projectId;
@@ -175,7 +175,7 @@ function setDefaultStageOwner(projectId) {
 const projectTeamOf = projectId => TEAMS.find(item => item.id === CV_PROJECTS.find(project => project.id === projectId)?.defaultTeam) || null;
 const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId)).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
 
-/* 默认执行计划：按项目成员角色预选每个阶段的确认人；同角色多人先选第一人。 */
+/* 默认执行计划：按项目成员角色预选每个阶段的执行人；同角色多人先选第一人。 */
 function defaultPlanStages(projectId) {
   const project = CV_PROJECTS.find(item => item.id === projectId);
   const people = tkPeopleInProject(projectId);
@@ -227,7 +227,7 @@ function setCreateMode(mode) {
   }
   byId('niuInfoPane').hidden = true;
   byId('niuCreatePlanPane').hidden = true;
-  byId('niuCreateHeading').innerHTML = '<span class="niu-smart-star">✦</span> 智能创建任务';
+  byId('niuCreateHeading').innerHTML = '智能创建任务 <span class="niu-smart-star">✦</span>';
   renderSmartProjectOptions();
   byId('niuCreateScroll').scrollTop = 0;
   byId(selectedProjectId ? 'niuSmartPrompt' : 'niuSmartProject').focus();
@@ -335,8 +335,8 @@ function createTask() {
   const owner = selectedOwnerId;
   if (!planLocked() && !draftStages.length) { toast('请至少添加一个执行阶段', 'warning'); selectCreateTab('plan'); byId('niuCreateAdd').focus(); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
-  const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => stage.requiresConfirmation !== false && !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
-  if (unassignedStage) { toast('请为节点选择当前项目的审核人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
+  const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
+  if (unassignedStage) { toast('请为节点选择当前项目的执行人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
   if (editingTaskId !== null) {
     const task = tkGetTasks().find(item => item.id === editingTaskId);
     if (!task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
@@ -372,21 +372,23 @@ function renderPlan() {
   const locked = planLocked();
   const disabled = locked ? ' disabled' : '';
   const completed = draftStages.filter(stage => stage.status === 'done').length;
-  const banner = '<span class="niu-plan-state"><i></i>' + (draftConfirmed ? '已确认' : '计划草案') + ' · ' + draftStages.length + ' 个阶段</span><span>' + (locked ? '任务已启动，执行计划已锁定' : draftStages.every(stage => stage.assigneeId) ? '✓ 各阶段已分配确认人' : '部分阶段待分配确认人') + '</span>';
+  const banner = '<span class="niu-plan-state"><i></i>' + (draftConfirmed ? '已确认' : '计划草案') + ' · ' + draftStages.length + ' 个阶段</span><span>' + (locked ? '任务已启动，执行计划已锁定' : draftStages.every(stage => stage.assigneeId) ? '✓ 各阶段已分配执行人' : '部分阶段待分配执行人') + '</span>';
   const stageOptions = planStageOptions(task.project);
   const stageList = draftStages.length ? draftStages.map((stage, index) => {
     const options = stageOptions.map(row => '<option value="' + escapeHtml(row.name) + '"' + (row.name === stage.workType ? ' selected' : '') + '>' + escapeHtml(row.name) + '</option>').join('')
       + (stageOptions.some(row => row.name === stage.workType) || !stage.workType ? '' : '<option value="' + escapeHtml(stage.workType) + '" selected>' + escapeHtml(stage.workType) + '</option>');
     const confirmation = stage.requiresConfirmation !== false;
-    const owner = confirmation ? '<button type="button" class="niu-stage-owner" data-niu-owner-stage="' + escapeHtml(stage.id) + '" aria-haspopup="listbox" aria-expanded="false" aria-label="选择第 ' + (index + 1) + ' 节点审核人"' + disabled + '>' + escapeHtml(personName(task.project, stage.assigneeId)) + '<span aria-hidden="true">⌄</span></button>' : '<span class="niu-stage-continuous">完成后直接进入下一节点</span>';
+    const owner = '<button type="button" class="niu-stage-owner" data-niu-owner-stage="' + escapeHtml(stage.id) + '" aria-haspopup="listbox" aria-expanded="false" aria-label="选择第 ' + (index + 1) + ' 节点执行人"' + disabled + '>' + escapeHtml(personName(task.project, stage.assigneeId)) + '<span aria-hidden="true">⌄</span></button>';
     const fields = '<div class="niu-stage-fields"><label><span>执行阶段</span><select data-niu-work-type="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></label><label><span>阶段工作说明</span><input data-niu-description="' + escapeHtml(stage.id) + '" value="' + escapeHtml(stage.description || '') + '" placeholder="填写本节点要完成的工作" aria-label="第 ' + (index + 1) + ' 阶段工作说明"' + disabled + '></label></div>';
     const completion = '<div class="niu-stage-completion"><span class="niu-stage-label">完成方式</span><div class="niu-stage-choice" role="group" aria-label="第 ' + (index + 1) + ' 节点完成方式"><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="false" aria-pressed="' + (!confirmation) + '"' + disabled + '>直接继续</button><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="true" aria-pressed="' + confirmation + '"' + disabled + '>需要确认</button></div>' + owner + '</div>';
     const remove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点">×</button>';
     if (activePlanScope === 'create') {
-      return '<div class="niu-stage niu-stage--compact" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</span><label class="niu-stage-inline-field"><span>执行阶段</span><select data-niu-work-type="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></label><div class="niu-stage-inline-field"><span>审核人</span>' + (confirmation ? owner : '<span class="niu-stage-continuous">无需审核</span>') + '</div>' + remove + '</div>';
+      const autoReview = !confirmation;
+      const reviewMode = '<label class="niu-auto-review-switch"><input type="checkbox" data-niu-review-mode="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 节点自动审核"' + (autoReview ? ' checked' : '') + (locked ? ' disabled' : '') + '><span aria-hidden="true"></span></label>';
+      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + remove + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</span>' + fields + completion + remove + '</div>';
-  }).join('') : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>';
+  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">还没有工作阶段。点击「＋ 添加节点」开始。</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
   if (activePlanScope === 'create') {
     byId('niuCreateAdd').disabled = locked;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
@@ -439,7 +441,7 @@ function savePlan(confirm) {
   const task = currentTask();
   if (!task) return;
   if (planLocked()) { toast('任务已启动，执行计划已锁定', 'warning'); return; }
-  if (confirm && (!draftStages.length || draftStages.some(stage => !stage.assigneeId))) { toast('请先为每个阶段指定确认人', 'warning'); return; }
+  if (confirm && (!draftStages.length || draftStages.some(stage => !stage.assigneeId))) { toast('请先为每个阶段指定执行人', 'warning'); return; }
   draftConfirmed = !!confirm;
   tkUpdateTask(task.id, { executionPlan: draftStages.map(stage => ({ ...stage })), planStatus: draftConfirmed ? 'confirmed' : 'draft' });
   renderPlan();
@@ -483,6 +485,17 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   });
   document.addEventListener('change', event => {
     if (event.target.closest('[data-niu-description]')) { renderPlan(); return; }
+    const reviewMode = event.target.closest('[data-niu-review-mode]');
+    if (reviewMode) {
+      if (planLocked()) return;
+      const stage = draftStages.find(item => item.id === reviewMode.dataset.niuReviewMode);
+      if (stage) {
+        stage.requiresConfirmation = !reviewMode.checked;
+        draftConfirmed = false;
+        renderPlan();
+      }
+      return;
+    }
     const select = event.target.closest('[data-niu-work-type]');
     if (!select || planLocked()) return;
     const stage = draftStages.find(item => item.id === select.dataset.niuWorkType);

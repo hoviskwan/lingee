@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'62',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务管理新增 Excel 模板下载与文件导入流程，导入字段支持执行阶段；新建任务执行计划支持逐阶段设置自动审核与执行人。'},
   {id:'61',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务产物重构为需求、技术、开发、测试与交付五份标准阶段文档并按阶段复用，会话提示语统一为「阶段已执行完成，请确认产物」且与产物卡片对齐；新建任务弹窗改为任务信息与执行计划页签并按阶段指定确认人，任务状态文案统一为待审核。'},
   {id:'60',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：看板任务卡按状态提供开始、回复、确认与查看结果操作并直达对应会话，待办列更名为待开始；任务会话支持阻塞、提问与待确认状态并同步侧栏状态点，阶段确认移至输入区引导条、产物在会话内展示；新建任务弹窗改为任务信息与执行节点单页分区；本地共享数据库迁移到 data.nosync 目录避免 iCloud 同步干扰。'},
   {id:'59',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目产物支持右侧内嵌预览、全屏、按格式筛选与下载，任务列表默认仅展示本人参与或创建的任务，本地开发默认使用浏览器存储。'},
@@ -59,6 +60,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '62':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/><path d="m13 14 2 2 4-4"/></svg>',
   '61':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>',
   '60':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 5v11"/><path d="M12 5v6"/><path d="M18 5v14"/></svg>',
   '59':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h4M8 13h8M8 17h8"/></svg>',

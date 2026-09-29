@@ -31,9 +31,18 @@
 .tk-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px;flex-wrap:wrap}
 .tk-tools-left{display:flex;align-items:center;gap:8px}
 .tk-tools-right{display:flex;align-items:center;gap:8px}
-.tk-toolbar-new{display:inline-flex;align-items:center;gap:5px;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.tk-toolbar-new-group{position:relative;display:inline-flex;align-items:center;height:30px}
+.tk-toolbar-new-group.hidden{display:none}
+.tk-toolbar-new{display:inline-flex;align-items:center;gap:5px;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--brand);border-radius:6px 0 0 6px;border-right:0;background:var(--brand);color:#fff;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .tk-toolbar-new:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 .tk-toolbar-new.hidden{display:none}
+.tk-toolbar-new-arrow{display:inline-flex;align-items:center;justify-content:center;height:30px;width:24px;box-sizing:border-box;padding:0;border:1px solid var(--brand);border-radius:0 6px 6px 0;background:var(--brand);color:#fff;font:inherit;cursor:pointer;border-left:1px solid rgba(255,255,255,.3)}
+.tk-toolbar-new-arrow:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.tk-toolbar-new-arrow[aria-expanded="true"]{background:var(--brand-hover)}
+.tk-toolbar-new-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);z-index:70;overflow:hidden;padding:4px}
+.tk-toolbar-new-menu.hidden{display:none}
+.tk-toolbar-new-item{display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:0 10px;border:0;border-radius:5px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;white-space:nowrap}
+.tk-toolbar-new-item:hover{background:var(--hover)}
 
 /* 搜索框 */
 .tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;transition:border-color .15s}
@@ -1503,19 +1512,56 @@ button.niu-create-mode{color:var(--text-secondary)}
 .niu-smart-fields .niu-field textarea:hover{border-color:var(--border-focus)}
 .niu-smart-fields .niu-field textarea:focus{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-fill)}
 .niu-smart-foot>button{border-color:transparent;box-shadow:none;font-size:12px;color:var(--text-secondary)}
-.niu-create-add-btn{padding:3px 10px;font-size:12px;white-space:nowrap}
-.niu-create-stage-columns{display:grid;grid-template-columns:28px minmax(0,1fr) minmax(0,.7fr) auto;gap:10px;align-items:center;padding:0 0 6px;border-bottom:1px solid var(--divider);color:var(--text-secondary);font-size:11px}
+.niu-create-add-btn{height:28px;padding:0 8px;font-size:12px;white-space:nowrap}
+/* ---------- 创建计划表格 ---------- */
+.niu-create-section--plan{overflow:visible}
+.niu-create-stage-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:0;font-size:12px}
+.niu-col-index{width:40px}
+.niu-col-review{width:88px}
+.niu-col-owner{width:148px}
+.niu-col-action{width:88px}
+/* 表头 */
+.niu-create-stage-table thead th{height:36px;padding:0 6px;border-bottom:1px solid var(--divider);color:var(--text-secondary);font-size:12px;font-weight:500;text-align:left;white-space:nowrap;vertical-align:middle}
+.niu-create-stage-table thead th:first-child{padding-left:0;text-align:center}
+.niu-create-stage-table thead th:nth-child(3){text-align:center}
+.niu-create-stage-table thead th:last-child{padding-right:0;text-align:center}
+/* 数据行 */
+.niu-stage-row{height:40px;border-bottom:1px solid var(--divider)}
+.niu-stage-row:last-child{border-bottom:0}
+.niu-stage-row td{height:40px;padding:6px;box-sizing:border-box;font-size:12px;vertical-align:middle;min-width:0}
+.niu-stage-row td:first-child{padding-left:0}
+.niu-stage-row td:last-child{padding-right:0;text-align:center}
+/* 序号 */
+.niu-create-stage-table .niu-stage-row .niu-stage-index{display:table-cell;width:auto;height:40px;color:var(--text-secondary);font-size:12px;line-height:28px;text-align:center;vertical-align:middle;background:transparent}
+/* 执行阶段 select：覆盖全局 niu-stage 样式，保持扁平外观 */
+.niu-create-stage-table .niu-stage-select,.niu-create-stage-table select[data-niu-work-type]{all:unset;box-sizing:border-box;display:block;width:100%;height:28px;border:1px solid transparent;border-radius:5px;background:transparent;font:inherit;font-size:12px;color:var(--text);padding:0 6px;cursor:pointer}
+.niu-create-stage-table .niu-stage-select:hover,.niu-create-stage-table select[data-niu-work-type]:hover{border-color:var(--border);background:var(--fill-1)}
+.niu-create-stage-table .niu-stage-select:focus,.niu-create-stage-table select[data-niu-work-type]:focus{border-color:var(--border-focus);background:var(--bg);outline:none}
+/* 执行人按钮：覆盖全局 niu-stage-owner 尺寸和颜色 */
+.niu-create-stage-table .niu-stage-owner{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:4px;width:100%;height:28px;padding:0 6px;border:1px solid transparent;border-radius:5px;background:transparent;font:inherit;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap;overflow:hidden;min-width:0}
+.niu-create-stage-table .niu-stage-owner span{color:var(--text-secondary);flex-shrink:0}
+.niu-create-stage-table .niu-stage-owner:hover{border-color:var(--border);background:var(--fill-1)}
+.niu-create-stage-table .niu-stage-owner:disabled{opacity:.5;cursor:not-allowed}
+/* 删除按钮 */
+.niu-create .niu-create-stage-table .niu-stage-remove{margin:0}
+/* 自动审核开关 */
+.niu-stage-review-cell{text-align:center}
+.niu-auto-review-switch{position:relative;display:inline-flex;width:32px;height:18px;vertical-align:middle;cursor:pointer}
+.niu-auto-review-switch input{position:absolute;inset:0;margin:0;opacity:0;cursor:pointer}
+.niu-auto-review-switch span{display:block;width:32px;height:18px;border-radius:9px;background:var(--border);transition:background .16s}
+.niu-auto-review-switch span::after{content:'';display:block;width:14px;height:14px;margin:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .16s}
+.niu-auto-review-switch input:checked+span{background:var(--brand)}
+.niu-auto-review-switch input:checked+span::after{transform:translateX(14px)}
+.niu-auto-review-switch input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
+.niu-auto-review-switch input:disabled+span{opacity:.5}
+.niu-auto-review-switch:has(input:disabled){cursor:not-allowed}
+/* 空状态 */
+td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-size:13px}
 .niu-create-section--plan .niu-stage-list{gap:0}
 .niu-create .niu-stage{display:grid;grid-template-columns:32px minmax(0,1fr) minmax(220px,.8fr) 24px;align-items:center;gap:12px;min-height:0;padding:7px 0;border:0;border-bottom:1px solid var(--divider);border-radius:0;box-shadow:none}
 .niu-create .niu-stage:hover{border-color:var(--divider)}
-.niu-create .niu-stage--compact{grid-template-columns:28px minmax(0,1fr) minmax(0,.7fr) 24px;align-items:center;gap:10px;min-height:0;padding:7px 0}
-.niu-create .niu-stage--compact .niu-stage-index{align-self:center;width:24px;height:24px;border-radius:0;font-size:11px}
 .niu-stage-inline-field{display:flex;flex-direction:column;gap:0;min-width:0}
-.niu-create .niu-stage--compact .niu-stage-inline-field>span{display:none}
 .niu-stage-inline-field>span{color:var(--text-secondary);font-size:11px;font-weight:500}
-.niu-create .niu-stage--compact :is(select,.niu-stage-owner){height:30px;min-height:30px;border-color:transparent;border-radius:5px;background:transparent;font-weight:400}
-.niu-create .niu-stage--compact :is(select,.niu-stage-owner):hover{border-color:var(--border);background:var(--fill-1)}
-.niu-create .niu-stage--compact .niu-stage-remove{grid-column:4;grid-row:1;align-self:center;margin:0}
 .niu-create .niu-stage-index{display:grid;place-items:center;width:28px;height:28px;border-radius:0;background:transparent;color:var(--text-secondary);font-size:12px}
 .niu-create .niu-stage-choice button[aria-pressed=true]{box-shadow:none}
 .niu-stage-fields{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(170px,1.2fr);gap:10px;min-width:0}
@@ -1543,5 +1589,51 @@ button.niu-create-mode{color:var(--text-secondary)}
   .niu-stage-completion{grid-column:2;grid-row:2}
   .niu-plan .niu-stage-remove{grid-column:3;grid-row:1;margin-top:0}
 }
-@media(max-width:620px){.niu-create .niu-create-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.niu-create-stage-columns{display:none}.niu-create .niu-stage--compact{grid-template-columns:28px minmax(0,1fr) 24px;align-items:start;padding:10px 0}.niu-create .niu-stage--compact .niu-stage-inline-field>span{display:block;margin-bottom:4px}.niu-stage--compact > div.niu-stage-inline-field{grid-column:2;grid-row:2}.niu-create .niu-stage--compact .niu-stage-remove{grid-column:3;grid-row:1}}
+@media(max-width:620px){.niu-create .niu-create-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.niu-col-review{width:84px}.niu-col-owner{width:120px}.niu-col-action{width:84px}.niu-create-add-btn{padding:0 6px}}
 @media(max-width:480px){.niu-create-section-head{flex-wrap:wrap}.niu-create-section-head .niu-button{margin-left:46px}.niu-create .niu-create-properties{display:grid;grid-template-columns:1fr}}
+/* ---------- 导入弹窗 ---------- */
+.tk-import-modal{width:560px}
+.tk-import-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;flex-shrink:0}
+.tk-import-head h3{font-size:16px;font-weight:600;color:var(--text);margin:0}
+.tk-import-body{display:flex;flex-direction:column;gap:18px;padding:0 22px 4px;overflow-y:auto;flex:1}
+.tk-import-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 22px;border-top:1px solid var(--divider);flex-shrink:0}
+.tk-import-section{display:flex;flex-direction:column;gap:6px}
+.tk-import-label{font-size:13px;color:var(--text-secondary)}
+.tk-import-select-wrap{position:relative;display:flex;align-items:center}
+.tk-import-select{width:100%;appearance:none;-webkit-appearance:none;padding:9px 36px 9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;cursor:pointer;outline:none;box-sizing:border-box}
+.tk-import-select:focus{border-color:var(--border-focus)}
+.tk-import-select-arrow{position:absolute;right:12px;pointer-events:none;color:var(--text-secondary)}
+.tk-import-drop-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1.5px dashed var(--border);border-radius:10px;padding:36px 24px 24px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;background:var(--fill-1)}
+.tk-import-drop-zone:hover,.tk-import-drop-zone.drag-over{border-color:var(--brand);background:var(--brand-fill)}
+.tk-import-drop-zone:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tk-import-drop-icon{color:var(--text-soft);margin-bottom:2px;transition:color .15s}
+.tk-import-drop-zone:hover .tk-import-drop-icon,.tk-import-drop-zone.drag-over .tk-import-drop-icon{color:var(--brand)}
+.tk-import-drop-primary{font-size:14px;font-weight:500;color:var(--text);margin:0}
+.tk-import-drop-secondary{font-size:12px;color:var(--text-soft);margin:0}
+.tk-import-tpl-btn{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;transition:all .15s}
+.tk-import-tpl-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
+.tk-import-file-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+.tk-import-file-bar.hidden{display:none}
+.tk-import-file-info{display:flex;align-items:center;gap:10px;min-width:0}
+.tk-import-file-info svg{color:var(--brand);flex-shrink:0}
+.tk-import-file-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tk-import-file-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.tk-import-file-size{font-size:12px;color:var(--text-soft)}
+.tk-import-file-remove{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px;flex-shrink:0}
+.tk-import-file-remove:hover{background:var(--hover);color:var(--text)}
+.tk-import-preview{display:flex;flex-direction:column;gap:8px}
+.tk-import-preview.hidden{display:none}
+.tk-import-preview-head{display:flex;align-items:center;justify-content:space-between}
+.tk-import-preview-label{font-size:13px;font-weight:500;color:var(--text)}
+.tk-import-preview-hint{font-size:12px;color:var(--text-soft)}
+.tk-import-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.tk-import-table{width:100%;border-collapse:collapse;font-size:12px}
+.tk-import-table th{padding:7px 10px;text-align:left;background:var(--fill-1);color:var(--text-secondary);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--border)}
+.tk-import-table td{padding:7px 10px;color:var(--text);border-bottom:1px solid var(--divider);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-import-table tr:last-child td{border-bottom:0}
+.tk-import-error{display:flex;align-items:center;gap:7px;padding:9px 12px;background:color-mix(in srgb,var(--danger) 8%,transparent);border:1px solid color-mix(in srgb,var(--danger) 25%,transparent);border-radius:8px;font-size:13px;color:var(--danger)}
+.tk-import-error.hidden{display:none}
+.tk-import-reqs{padding-bottom:6px}
+.tk-import-reqs-title{font-size:14px;font-weight:600;color:var(--text);margin:0 0 10px}
+.tk-import-reqs-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.tk-import-reqs-list li{font-size:13px;color:var(--text-secondary);line-height:1.5}

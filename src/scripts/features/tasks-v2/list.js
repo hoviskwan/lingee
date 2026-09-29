@@ -641,7 +641,7 @@ function render() {
   }
   var split = taskViewState.viewMode === 'split';
   if (split) taskViewState.layout = 'list';
-  els.tkToolbarNew.classList.remove('hidden');
+  els.tkToolbarNewGroup.classList.remove('hidden');
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', taskViewState.viewMode === 'full');
   $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {

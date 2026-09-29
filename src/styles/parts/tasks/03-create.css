@@ -31,3 +31,56 @@
 .tk-form-field input:focus,.tk-form-field select:focus{border-color:var(--border-focus)}
 .tk-check-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer}
 .tk-check-label input{width:auto}
+
+/* ---------- 导入弹窗 ---------- */
+.tk-import-modal{width:560px}
+.tk-import-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;flex-shrink:0}
+.tk-import-head h3{font-size:16px;font-weight:600;color:var(--text);margin:0}
+.tk-import-body{display:flex;flex-direction:column;gap:18px;padding:0 22px 4px;overflow-y:auto;flex:1}
+.tk-import-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:16px 22px;border-top:1px solid var(--divider);flex-shrink:0}
+/* 项目选择 */
+.tk-import-section{display:flex;flex-direction:column;gap:6px}
+.tk-import-label{font-size:13px;color:var(--text-secondary)}
+.tk-import-select-wrap{position:relative;display:flex;align-items:center}
+.tk-import-select{width:100%;appearance:none;-webkit-appearance:none;padding:9px 36px 9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;cursor:pointer;outline:none;box-sizing:border-box}
+.tk-import-select:focus{border-color:var(--border-focus)}
+.tk-import-select-arrow{position:absolute;right:12px;pointer-events:none;color:var(--text-secondary)}
+/* 上传区 */
+.tk-import-drop-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1.5px dashed var(--border);border-radius:10px;padding:36px 24px 24px;cursor:pointer;transition:border-color .15s,background .15s;text-align:center;background:var(--fill-1)}
+.tk-import-drop-zone:hover,.tk-import-drop-zone.drag-over{border-color:var(--brand);background:var(--brand-fill)}
+.tk-import-drop-zone:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tk-import-drop-icon{color:var(--text-soft);margin-bottom:2px;transition:color .15s}
+.tk-import-drop-zone:hover .tk-import-drop-icon,.tk-import-drop-zone.drag-over .tk-import-drop-icon{color:var(--brand)}
+.tk-import-drop-primary{font-size:14px;font-weight:500;color:var(--text);margin:0}
+.tk-import-drop-secondary{font-size:12px;color:var(--text-soft);margin:0}
+.tk-import-tpl-btn{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;transition:all .15s}
+.tk-import-tpl-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
+/* 已选文件条 */
+.tk-import-file-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+.tk-import-file-bar.hidden{display:none}
+.tk-import-file-info{display:flex;align-items:center;gap:10px;min-width:0}
+.tk-import-file-info svg{color:var(--brand);flex-shrink:0}
+.tk-import-file-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tk-import-file-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.tk-import-file-size{font-size:12px;color:var(--text-soft)}
+.tk-import-file-remove{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px;flex-shrink:0}
+.tk-import-file-remove:hover{background:var(--hover);color:var(--text)}
+/* 预览表格 */
+.tk-import-preview{display:flex;flex-direction:column;gap:8px}
+.tk-import-preview.hidden{display:none}
+.tk-import-preview-head{display:flex;align-items:center;justify-content:space-between}
+.tk-import-preview-label{font-size:13px;font-weight:500;color:var(--text)}
+.tk-import-preview-hint{font-size:12px;color:var(--text-soft)}
+.tk-import-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px}
+.tk-import-table{width:100%;border-collapse:collapse;font-size:12px}
+.tk-import-table th{padding:7px 10px;text-align:left;background:var(--fill-1);color:var(--text-secondary);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--border)}
+.tk-import-table td{padding:7px 10px;color:var(--text);border-bottom:1px solid var(--divider);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-import-table tr:last-child td{border-bottom:0}
+/* 错误提示 */
+.tk-import-error{display:flex;align-items:center;gap:7px;padding:9px 12px;background:color-mix(in srgb,var(--danger) 8%,transparent);border:1px solid color-mix(in srgb,var(--danger) 25%,transparent);border-radius:8px;font-size:13px;color:var(--danger)}
+.tk-import-error.hidden{display:none}
+/* 字段说明 */
+.tk-import-reqs{padding-bottom:6px}
+.tk-import-reqs-title{font-size:14px;font-weight:600;color:var(--text);margin:0 0 10px}
+.tk-import-reqs-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.tk-import-reqs-list li{font-size:13px;color:var(--text-secondary);line-height:1.5}

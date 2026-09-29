@@ -31,9 +31,18 @@
 .tk-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px;flex-wrap:wrap}
 .tk-tools-left{display:flex;align-items:center;gap:8px}
 .tk-tools-right{display:flex;align-items:center;gap:8px}
-.tk-toolbar-new{display:inline-flex;align-items:center;gap:5px;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.tk-toolbar-new-group{position:relative;display:inline-flex;align-items:center;height:30px}
+.tk-toolbar-new-group.hidden{display:none}
+.tk-toolbar-new{display:inline-flex;align-items:center;gap:5px;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--brand);border-radius:6px 0 0 6px;border-right:0;background:var(--brand);color:#fff;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .tk-toolbar-new:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 .tk-toolbar-new.hidden{display:none}
+.tk-toolbar-new-arrow{display:inline-flex;align-items:center;justify-content:center;height:30px;width:24px;box-sizing:border-box;padding:0;border:1px solid var(--brand);border-radius:0 6px 6px 0;background:var(--brand);color:#fff;font:inherit;cursor:pointer;border-left:1px solid rgba(255,255,255,.3)}
+.tk-toolbar-new-arrow:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.tk-toolbar-new-arrow[aria-expanded="true"]{background:var(--brand-hover)}
+.tk-toolbar-new-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:160px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);z-index:70;overflow:hidden;padding:4px}
+.tk-toolbar-new-menu.hidden{display:none}
+.tk-toolbar-new-item{display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:0 10px;border:0;border-radius:5px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;white-space:nowrap}
+.tk-toolbar-new-item:hover{background:var(--hover)}
 
 /* 搜索框 */
 .tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;transition:border-color .15s}
