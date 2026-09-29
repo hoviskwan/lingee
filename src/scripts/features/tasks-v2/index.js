@@ -348,7 +348,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
     delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
   };
   menu.innerHTML = ''
-    + (detailOnly || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
+    + (detailOnly || anchorEl.closest('.tk-card') || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
     + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>')
     + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
     + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
@@ -676,9 +676,9 @@ function renderCard(t, opts) {
     footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
   }
   var needsReply = taskConversationNeedsReply(t);
-  var cardAction = t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
+  var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' disabled title="仅当前阶段处理人可开始"') + '>开始</button>'
+    : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
-  /* 待开始卡片不再渲染「开始」按钮，开始入口收到右上角三点菜单 */
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
