@@ -40,6 +40,8 @@ function closeTaskExceptionHistory() {
   if (back) back.remove();
   if (taskExceptionPreviousTitle) $('#chatTitle').textContent = taskExceptionPreviousTitle;
   taskExceptionBack = null;
+  /* 关闭异常回看后按当前会话是否任务会话恢复历史版本入口。 */
+  $('#historyBtn').classList.toggle('hidden', !!tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; }));
 }
 export function openTaskExceptionHistory(task, onBack) {
   if (!task) return;
@@ -74,6 +76,7 @@ export function openTaskExceptionHistory(task, onBack) {
   chatMessages.appendChild(panel);
   $('#chatTitle').textContent = '异常会话 · ' + (task.title || '任务');
   viewChat.classList.add('task-exception-open');
+  $('#historyBtn').classList.add('hidden');
   showView('chat');
   chatMessages.scrollTop = 0;
 }
@@ -118,6 +121,7 @@ export function openTaskSessionHistory(task, session, onBack, onContinue) {
   chatMessages.appendChild(panel);
   $('#chatTitle').textContent = '我的会话 · ' + (task.title || '任务');
   viewChat.classList.add('task-exception-open');
+  $('#historyBtn').classList.add('hidden');
   showView('chat');
   chatMessages.scrollTop = 0;
 }
@@ -128,6 +132,9 @@ var activeSessionId = null;
 var CHAT_SESSIONS_KEY = 'lingee-chat-sessions-v1';
 var chatSessions = [];
 var collapsedChatProjects = new Set();
+/* 项目会话超过 5 条时默认收起，点第 5 条下的「展开显示」查看全部（参考 Codex） */
+var CHAT_PROJECT_SESSION_LIMIT = 5;
+var expandedChatProjects = new Set();
 try {
   var savedSessions = JSON.parse(localStorage.getItem(CHAT_SESSIONS_KEY) || '[]');
   if (Array.isArray(savedSessions)) chatSessions = savedSessions.filter(function (session) {
@@ -218,13 +225,26 @@ function renderChatSessions() {
   });
   folders.innerHTML = Array.from(groups, function (entry) {
     var id = entry[0], name = projectName(id), collapsed = collapsedChatProjects.has(id);
+    var sessions = entry[1];
+    var attrId = escapeHtml(String(id)).replace(/"/g, '&quot;');
+    /* 搜索中或当前会话落在收起段时全部展开，保证结果与正在使用的会话可见 */
+    var activeIndex = sessions.findIndex(function (session) { return session.id === activeSessionId; });
+    var expandAll = !!query || expandedChatProjects.has(id) || activeIndex >= CHAT_PROJECT_SESSION_LIMIT;
+    var overflow = sessions.length - CHAT_PROJECT_SESSION_LIMIT;
     var folderIcon = collapsed
       ? '<svg class="chat-project-icon" viewBox="0 0 16 16" fill="none"><path d="M6.26036 2C7.03874 2.00002 7.77849 2.34003 8.2851 2.93099L9.08783 3.86784C9.34114 4.1633 9.71102 4.33333 10.1002 4.33333H12.5136C12.5637 4.33334 12.6125 4.33912 12.6594 4.34961C14.0645 4.50628 15.1265 5.75221 15.0195 7.19727L14.649 12.1973C14.5457 13.5896 13.3857 14.6666 11.9895 14.6667H3.70437C2.30813 14.6667 1.14815 13.5897 1.04487 12.1973L0.674423 7.19727C0.600705 6.20208 1.08157 5.30192 1.84695 4.78646V4.66667C1.84695 3.19391 3.04086 2 4.51361 2H6.26036ZM3.33393 5.66667C2.5588 5.66667 1.94734 6.32532 2.0045 7.09831L2.37429 12.0983C2.42587 12.7946 3.0062 13.3333 3.70437 13.3333H11.9895C12.6876 13.3333 13.268 12.7945 13.3196 12.0983L13.6894 7.09831C13.7465 6.32536 13.135 5.66673 12.36 5.66667H3.33393ZM4.51361 3.33333C3.89154 3.33333 3.3705 3.75975 3.22325 4.33594C3.25991 4.33445 3.29688 4.33333 3.33393 4.33333H7.73041L7.27273 3.79883C7.01943 3.50337 6.64953 3.33335 6.26036 3.33333H4.51361Z" fill="currentColor"/></svg>'
       : '<svg class="chat-project-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 7V4.5A1.5 1.5 0 0 1 3 3h3l1.5 1.5H12A1.5 1.5 0 0 1 13.5 6v1"/><path d="M2.7 7h10.8a1 1 0 0 1 .97 1.24l-1.15 4.6a1 1 0 0 1-.97.76H2.5a1 1 0 0 1-.97-.76L.76 9.76A2.2 2.2 0 0 1 2.7 7Z"/></svg>';
     var chevronIcon = '<path d="M11.8619 5.5287C12.1223 5.26835 12.5443 5.26835 12.8046 5.5287C13.0649 5.78905 13.065 6.21109 12.8046 6.47141L9.03706 10.239C8.46432 10.8117 7.53562 10.8117 6.96284 10.239L3.19526 6.47141C2.93491 6.21106 2.93491 5.78905 3.19526 5.5287C3.45561 5.26835 3.87762 5.26835 4.13797 5.5287L7.90555 9.29628C7.95763 9.34825 8.04232 9.34831 8.09435 9.29628L11.8619 5.5287Z" fill="currentColor"/>';
-    return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + escapeHtml(String(id)).replace(/"/g, '&quot;') + '">'
+    /* 展开后不再显示按钮；只有收起态且超过 5 条时出现「展开显示」 */
+    var sessionsHtml = expandAll
+      ? sessions.map(sessionHtml).join('')
+      : sessions.slice(0, CHAT_PROJECT_SESSION_LIMIT).map(sessionHtml).join('')
+        + (overflow > 0
+          ? '<button type="button" class="chat-project-more" data-chat-project-toggle="' + attrId + '"><span class="txt">展开显示</span></button>'
+          : '');
+    return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + attrId + '">'
       + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>'
-      + '<div class="chat-project-sessions">' + entry[1].map(sessionHtml).join('') + '</div></div>';
+      + '<div class="chat-project-sessions">' + sessionsHtml + '</div></div>';
   }).join('');
 }
 function createChatSession(title, taskId) {
@@ -263,10 +283,17 @@ function appendChatStageEndMarker(marker) {
   var line = document.createElement('div');
   line.className = 'chat-stage-end';
   line.dataset.stageId = marker.stageId;
+  line.setAttribute('role', 'status');
+  var icon = document.createElement('span');
+  icon.className = 'chat-stage-end-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = '<svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="currentColor"/><path d="M10.951 4.249C11.283 4.581 11.283 5.119 10.951 5.451L5.951 10.451C5.619 10.783 5.081 10.783 4.749 10.451L2.749 8.451C2.417 8.119 2.417 7.581 2.749 7.249C3.081 6.917 3.619 6.917 3.951 7.249L5.35 8.648L9.749 4.249C10.081 3.917 10.619 3.917 10.951 4.249Z" fill="white"/></svg>';
   var label = document.createElement('span');
   label.textContent = '「' + marker.stageName + '」已完成';
+  line.appendChild(icon);
   line.appendChild(label);
-  messagesList.appendChild(line);
+  var responses = messagesList.querySelectorAll('.message.assistant .assistant-response');
+  (responses[responses.length - 1] || messagesList).appendChild(line);
 }
 function renderChatStageEndMarkers(session, exchangeIndex, afterQuestion) {
   (session.stageEndMarkers || []).forEach(function (marker) {
@@ -631,7 +658,11 @@ function renderChatTaskSide() {
   var title = document.getElementById('chatTitle');
   title.classList.toggle('is-task', !!task);
   title.setAttribute('aria-label', task ? '打开任务详情：' + task.title : '会话标题');
+  if (task) title.setAttribute('data-tooltip', '打开任务详情');
+  else title.removeAttribute('data-tooltip');
   if (task) title.textContent = task.title;
+  /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */
+  document.getElementById('historyBtn')?.classList.toggle('hidden', !!task || viewChat.classList.contains('task-exception-open'));
   refreshChatStageConfirm();
   /* 任务会话确认流转/完成后任务不再处于执行态，隐藏输入区；任务重新执行时恢复。 */
   document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !['in_progress', 'in_review', 'blocked'].includes(task.status));
@@ -904,7 +935,7 @@ function appendTaskArtifact(result, task, autoOpen) {
   var next = stages[stages.findIndex(function (stage) { return stage.id === task.executionStageId; }) + 1];
   var closing = document.createElement('p');
   closing.className = 'chat-task-result-closing';
-  closing.textContent = '「' + taskStageName(task) + '」产物已提交，' + (next ? '确认后进入「' + next.name + '」。' : '确认后任务完成。');
+  closing.textContent = '「' + taskStageName(task) + '」产物已生成，' + (next ? '确认后提交并进入「' + next.name + '」。' : '确认后提交并完成任务。');
   result.appendChild(closing);
   if (autoOpen) openChatDocViewer(task, artifact, true);
 }
@@ -1660,6 +1691,12 @@ export function initComposer() {
   document.getElementById('chatProjectFolders').addEventListener('click', function (event) {
     var entry = event.target.closest('[data-chat-session]');
     if (entry) { openChatSession(entry.getAttribute('data-chat-session')); return; }
+    var toggle = event.target.closest('[data-chat-project-toggle]');
+    if (toggle) {
+      expandedChatProjects.add(toggle.getAttribute('data-chat-project-toggle'));
+      renderChatSessions();
+      return;
+    }
     var title = event.target.closest('.chat-project-title');
     if (!title) return;
     var id = title.closest('[data-chat-project]').getAttribute('data-chat-project');

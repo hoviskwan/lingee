@@ -76,7 +76,7 @@ export function getDemoStageRun(task, entry) {
     const reason = task.blockedRun?.reason || '所需依赖尚未就绪，执行已中断。';
     run.steps[2] = {kind:'error',summary:'执行中断：' + reason,detail:reason,state:'failed'};
   } else if (entry.state === 'review') {
-    run.steps[2] = {kind:'result',summary:`${entry.stage}结果已提交，等待人工审核。`,detail:`「${task.title}」的${entry.stage}执行记录与阶段产物已提交，等待项目负责人确认。`,state:'done'};
+    run.steps[2] = {kind:'result',summary:`${entry.stage}结果已生成，等待人工审核。`,detail:`「${task.title}」的${entry.stage}执行记录与阶段产物已生成，等待项目负责人确认。`,state:'done'};
   }
   return run;
 }

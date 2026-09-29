@@ -65,12 +65,15 @@ function cvMyProjects(){
   return currentPerson?CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id)&&(p.owner===currentPerson.name||(p.members||[]).includes(currentPerson.id));}):[];
 }
 function cvProjectFilterChoices(field){
-  var projects=cvMyProjects();
+  var query=(($('#cvProjectSearch')||{}).value||'').trim().toLocaleLowerCase();
+  var currentName=cvCurrentUserName();
+  var projects=cvMyProjects().filter(function(project){return (cvProjectScope==='all'||(cvProjectScope==='owned'&&project.owner===currentName)||(cvProjectScope==='joined'&&project.owner!==currentName))
+    &&(!query||[project.name,project.desc||''].join(' ').toLocaleLowerCase().includes(query));});
   var pairs=field==='status'?Object.keys(PJ_STATUS).map(function(id){return [id,PJ_STATUS[id].t];})
     :field==='priority'?['高','中','低'].map(function(value){return [value,value];})
     :field==='owner'?Array.from(new Set(projects.map(function(project){return project.owner||'';}).filter(Boolean))).sort().map(function(value){return [value,value];})
     :[['none','无任务'],['zero','0%'],['partial','1%–99%'],['done','100%']];
-  return pairs.map(function(pair){return {value:pair[0],label:pair[1],count:projects.filter(function(project){return cvProjectFieldValue(project,field)===pair[0];}).length};});
+  return pairs.map(function(pair){return {value:pair[0],label:pair[1],count:projects.filter(function(project){return cvProjectFieldValue(project,field)===pair[0];}).length};}).filter(function(choice){return choice.count>0;});
 }
 /* 兼容旧版 p.features：首次读取时迁移为 ProjectTask(kind=epic)，
    之后 Epic / Task / Subtask 统一存放在 CV_TASKS，并用 parentTaskId 建树。 */
@@ -156,7 +159,6 @@ function cvRenderProjectList(){
 function cvRenderProjectFilters(){
   var fields=$('#cvProjectFilterFields'),options=$('#cvProjectFilterOptions');
   if(!fields||!options)return;
-  cvProjectFilters=cvProjectFilters.filter(function(item){return cvProjectFilterChoices(item.field).some(function(choice){return choice.value===item.value;});});
   fields.innerHTML=PJ_FILTER_FIELDS.map(function(field){
     var count=cvProjectFilters.filter(function(item){return item.field===field[0];}).length;
     return '<button type="button" class="pj-filter-category'+(field[0]===cvActiveProjectFilter?' active':'')+'" data-pj-filter-field="'+field[0]+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+field[2]+'</svg><span>'+field[1]+'</span>'+(count?'<span class="pj-filter-count">'+count+'</span>':'')+'<svg class="pj-filter-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button>';

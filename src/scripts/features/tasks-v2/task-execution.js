@@ -83,7 +83,7 @@ export function submitTaskStage(task) {
       docTitle:'《' + task.title + '》阶段执行记录', summary:stage.desc || task.title,
       status:'待审核', date:date, author:'执行 Agent',
       sections:[{heading:'执行目标',blocks:[{p:stage.desc || task.desc || task.title}]},
-        {heading:'提交说明',blocks:[{p:'本阶段已提交，等待项目负责人确认。'}]}],
+        {heading:'提交说明',blocks:[{p:'本阶段产物已生成，等待项目负责人确认；确认后提交并流转。'}]}],
     });
   }
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});

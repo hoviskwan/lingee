@@ -92,7 +92,8 @@
             </div>
             <div class="tk-fields-list" id="tkFieldsList"></div>
           </div>
-          <div class="tk-display-group-row">
+          <!-- 分组选择先隐藏，展示方式后续再规划；分组逻辑（state.groupBy）保留 -->
+          <div class="tk-display-group-row hidden">
             <span id="tkGroupLabel">分组</span>
             <button type="button" class="tk-flow-field-value tk-display-choice" id="tkGroupSelect" aria-labelledby="tkGroupLabel tkGroupValue" aria-haspopup="listbox" aria-expanded="false">
               <span class="tk-display-choice-text" id="tkGroupValue">状态</span>
@@ -334,5 +335,6 @@
     </div>
     <div class="tk-popover" id="tkBulkAssigneeMenu"></div>
 <!--#include "src/modals/tasks/new-issue-ui.html" -->
+<!--#include "src/modals/tasks/confirm.html" -->
 <!--#include "src/modals/tasks/import-excel.html" -->
   </div>

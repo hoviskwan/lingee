@@ -22,9 +22,10 @@ function localSqlite() {
 // 演示原型：构建产出单个可双击打开的 index.html
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const livePreview = mode === 'preview-live';
   const sharedStorageEnabled = env.VITE_SHARED_STORAGE === '1';
   return {
-    base: '/lingee/',
+    base: livePreview ? '/' : '/lingee/',
     plugins: [
       ...(sharedStorageEnabled ? [localSqlite()] : []),
       spaFallback(),
@@ -38,12 +39,12 @@ export default defineConfig(({ mode }) => {
         name: 'restore-dev-base',
         enforce: 'post',
         config(_, { command }) {
-          if (command === 'serve') return { base: '/lingee/' };
+          if (command === 'serve') return { base: livePreview ? '/' : '/lingee/' };
         },
       },
       pages404(),
     ],
-    server: { host:'0.0.0.0', port: Number(env.PORT) || 5199, open: true },
+    server: { host: livePreview ? '127.0.0.1' : '0.0.0.0', port: Number(env.PORT) || (livePreview ? 4173 : 5199), strictPort: livePreview, open: !livePreview },
     build: {
       outDir: 'dist',
       assetsInlineLimit: 100000000,

@@ -32,12 +32,14 @@ function renderTaskListRow(t, opts, context) {
     + '<td class="tk-col-code"><span class="tk-row-code">' + context.escapeHtml(t.code) + '</span></td>'
     + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + context.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
     + '<td class="tk-col-status"><span class="tk-row-status">' + context.statusSvg(t.status) + context.escapeHtml(st.name) + '</span></td>'
+    + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(t.issueType) + '</span>' : '—') + '</td>'
     + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
     + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + context.avatarSm(t.assignee) + '<span>' + context.escapeHtml(person.name) + '</span></div></td>'
     + '<td class="tk-col-project">' + context.escapeHtml(tkGetProjectName(t.project)) + '</td>'
     + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? context.fmtDate(t.dueDate) : '—') + '</span></td>'
     + '<td class="tk-col-created">' + context.fmtDate(t.createDate) + '</td>'
     + '<td class="tk-col-labels">' + ((t.labels || []).length ? t.labels.map(function(name) { return '<span class="tk-row-label">' + context.escapeHtml(name) + '</span>'; }).join('') : '—') + '</td>'
+    + '<td class="tk-col-desc">' + (t.desc ? '<span class="tk-row-desc" title="' + context.escapeHtml(String(t.desc).replace(/\s+/g, ' ')) + '">' + context.escapeHtml(t.desc) + '</span>' : '—') + '</td>'
     + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
 }
 
@@ -46,7 +48,7 @@ export function taskListVisibleColumnCount(order, visibility) {
 }
 
 function taskListFieldKey(cell) {
-  var match = cell.className.match(/(?:^|\s)tk-col-(code|title|module|status|priority|assignee|project|due|created|labels)(?:\s|$)/);
+  var match = cell.className.match(/(?:^|\s)tk-col-(code|title|module|status|type|priority|assignee|project|due|created|labels|desc)(?:\s|$)/);
   return match && match[1];
 }
 

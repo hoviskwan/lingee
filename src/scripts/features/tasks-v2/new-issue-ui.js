@@ -7,12 +7,12 @@ import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAMS } from '../expert/store.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
-import taskFlowHtml from '../../../../outputs/task-state-flow.html?raw';
 
 let renderTasks = () => {};
 let refreshTaskDetail = () => {};
 let currentTaskId = null;
 let editingTaskId = null;
+let copiedTaskFields = null;
 let initialPlanSnapshot = '[]';
 let draftStages = [];
 let draftConfirmed = false;
@@ -41,26 +41,6 @@ function closeOverlays() {
   closeProjectPopup();
   byId('niuCreateOverlay').hidden = true;
   byId('niuPlanOverlay').hidden = true;
-}
-
-function closeTaskFlowHelp() {
-  byId('tkFlowHelpOverlay').hidden = true;
-  byId('tkFlowHelpFrame').srcdoc = '';
-}
-
-function sizeTaskFlowHelp() {
-  if (byId('tkFlowHelpOverlay').hidden) return;
-  const frame = byId('tkFlowHelpFrame');
-  const svg = frame.contentDocument?.querySelector('svg');
-  if (svg) frame.style.height = `${Math.ceil(svg.getBoundingClientRect().height)}px`;
-}
-
-function openTaskFlowHelp() {
-  const frame = byId('tkFlowHelpFrame');
-  frame.style.height = '0px';
-  frame.srcdoc = taskFlowHtml;
-  byId('tkFlowHelpOverlay').hidden = false;
-  byId('tkFlowHelpClose').focus();
 }
 
 function closePersonPopup() {
@@ -256,6 +236,7 @@ export function openNewIssueCreate(projectId) {
   activePlanScope = 'create';
   currentTaskId = null;
   editingTaskId = null;
+  copiedTaskFields = null;
   initialPlanSnapshot = '[]';
   draftStages = [];
   draftConfirmed = false;
@@ -280,6 +261,24 @@ export function openNewIssueCreate(projectId) {
   setCreateMode('manual');
   renderPlan();
   byId('niuCreateScroll').scrollTop = 0;
+}
+
+export function openNewIssueCopy(taskId) {
+  const source = tkGetTasks().find(task => task.id === Number(taskId));
+  if (!source) { toast('未找到任务', 'warning'); return; }
+  openNewIssueCreate(source.project);
+  if (byId('niuCreateOverlay').hidden) return;
+  byId('niuTitle').value = source.title || '';
+  byId('niuDescription').value = source.desc || '';
+  byId('niuType').value = source.issueType || '';
+  byId('niuPriority').value = source.priority || 'medium';
+  if (tkPeopleInProject(source.project).some(person => person.id === source.assignee)) selectedOwnerId = source.assignee;
+  copiedTaskFields = { labels: [...(source.labels || [])], dueDate: source.dueDate || '', module: source.module || '' };
+  draftStages = (source.executionPlan || defaultPlanStages(source.project, selectedOwnerId)).map(stage => ({
+    ...stage, id: crypto.randomUUID(), status: 'pending', assigneeId: tkPeopleInProject(source.project).some(person => person.id === stage.assigneeId) ? stage.assigneeId : selectedOwnerId,
+  }));
+  byId('niuCreateStageCount').textContent = String(draftStages.length);
+  byId('niuTitle').focus();
 }
 
 export function openNewIssueEdit(taskId) {
@@ -356,8 +355,8 @@ function createTask() {
   }
   tkAddTask({
     title, desc: description, issueType,
-    status: 'backlog', priority: byId('niuPriority').value, dueDate: '',
-    assignee: owner, createdBy: tkCurrentUserId(), project, teamId: CV_PROJECTS.find(item => item.id === project)?.defaultTeam || '', labels: [],
+    status: 'backlog', priority: byId('niuPriority').value, dueDate: copiedTaskFields?.dueDate || '',
+    assignee: owner, createdBy: tkCurrentUserId(), project, teamId: CV_PROJECTS.find(item => item.id === project)?.defaultTeam || '', labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
     executionPlan: draftStages.map(stage => ({ ...stage })),
     planStatus: 'draft',
   });
@@ -471,12 +470,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuCreateAdd').addEventListener('click', () => addStage());
   byId('niuPlanSave').addEventListener('click', () => savePlan(false));
   byId('niuPlanConfirm').addEventListener('click', () => savePlan(true));
-  byId('tkFlowHelpClose').addEventListener('click', closeTaskFlowHelp);
-  byId('tkFlowHelpFrame').addEventListener('load', sizeTaskFlowHelp);
-  window.addEventListener('resize', sizeTaskFlowHelp);
-  byId('tkFlowHelpOverlay').addEventListener('click', event => {
-    if (event.target === byId('tkFlowHelpOverlay')) closeTaskFlowHelp();
-  });
   document.addEventListener('input', event => {
     const input = event.target.closest('[data-niu-description]');
     if (!input || planLocked()) return;
@@ -516,7 +509,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     renderPlan();
   });
   document.addEventListener('click', event => {
-    if (event.target.closest('[data-task-flow-help]')) { openTaskFlowHelp(); return; }
     const person = event.target.closest('[data-niu-person]');
     if (person && personPopupTarget) {
       if (planLocked()) { closePersonPopup(); return; }
@@ -546,8 +538,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   });
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
-    if (!byId('tkFlowHelpOverlay').hidden) closeTaskFlowHelp();
-    else if (!byId('niuPersonPopup').hidden) closePersonPopup();
+    if (!byId('niuPersonPopup').hidden) closePersonPopup();
     else if (!byId('niuProjectPopup').hidden) closeProjectPopup();
     else if (!byId('niuCreateOverlay').hidden || !byId('niuPlanOverlay').hidden) closeOverlays();
   });

@@ -4,6 +4,17 @@
    ============================================================ */
 
 /* ---------- 页面骨架 ---------- */
+.tk-confirm-overlay[hidden]{display:none}
+.tk-confirm-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
+.tk-confirm-card{width:min(100%,360px);padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.tk-confirm-card h3{margin:0 0 10px;color:var(--text);font-size:16px;font-weight:600}
+.tk-confirm-card p{margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.tk-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+.tk-confirm-actions button{min-width:76px;padding:7px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.tk-confirm-actions button:hover{background:var(--hover)}
+#tkConfirmOk{border-color:#d92d20;background:#d92d20;color:#fff}
+#tkConfirmOk:hover{background:#b42318}
+
 #view-tasks{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
 #view-tasks.hidden{display:none}
 
@@ -208,7 +219,7 @@
 .tk-board-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
 .tk-board-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
 
-.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px);height:100%}
+.tk-board-col{flex:1 0 260px;min-width:0;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px);height:100%}
 .tk-board-col.is-collapsed{height:auto}
 .tk-board-col-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--divider);flex-shrink:0}
 .tk-board-col-head-left{display:flex;align-items:center;gap:6px}
@@ -243,10 +254,10 @@
 .tk-card-label{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--fill-1);color:var(--text-secondary);border:1px solid var(--border)}
 .tk-card-foot{display:flex;align-items:center;justify-content:space-between}
 .tk-card-foot-left{display:flex;align-items:center;gap:6px}
-.tk-card-action,.tk-card-exec-btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:44px;height:28px;margin-left:auto;padding:0 9px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font:inherit;font-size:11px;font-weight:500;line-height:1;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.tk-card-action{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:44px;height:28px;margin-left:auto;padding:0 9px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font:inherit;font-size:11px;font-weight:500;line-height:1;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
 .tk-card-action:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
-.tk-card-action--primary,.tk-card-exec-btn{border-color:var(--brand);background:var(--brand);color:#fff}
-.tk-card-action--primary:hover,.tk-card-exec-btn:hover{border-color:var(--brand-hover);background:var(--brand-hover);box-shadow:0 2px 7px rgba(73,93,255,.24);color:#fff}
+.tk-card-action--primary{border-color:var(--brand);background:var(--brand);color:#fff}
+.tk-card-action--primary:hover{border-color:var(--brand-hover);background:var(--brand-hover);box-shadow:0 2px 7px rgba(73,93,255,.24);color:#fff}
 .tk-card-priority{font-size:10px}
 .tk-card-due{font-size:11px;display:flex;align-items:center;gap:3px}
 .tk-card-due.overdue{color:var(--danger)}
@@ -254,7 +265,7 @@
 .tk-card-more{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;padding:4px;border-radius:4px;display:flex;opacity:0;transition:opacity .15s,background .15s,color .15s}
 .tk-card:hover .tk-card-more,.tk-card:focus-within .tk-card-more{opacity:1}
 .tk-card-more:hover{background:var(--brand-fill);color:var(--brand)}
-.tk-card-action:focus-visible,.tk-card-exec-btn:focus-visible,.tk-card-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tk-card-action:focus-visible,.tk-card-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .tk-card-menu{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:140px;z-index:200;animation:tk-menu-in .12s ease}
 .tk-card-menu-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
 .tk-card-menu-item:hover{background:var(--hover)}
@@ -366,6 +377,12 @@ body.tk-col-resizing{user-select:none;cursor:col-resize}
 .tk-col-created{width:100px}
 .tk-col-labels{width:140px}
 .tk-row-label{display:inline-block;margin:1px 3px 1px 0;padding:1px 5px;border:1px solid var(--border);border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;white-space:nowrap}
+.tk-col-type{width:76px}
+.tk-row-type{display:inline-block;margin:1px 0;padding:1px 6px;border-radius:4px;font-size:11px;line-height:16px;white-space:nowrap}
+.tk-row-type[data-type="需求"]{color:var(--brand);background:var(--brand-fill)}
+.tk-row-type[data-type="缺陷"]{color:#e04a3a;background:rgba(224,74,58,.1)}
+.tk-col-desc{max-width:280px}
+.tk-row-desc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:12px}
 
 .tk-row-code{font-size:12px;color:var(--text);font-weight:500}
 .tk-row-status{display:inline-flex;align-items:center;gap:4px;font-size:12px}
@@ -1410,21 +1427,6 @@ input[type=date].tk-mc-pill{width:auto}
 @media(max-width:800px){.niu-plan-layout{grid-template-columns:1fr;overflow:auto}.niu-plan-aside{min-height:150px}.niu-plan-main{overflow:visible}.niu-plan{height:90vh}.niu-create-foot{align-items:flex-end}}
 @media(max-width:640px){.niu-overlay{padding:8px}.niu-create{height:min(620px,calc(100vh - 16px))}.niu-create-head,.niu-plan-head{padding:17px}.niu-create-columns{grid-template-columns:1fr;height:auto}.niu-create-writing,.niu-create-properties,.niu-create-plan-pane,.niu-plan-content{padding:18px}.niu-create-writing .niu-field textarea{min-height:180px}.niu-create-properties{border-left:0;border-top:1px solid #e8edf4}.niu-create-foot{padding:14px 18px}.niu-plan-layout{padding:0 8px 8px}.niu-plan-head{align-items:flex-start}.niu-plan-head-actions{flex-wrap:wrap;justify-content:flex-end}.niu-plan-head-actions .niu-button{min-height:32px;padding:0 8px;font-size:11px}.niu-stage-columns{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 26px}.niu-stage-columns span:last-child{display:none}.niu-stage{grid-template-columns:22px minmax(0,1fr) minmax(0,1fr) 26px}.niu-stage-owner{grid-column:2 / 4;width:auto}.niu-stage-remove{grid-column:4;grid-row:1 / 3;align-self:center}.niu-tabs{gap:15px;padding:0 14px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.niu-overlay *{scroll-behavior:auto!important;transition:none!important}}
-
-/* 执行计划的状态流转说明入口与图表弹窗。 */
-.tk-flow-help-heading{display:inline-flex;align-items:center;gap:3px}
-.tk-flow-help-trigger{display:inline-grid;place-items:center;box-sizing:border-box;width:18px;height:18px;flex:none;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--text-secondary);line-height:1;vertical-align:middle;cursor:pointer}
-.tk-flow-help-trigger svg{display:block;width:14px;height:14px;flex:none}
-.tk-flow-help-trigger:hover,.tk-flow-help-trigger:focus-visible{background:var(--brand-fill);color:var(--brand)}
-.tk-flow-help-trigger:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.tk-flow-help-overlay{position:fixed;inset:0;z-index:380;display:grid;place-items:center;padding:20px;background:var(--tb-backdrop,rgba(32,44,65,.46))}
-.tk-flow-help-overlay[hidden]{display:none!important}
-.tk-flow-help-dialog{display:flex;flex-direction:column;width:min(100%,1280px);max-height:min(90vh,940px);overflow:hidden;border:1px solid var(--border);border-radius:14px;background:var(--bg);box-shadow:var(--menu-shadow)}
-.tk-flow-help-dialog header{display:flex;flex:none;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;border-bottom:1px solid var(--border)}
-.tk-flow-help-dialog h2{margin:0;color:var(--text);font-size:17px}
-.tk-flow-help-close{display:grid;place-items:center;width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);font-size:24px;cursor:pointer}
-.tk-flow-help-close:hover{background:var(--fill-1);color:var(--text)}
-.tk-flow-help-dialog iframe{width:100%;height:0;min-height:0;flex:0 1 auto;border:0;background:#fff}
 
 /* 开发成果中的业务界面预览。 */
 .tk-demo-app{margin:8px 0 14px;overflow:hidden;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text)}

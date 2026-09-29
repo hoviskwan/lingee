@@ -13,7 +13,7 @@ import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkWasTaskHandler, tkEns
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
-import { initNewIssueUI, openNewIssueCreate, openNewIssueEdit } from './new-issue-ui.js';
+import { initNewIssueUI, openNewIssueCreate, openNewIssueCopy, openNewIssueEdit } from './new-issue-ui.js';
 import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage, submitTaskStage, taskExecutionStages, taskStageHandoffPatch } from './task-execution.js';
 import { initTkFormExpertPicker } from './expert-picker.js';
 
@@ -56,10 +56,11 @@ import {
 /* ---------- 状态 ---------- */
 var LIST_FIELDS = [
   { id:'code', name:'编号' }, { id:'title', name:'标题', required:true },
-  { id:'status', name:'状态' },
+  { id:'status', name:'状态' }, { id:'type', name:'任务类型' },
   { id:'priority', name:'优先级' }, { id:'assignee', name:'处理人' },
   { id:'project', name:'项目' }, { id:'due', name:'截止日期' },
   { id:'created', name:'创建时间' }, { id:'labels', name:'标签' },
+  { id:'desc', name:'描述' },
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
 var state = {
@@ -67,7 +68,7 @@ var state = {
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:false, labels:false, childProgress:true },
-  listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false },
+  listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false, desc:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
 var projectListMode = false;
@@ -104,7 +105,6 @@ function taskHeaderAction(task) {
     backlog:{label:'开始执行',action:'start'},
     in_progress:{label:'查看执行',action:'view-run'},
     blocked:{label:'重试执行',action:'retry'},
-    done:{label:'查看结果',action:'view-result'},
   }[task.status] || null;
 }
 
@@ -284,10 +284,8 @@ function handleTaskHeaderAction() {
     openDrawer(task.id);
   } else if (action === 'start') {
     startTaskExecution(task.id);
-  } else if (action === 'view-run' || action === 'view-result') {
-    var report = action === 'view-result' ? els.tkDrawerBody.querySelector('.tk-exec-card-report') : null;
-    if (report) report.open = true;
-    (report || els.tkDrawerBody.querySelector('.tk-feed-stage-overview'))?.scrollIntoView({behavior:'smooth',block:'start'});
+  } else if (action === 'view-run') {
+    els.tkDrawerBody.querySelector('.tk-feed-stage-overview')?.scrollIntoView({behavior:'smooth',block:'start'});
   } else if (action === 'retry') retryBlockedTask(task);
 }
 function returnToTaskDetail(task) {
@@ -363,7 +361,6 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
     item.addEventListener('click', function() {
       var act = item.getAttribute('data-card-action');
       var aid = parseInt(item.getAttribute('data-card-task'), 10);
-      if (detailOnly && act === 'delete' && state.drawerTaskId === aid) closeDrawer();
       handleCardAction(act, aid);
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       if (detailOnly) els.tkDrawerMore.setAttribute('aria-expanded', 'false');
@@ -377,26 +374,45 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   menu.style.top = top + 'px';
   menu.style.left = left + 'px';
 }
-function handleCardAction(act, aid) {
-  if (act === 'chat') { startTaskExecution(aid); }
-  else if (act === 'edit') { openNewIssueEdit(aid); }
-  else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
-  else if (act === 'copy') {
-    var src = tkGetTasks().find(function(x){return x.id===aid;});
-    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); toast('复制成功', 'success'); }
-  }
-  else if (act === 'subtask') {
-    var parent = tkGetTasks().find(function(x){return x.id===aid;});
-    if (parent) {
-      tkAddTask({ title: parent.title + ' - 子任务', desc:'', status:'backlog', priority: parent.priority || 'medium',
-        assignee: parent.assignee || tkCurrentUserId(), project: parent.project || tkProjectsForCurrentUser()[0]?.id || '',
-        labels:(parent.labels||[]).slice(), dueDate:'', createDate:new Date().toISOString().slice(0,10),
-        parentId: parent.id });
-      render();
-      toast('创建成功', 'success');
-    }
-  }
+let taskConfirmAction = null;
+let taskConfirmFocus = null;
+function closeTaskConfirm(confirmed) {
+  var overlay = document.getElementById('tkConfirmOverlay');
+  if (overlay.hidden) return;
+  overlay.hidden = true;
+  var action = taskConfirmAction;
+  taskConfirmAction = null;
+  if (taskConfirmFocus?.isConnected) taskConfirmFocus.focus();
+  taskConfirmFocus = null;
+  if (confirmed && action) action();
 }
+function showTaskConfirm(message, action, title) {
+  var overlay = document.getElementById('tkConfirmOverlay');
+  taskConfirmFocus = document.activeElement;
+  taskConfirmAction = action;
+  document.getElementById('tkConfirmTitle').textContent = title || '确认删除';
+  document.getElementById('tkConfirmMessage').textContent = message;
+  overlay.hidden = false;
+  document.getElementById('tkConfirmCancel').focus();
+}
+function confirmDeleteTask(taskId) {
+  var task = tkGetTasks().find(function (item) { return item.id === Number(taskId); });
+  if (!task) return;
+  showTaskConfirm('确定删除任务「' + task.title + '」吗？', function () {
+    if (state.drawerTaskId === task.id) closeDrawer();
+    tkDeleteTask(task.id);
+    render();
+    toast('删除成功', 'success');
+  });
+}
+function handleCardAction(act, aid) {
+  if (act === 'chat') startTaskExecution(aid);
+  else if (act === 'edit') openNewIssueEdit(aid);
+  else if (act === 'delete') confirmDeleteTask(aid);
+  else if (act === 'copy') openNewIssueCopy(aid);
+  else if (act === 'subtask') openTaskModal(null, aid);
+}
+
 function priClass(p) { return 'tk-pri-' + (p || 'low'); }
 function filterAssigneeOptions(menu, optionSelector, value) {
   if (!menu) return;
@@ -518,7 +534,7 @@ function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
   if (field === 'creator') return task.createdBy === val;
-  /* 「已办」不是任务状态，而是本人处理过但已流转的视角，与看板已办分组同口径 */
+  /* 「已办」不是任务状态，而是本人处理过但已流转的视角；看板已隐藏该列，此处保留兼容已保存视图的筛选 */
   if (field === 'status' && val === 'handled') return op === 'neq' ? !tkIsHandledByMe(task) : tkIsHandledByMe(task);
   /* 「负责人：全部」是项目管理员的放开视角，展示权限内全部任务 */
   if (field === 'assignee' && val === 'all') return op === 'neq' ? false : true;
@@ -586,10 +602,9 @@ function getGroupedTasks(tasks) {
   if (state.groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
   var groups = {}, keys = [];
   if (state.groupBy === 'status') {
-    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待开始」列 */
-    TK_STATUSES.forEach(function (s) { if (s.id === 'planned') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
-    groups.handled = { name: '已办', color: 'gray', tasks: [] };
-    keys.splice(keys.indexOf('done') + 1, 0, 'handled');
+    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待开始」列；
+       「已取消」「已办」先隐藏：不单独成列，任务卡片也不上板，展示方式后续再规划 */
+    TK_STATUSES.forEach(function (s) { if (s.id === 'planned' || s.id === 'cancelled') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
   } else if (state.groupBy === 'priority') {
     TK_PRIORITIES.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
   } else if (state.groupBy === 'assignee') {
@@ -603,8 +618,9 @@ function getGroupedTasks(tasks) {
     var k = t[state.groupBy];
     if (state.groupBy === 'status') {
       if (k === 'planned') k = 'backlog';
-      if (!['in_progress', 'in_review', 'blocked'].includes(k) && tkIsHandledByMe(t)) k = 'handled';
     }
+    /* 已取消与个人已办的任务不上板；执行中/待审核/已阻塞等活跃任务即使本人处理过也保留 */
+    if (t.status === 'cancelled' || (!['in_progress', 'in_review', 'blocked'].includes(t.status) && tkIsHandledByMe(t))) return;
     if (!k) {
       if (state.groupBy === 'assignee') k = 'unassigned';
       else if (state.groupBy === 'project') k = 'none';
@@ -690,16 +706,14 @@ function renderCard(t, opts) {
   var needsReply = taskConversationNeedsReply(t);
   var cardAction = t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
-  var startBtn = isBacklog && tkCanStartTask(t)
-    ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始"><span>开始</span></button>'
-    : '';
+  /* 待开始卡片不再渲染「开始」按钮，开始入口收到右上角三点菜单 */
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
     + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + footExtraHtml
-    + '</div>' + startBtn + cardAction + '</div></div>';
+    + '</div>' + cardAction + '</div></div>';
 }
 
 /* ---------- 渲染：列表 ---------- */
@@ -2226,7 +2240,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
      + (taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
-    + '<div class="tk-feed-stage-overview-head"><span class="tk-flow-help-heading"><strong>执行计划</strong><button type="button" class="tk-flow-help-trigger" data-task-flow-help aria-label="查看任务状态与处理人流程图" title="查看任务状态与处理人流程图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4"/><path d="M12 17h.01"/></svg></button></span></div>'
+     + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
     + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行专家</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead><tbody>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
@@ -2671,9 +2685,10 @@ function closeDrawer() {
 var activeFilterSection = '';
 var filterSections = [
   ['status','状态','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>'],
+  ['issueType','任务类型','<path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/>'],
   ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
   ['dueDate','日期','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>'],
-  ['assignee','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
+  ['assignee','处理人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
   ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
   ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
@@ -2684,9 +2699,10 @@ function filterOptionsFor(section) {
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
     ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待审核'],
-    ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
-    ['handled','已办'],
-  ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return o[0] === 'handled' ? tkIsHandledByMe(t) : t.status === o[0]; }).length }; });
+    ['blocked','已阻塞'],['done','已完成'],
+    /* 「已取消」「已办」先隐藏，不提供筛选入口 */
+  ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
+  if (section === 'issueType') return [['需求','需求'],['缺陷','缺陷']].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.issueType === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
   if (section === 'assignee') return (tkIsProjectOwner() ? [{ value:'all', label:'全部', count:tasks.length }] : []).concat(TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; }));
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
@@ -2864,7 +2880,7 @@ function handleDrop(e) {
   col.classList.remove('drag-over');
   var boardCol = col.closest('.tk-board-col');
   var groupKey = boardCol.getAttribute('data-group-key');
-  if (groupKey === 'handled') return;
+    if (groupKey === 'cancelled') return;
   var patch = {};
   if (state.groupBy === 'status') patch.status = groupKey;
   else if (state.groupBy === 'priority') patch.priority = groupKey;
@@ -3438,8 +3454,8 @@ function bindEvents() {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
       if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
-      else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
-      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
+      else if (act === 'delete') { confirmDeleteTask(aid); }
+      else if (act === 'copy') { openNewIssueCopy(aid); }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -3727,10 +3743,13 @@ function bindEvents() {
     if (delBtn) {
       e.stopPropagation();
       var viewId = delBtn.getAttribute('data-del-view');
-      tkDeleteView(viewId);
-      if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
-      render();
-      toast('删除成功', 'success');
+      var view = tkGetViews().find(function (item) { return item.id === viewId; });
+      showTaskConfirm('确定删除视图「' + (view?.name || '') + '」吗？', function () {
+        tkDeleteView(viewId);
+        if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
+        render();
+        toast('删除成功', 'success');
+      });
       return;
     }
     var tab = e.target.closest('.list-page-tab');
@@ -3776,11 +3795,14 @@ function bindEvents() {
     var delBtn = e.target.closest('[data-del-view]');
     if (delBtn) {
       var viewId = delBtn.getAttribute('data-del-view');
-      tkDeleteView(viewId);
-      if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
-      openManageViews();
-      render();
-      toast('删除成功', 'success');
+      var view = tkGetViews().find(function (item) { return item.id === viewId; });
+      showTaskConfirm('确定删除视图「' + (view?.name || '') + '」吗？', function () {
+        tkDeleteView(viewId);
+        if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
+        openManageViews();
+        render();
+        toast('删除成功', 'success');
+      });
       return;
     }
     var renameBtn = e.target.closest('[data-rename-view]');
@@ -3812,11 +3834,15 @@ function bindEvents() {
       }
       if (action === 'delete') {
         var delCount = state.selectedIds.size;
-        state.selectedIds.forEach(function (id) { tkDeleteTask(id); });
-        state.selectedIds.clear();
-        hidePopover();
-        render();
-        toast('成功删除 ' + delCount + ' 个任务', 'success');
+        if (!delCount) return;
+        var ids = Array.from(state.selectedIds);
+        showTaskConfirm('确定删除选中的 ' + delCount + ' 个任务吗？', function () {
+          ids.forEach(function (id) { tkDeleteTask(id); });
+          state.selectedIds.clear();
+          hidePopover();
+          render();
+          toast('成功删除 ' + delCount + ' 个任务', 'success');
+        });
       }
     });
   });
@@ -3954,7 +3980,7 @@ function bindEvents() {
     if (addBtn) {
       var groupKey = addBtn.getAttribute('data-add-group');
       openTaskModal(null);
-      if (state.groupBy === 'status' && groupKey !== 'handled') els.tkFormStatus.value = groupKey;
+      if (state.groupBy === 'status') els.tkFormStatus.value = groupKey;
       else if (state.groupBy === 'priority') els.tkFormPriority.value = groupKey;
       else if (state.groupBy === 'assignee' && groupKey !== 'unassigned') { var memberProject = tkProjectsForCurrentUser().find(function (project) { return tkPeopleInProject(project.id).some(function (person) { return person.id === groupKey; }); }); if (memberProject) { els.tkFormProject.value = memberProject.id; refreshFormAssignees(groupKey); } }
       else if (state.groupBy === 'project' && groupKey !== 'none') { els.tkFormProject.value = groupKey; refreshFormAssignees(); }
@@ -3973,8 +3999,8 @@ function bindEvents() {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
       if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
-      else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
-      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
+      else if (act === 'delete') { confirmDeleteTask(aid); }
+      else if (act === 'copy') { openNewIssueCopy(aid); }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -4071,8 +4097,8 @@ function bindEvents() {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
       if (act2 === 'chat') { startTaskExecution(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
-      else if (act2 === 'delete') { tkDeleteTask(aid2); render(); toast('删除成功', 'success'); }
-      else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); toast('复制成功', 'success'); } }
+      else if (act2 === 'delete') { confirmDeleteTask(aid2); }
+      else if (act2 === 'copy') { openNewIssueCopy(aid2); }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -4231,7 +4257,7 @@ function initColumnResize() {
 }
 
 /* ---------- 初始化 ---------- */
-/* 协作开发菜单徽标与任务看板「待审核」列使用相同的筛选和已办分组口径。 */
+/* 协作开发菜单徽标与任务看板「待审核」列使用相同的筛选口径。 */
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
@@ -4254,6 +4280,21 @@ function syncTaskDataView() {
 }
 
 export function initTasksV2() {
+  var confirmOverlay = document.getElementById('tkConfirmOverlay');
+  if (confirmOverlay.parentNode !== document.body) document.body.appendChild(confirmOverlay);
+  document.getElementById('tkConfirmCancel').addEventListener('click', function () { closeTaskConfirm(false); });
+  document.getElementById('tkConfirmOk').addEventListener('click', function () { closeTaskConfirm(true); });
+  confirmOverlay.addEventListener('click', function (event) { if (event.target === confirmOverlay) closeTaskConfirm(false); });
+  document.addEventListener('keydown', function (event) {
+    if (confirmOverlay.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeTaskConfirm(false); }
+    if (event.key === 'Tab') {
+      var cancel = document.getElementById('tkConfirmCancel');
+      var ok = document.getElementById('tkConfirmOk');
+      if (event.shiftKey && document.activeElement === cancel) { event.preventDefault(); ok.focus(); }
+      else if (!event.shiftKey && document.activeElement === ok) { event.preventDefault(); cancel.focus(); }
+    }
+  });
   restoreTaskLabelCatalog();
   tkPruneOrphanTasks();
   tkSyncPeople();

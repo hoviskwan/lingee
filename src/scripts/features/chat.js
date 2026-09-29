@@ -128,6 +128,7 @@ export function initPreview() {
 export function initHistoryPanel() {
   if(historyBtn){
     historyBtn.addEventListener('click',function(){
+      if (historyBtn.classList.contains('hidden')) return;
       var isShow=historyPanel.classList.contains('show');
       if(isShow){ closeHistory(); }
       else{ historyPanel.classList.add('show'); historyOverlay.classList.add('show'); historyBtn.classList.add('on'); }

@@ -337,8 +337,8 @@ function getGroupedTasks(tasks) {
   if (taskViewState.groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
   var groups = {}, keys = [];
   if (taskViewState.groupBy === 'status') {
-    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待开始」列 */
-    TK_STATUSES.forEach(function (s) { if (s.id === 'planned') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
+    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待开始」列；「已取消」先隐藏，不上板 */
+    TK_STATUSES.forEach(function (s) { if (s.id === 'planned' || s.id === 'cancelled') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
   } else if (taskViewState.groupBy === 'priority') {
     TK_PRIORITIES.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
   } else if (taskViewState.groupBy === 'assignee') {
@@ -351,6 +351,8 @@ function getGroupedTasks(tasks) {
   tasks.forEach(function (t) {
     var k = t[taskViewState.groupBy];
     if (taskViewState.groupBy === 'status' && k === 'planned') k = 'backlog';
+    /* 已取消的任务不上板，展示方式后续再规划 */
+    if (t.status === 'cancelled') return;
     if (!k) {
       if (taskViewState.groupBy === 'assignee') k = 'unassigned';
       else if (taskViewState.groupBy === 'project') k = 'none';
@@ -432,16 +434,14 @@ function renderCard(t, opts) {
     var latest = stages.length ? stages[stages.length - 1] : null;
     footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
   }
-  var startBtn = isBacklog && tkCanStartTask(t)
-    ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始"><span>开始</span></button>'
-    : '';
+  /* 待开始卡片不再渲染「开始」按钮，开始入口收到右上角三点菜单 */
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
     + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + footExtraHtml
-    + '</div>' + startBtn + '</div></div>';
+    + '</div></div></div>';
 }
 
 function visibleListColumnCount() {
@@ -846,9 +846,10 @@ var activeFilterSection = 'status';
 
 var filterSections = [
   ['status','状态','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>'],
+  ['issueType','任务类型','<path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/>'],
   ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
   ['dueDate','日期','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>'],
-  ['assignee','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
+  ['assignee','处理人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
   ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
   ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
@@ -859,8 +860,10 @@ function filterOptionsFor(section) {
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
     ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待审核'],
-    ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
+    ['blocked','已阻塞'],['done','已完成'],
+    /* 「已取消」先隐藏，不提供筛选入口 */
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
+  if (section === 'issueType') return [['需求','需求'],['缺陷','缺陷']].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.issueType === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
   if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });

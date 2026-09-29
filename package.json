@@ -13,7 +13,8 @@
     "check": "node build/check-modules.mjs",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "standalone": "node scripts/build-standalone.cjs",
-    "preview": "node scripts/preview-server.mjs"
+    "preview": "vite --mode preview-live",
+    "preview:build": "node scripts/preview-server.mjs 4174"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

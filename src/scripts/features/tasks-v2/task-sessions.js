@@ -99,7 +99,7 @@ function seedDemoSessions(task, ownerId) {
   });
   var startStatus = status === 'in_progress' ? 'active' : 'ended';
   var progress = status === 'done' ? '全部阶段已完成，交付物已归档到任务详情。'
-    : status === 'in_review' ? '「' + stageName(stageId, task) + '」阶段产出已提交，等待你审核。'
+    : status === 'in_review' ? '「' + stageName(stageId, task) + '」阶段产出已生成，等待你确认。'
     : status === 'blocked' ? '「' + stageName(stageId, task) + '」阶段执行中断，详情见异常会话。'
     : '正在执行「' + stageName(stageId, task) + '」阶段，完成后会通知你审核。';
   createSession(task, ownerId, {

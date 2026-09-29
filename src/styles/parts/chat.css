@@ -5,6 +5,7 @@
   .chat-header-info{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
   .chat-header-title{display:block;min-width:0;max-width:100%;padding:4px 7px;margin-left:-7px;border:0;border-radius:6px;background:transparent;color:var(--text);font:inherit;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;cursor:default}
   .chat-header-title.is-task{cursor:pointer}
+  .chat-header-title.is-task::after{content:' ↗';color:var(--text-muted);font-size:12px;font-weight:400;white-space:nowrap}
   .chat-header-title.is-task:hover{background:var(--hover)}
   .chat-header-title.is-task:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
   .chat-header-task{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:0;border-radius:6px;background:var(--brand-fill);color:var(--brand-active);font:inherit;font-size:12px;cursor:pointer;max-width:280px;flex:none;transition:background .15s}
@@ -130,8 +131,9 @@
   .preview-loading::after{content:'';width:24px;height:24px;border:2.5px solid var(--border-hover);border-top-color:#495dff;border-radius:50%;animation:env-spin .6s linear infinite}
   .chat-messages{flex:1;min-width:0;overflow-y:auto;padding:40px 20px;display:flex;flex-direction:column;position:relative}
   .messages-list{display:flex;flex-direction:column;gap:20px;max-width:900px;min-width:0;margin:0 auto;width:100%}
-  .chat-stage-end{display:flex;align-items:center;gap:12px;width:100%;margin:4px 0;color:var(--text-secondary);font-size:12px;font-weight:500;white-space:nowrap}
-  .chat-stage-end::before,.chat-stage-end::after{content:"";flex:1;height:1px;background:var(--border-hover)}
+  .chat-stage-end{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:18px;padding-top:11px;border-top:1px solid var(--divider);color:var(--text-secondary);font-size:14px;font-weight:500;line-height:1.7;text-align:center}
+  .chat-stage-end-icon{display:grid;place-items:center;width:14px;height:14px;flex:none;color:var(--task-done-icon)}
+  .chat-stage-end-icon svg{width:14px;height:14px}
   #view-chat.task-exception-open .messages-list,#view-chat.task-exception-open .chat-composer-wrap,#view-chat.task-exception-open #historyBtn,#view-chat.task-exception-open #togglePreviewBtn,#view-chat.task-exception-open .chat-preview-side,#view-chat.task-exception-open .chat-preview-resizer{display:none!important}
   #view-chat.task-exception-open .chat-container{flex-direction:column}
   .task-exception-history{width:min(900px,100%);margin:0 auto;display:flex;flex-direction:column;gap:20px;color:var(--text)}

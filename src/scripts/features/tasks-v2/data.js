@@ -160,7 +160,8 @@ export const TK_VIEWS = [
 
 /* ---------- 筛选字段定义 ---------- */
 export const TK_FILTER_FIELDS = [
-  { id: 'status',    name: '状态',   type: 'select', options: TK_STATUSES.map(s => ({ value: s.id, label: s.name })).concat([{ value: 'handled', label: '已办' }]) },
+  { id: 'status',    name: '状态',   type: 'select', options: TK_STATUSES.filter(s => s.id !== 'cancelled').map(s => ({ value: s.id, label: s.name })) },
+  { id: 'issueType', name: '任务类型', type: 'select', options: [{ value: '需求', label: '需求' }, { value: '缺陷', label: '缺陷' }] },
   { id: 'priority',  name: '优先级', type: 'select', options: TK_PRIORITIES.map(p => ({ value: p.id, label: p.name })) },
   { id: 'assignee',  name: '处理人', type: 'select', options: TK_PEOPLE.map(p => ({ value: p.id, label: p.name })) },
   { id: 'project',   name: '项目',   type: 'select', options: TK_PROJECTS.map(p => ({ value: p.id, label: p.name })) },
@@ -328,7 +329,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 editor-value-shapes.json 并归档', assigneeId:'p40', status:'pending' },
     ] },
   { id:1203, code:'T1001203', title:'规则动作类型序列化槽位验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-18', dueDate:'2026-10-08',
-    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已提交，等待审核。',
+    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已生成，等待审核。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-19 11:00:00', authorId:'p23' },
@@ -394,7 +395,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'集成差异清单到 app-build 契约', assigneeId:'p40', status:'done' },
     ] },
   { id:1207, code:'T1001207', title:'属性继承链取值域合并验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
-    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已提交，等待审核。',
+    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待审核。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-26 09:20:00', authorId:'p23' },
@@ -409,7 +410,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 domain-value-merge-report.json 并归档', assigneeId:'p39', status:'pending' },
     ] },
   { id:1208, code:'T1001208', title:'复杂属性参数表单与转换器映射核对', status:'in_review', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-24', dueDate:'2026-10-11',
-    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已提交，等待审核。',
+    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已生成，等待审核。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-25 10:40:00', authorId:'p23' },
@@ -519,8 +520,11 @@ try {
     localStorage.setItem('lingee_tasks_remove_lingee_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
-/* p34（早期误建的重复记录）名下任务归并到 p23（吴晓锋）；幂等，人员已并入后不会再出现 */
-_tasks.forEach(function (task) { if (task.assignee === 'p34') task.assignee = 'p23'; });
+/* p34（早期误建的重复记录）名下任务归并到 p23（吴晓锋）；旧任务按标签推导任务类型（与新建弹窗同口径）。幂等。 */
+_tasks.forEach(function (task) {
+  if (task.assignee === 'p34') task.assignee = 'p23';
+  if (!task.issueType) task.issueType = (task.labels || []).includes('缺陷') ? '缺陷' : (task.labels || []).includes('需求') ? '需求' : '';
+});
 try {
   if (!localStorage.getItem('lingee_tasks_merge_p34_v1')) {
     persistTasks();

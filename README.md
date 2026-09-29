@@ -8,6 +8,8 @@
 npm install
 npm run dev          # 开发服务器（固定 5199 端口），使用浏览器 localStorage
 npm run dev:shared   # 开发服务器，启用本机 SQLite 共享数据
+npm run preview      # 4173 端口实时预览，源码修改后自动更新
+npm run preview:build # 4174 端口预览 dist 构建产物，需先运行 build
 npm run check        # 模块自检：import/export 是否对得上
 npm run build        # 产出 dist/index.html（零外链单文件）
 npm run format       # 格式化 src
