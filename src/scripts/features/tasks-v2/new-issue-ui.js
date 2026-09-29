@@ -85,12 +85,20 @@ function openProjectPopup() {
   byId('niuProjectSearch').value = '';
   renderProjectOptions();
   const popup = byId('niuProjectPopup');
-  popup.hidden = false;
   const trigger = byId('niuProjectTrigger');
   trigger.setAttribute('aria-expanded', 'true');
+  popup.hidden = false;
   const rect = trigger.getBoundingClientRect();
-  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 250)) + 'px';
-  popup.style.top = (rect.bottom + popup.offsetHeight + 8 < window.innerHeight ? rect.bottom + 5 : Math.max(8, rect.top - popup.offsetHeight - 5)) + 'px';
+  const ph = popup.offsetHeight;
+  const goDown = rect.bottom + ph + 8 <= window.innerHeight;
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 260)) + 'px';
+  if (goDown) {
+    popup.style.top = (rect.bottom + 4) + 'px';
+    popup.style.bottom = 'auto';
+  } else {
+    popup.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    popup.style.top = 'auto';
+  }
   byId('niuProjectSearch').focus();
 }
 
@@ -142,8 +150,16 @@ function openPersonPopup(target, stageId) {
   renderPersonOptions();
   popup.hidden = false;
   const rect = trigger.getBoundingClientRect();
+  const ph = popup.offsetHeight;
+  const goDown = rect.bottom + ph + 8 <= window.innerHeight;
   popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 250)) + 'px';
-  popup.style.top = (rect.bottom + popup.offsetHeight + 8 < window.innerHeight ? rect.bottom + 5 : Math.max(8, rect.top - popup.offsetHeight - 5)) + 'px';
+  if (goDown) {
+    popup.style.top = (rect.bottom + 4) + 'px';
+    popup.style.bottom = 'auto';
+  } else {
+    popup.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    popup.style.top = 'auto';
+  }
   trigger.setAttribute('aria-expanded', 'true');
   byId('niuPersonSearch').focus();
 }
@@ -436,8 +452,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   refreshTaskDetail = detailCallback;
   byId('niuProjectTrigger').addEventListener('click', openProjectPopup);
   byId('niuProjectSearch').addEventListener('input', renderProjectOptions);
-  byId('niuInfoTab').addEventListener('click', () => selectCreateTab('info'));
-  byId('niuCreatePlanTab').addEventListener('click', () => selectCreateTab('plan'));
   byId('niuPersonSearch').addEventListener('input', renderPersonOptions);
   byId('niuCreateSubmit').addEventListener('click', createTask);
   byId('niuWizardNext').addEventListener('click', () => {
