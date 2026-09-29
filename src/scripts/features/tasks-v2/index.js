@@ -38,7 +38,10 @@ import _iconExcel from '../../../assets/file-type-icons/excel.png';
 import _iconMarkdown from '../../../assets/file-type-icons/markdown.png';
 import _iconPdf from '../../../assets/file-type-icons/pdf.png';
 import _iconPpt from '../../../assets/file-type-icons/ppt.png';
-var _artifactIcons = { requirements:_iconMarkdown, plan:_iconDocument, technical:_iconDoc, architecture:_iconHtml, prototype:_iconImage, test:_iconExcel, delivery:_iconPdf };
+var _artifactIcons = { requirements:_iconMarkdown, technical:_iconDoc, implementation:_iconHtml, test:_iconExcel, delivery:_iconPdf };
+function artifactIcon(artifact) {
+  return _artifactIcons[artifact.id] || ({ '需求文档':_iconMarkdown, '技术文档':_iconDoc, '开发成果':_iconHtml, '测试报告':_iconExcel, '交付报告':_iconPdf })[artifact.type] || _iconDocument;
+}
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
   TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser,
@@ -690,7 +693,7 @@ function renderCard(t, opts) {
     ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始"><span>开始</span></button>'
     : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
-    + (startBtn ? '' : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
+    + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
@@ -1642,9 +1645,9 @@ function propPicker(name, currentVal, options, isDate) {
 function renderTaskArtifact(artifact) {
   return '<div class="tk-artifact" data-artifact-preview="' + escapeHtml(artifact.id) + '">' +
         '<div class="tk-artifact-summary">' +
-          '<span class="tk-artifact-icon"><img src="' + (_artifactIcons[artifact.id] || _iconDocument) + '" width="16" height="16" alt=""></span>' +
-          '<span class="tk-artifact-title">' + escapeHtml(artifact.type) + '</span>' +
-          '<span class="tk-artifact-type">预览</span>' +
+          '<span class="tk-artifact-icon"><img src="' + artifactIcon(artifact) + '" width="16" height="16" alt=""></span>' +
+          '<span class="tk-artifact-title">' + escapeHtml(artifact.docTitle || artifact.type) + '</span>' +
+          '<span class="tk-artifact-type">' + escapeHtml(artifact.type) + '</span>' +
           '<svg class="tk-artifact-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>' +
         '</div>' +
       '</div>';
@@ -1653,9 +1656,9 @@ function renderDocPreviewTabsBar() {
   if (docPreviewTabs.length < 2) return '';
   return '<div class="tk-doc-preview-tabs" role="tablist" aria-label="已打开的产物页签">' + docPreviewTabs.map(function (tab) {
     var active = tab.id === docPreviewActiveId;
-    return '<button type="button" class="tk-doc-preview-tab' + (active ? ' is-active' : '') + '" role="tab" aria-selected="' + active + '" data-doc-tab="' + escapeHtml(tab.id) + '" title="' + escapeHtml(tab.type) + '">'
-      + '<span class="tk-doc-preview-tab-icon"><img src="' + (_artifactIcons[tab.id] || _iconDocument) + '" alt=""></span>'
-      + '<span class="tk-doc-preview-tab-name">' + escapeHtml(tab.type) + '</span>'
+    return '<button type="button" class="tk-doc-preview-tab' + (active ? ' is-active' : '') + '" role="tab" aria-selected="' + active + '" data-doc-tab="' + escapeHtml(tab.id) + '" title="' + escapeHtml(tab.docTitle || tab.type) + '">'
+      + '<span class="tk-doc-preview-tab-icon"><img src="' + artifactIcon(tab) + '" alt=""></span>'
+      + '<span class="tk-doc-preview-tab-name">' + escapeHtml(tab.docTitle || tab.type) + '</span>'
       + '<span class="tk-doc-preview-tab-close" data-doc-tab-close="' + escapeHtml(tab.id) + '" role="button" aria-label="关闭「' + escapeHtml(tab.type) + '」页签" title="关闭页签"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>'
       + '</button>';
   }).join('') + '</div>';
@@ -1669,8 +1672,8 @@ function renderDocPreviewContent(artifact) {
     renderDocPreviewTabsBar() +
     '<div class="tk-doc-preview-head">' +
       '<div class="tk-doc-preview-title">' +
-        '<span class="tk-doc-preview-icon"><img src="' + (_artifactIcons[artifact.id] || _iconDocument) + '" alt=""></span>' +
-        '<div><strong>' + escapeHtml(artifact.type) + '</strong><span>' + escapeHtml(artifact.summary) + '</span></div>' +
+        '<span class="tk-doc-preview-icon"><img src="' + artifactIcon(artifact) + '" alt=""></span>' +
+        '<div><strong>' + escapeHtml(artifact.docTitle || artifact.type) + '</strong><span>' + escapeHtml(artifact.summary) + '</span></div>' +
       '</div>' +
       '<button type="button" class="tk-doc-preview-close" id="tkDocPreviewClose" aria-label="关闭文档预览" data-tooltip="关闭">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
@@ -2459,7 +2462,7 @@ function filterOptionsFor(section) {
      「N 个任务」即点选该项后列表显示的数量；协作开发徽标与默认口径一致。 */
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
-    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','审核中'],
+    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待审核'],
     ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
     ['handled','已办'],
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return o[0] === 'handled' ? tkIsHandledByMe(t) : t.status === o[0]; }).length }; });
@@ -3053,8 +3056,7 @@ function bindEvents() {
         if (submitted.ok) {
           render();
           openDrawer(sessionTask.id);
-          toast(submitted.continuous ? (submitted.done ? '最终节点已完成，任务已完成' : submitted.stage.name + '已完成，已进入下一节点') : submitted.stage.name + '已完成，等待审核', 'success');
-          if (submitted.continuous && submitted.done) document.dispatchEvent(new CustomEvent('lingee:task-stage-completed', {detail:{taskId:sessionTask.id}}));
+          toast(submitted.stage.name + '已完成，等待审核', 'success');
         }
       }
       return;
@@ -3986,17 +3988,17 @@ function initColumnResize() {
 }
 
 /* ---------- 初始化 ---------- */
-/* 协作开发菜单徽标与任务看板「审核中」列使用相同的筛选和已办分组口径。 */
+/* 协作开发菜单徽标与任务看板「待审核」列使用相同的筛选和已办分组口径。 */
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
   var count = getFilteredTasks().filter(function (task) {
-    return task.status === 'in_review' && !tkIsHandledByMe(task);
+    return task.status === 'in_review';
   }).length;
   badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
-  badge.setAttribute('data-tooltip', count + ' 个任务审核中');
-  badge.setAttribute('aria-label', count + ' 个任务审核中');
+  badge.setAttribute('data-tooltip', count + ' 个任务待审核');
+  badge.setAttribute('aria-label', count + ' 个任务待审核');
 }
 var taskDataRenderQueued = false;
 function syncTaskDataView() {

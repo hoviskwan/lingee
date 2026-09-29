@@ -150,13 +150,7 @@ function openTeamSession() {
   showView('chat');
   navItems.forEach(function (n) { n.classList.remove('active'); });
   $('#chatTitle').textContent = SESSION_TITLE;
-  /* 标题旁关联任务标签：点击跳转任务详情 */
-  var taskTag = $('#chatHeaderTask');
-  if (taskTag) {
-    taskTag.dataset.taskId = String(LINKED_TASK.id);
-    taskTag.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="chat-header-task-label">' + xesc(LINKED_TASK.code) + ' ' + xesc(LINKED_TASK.title) + '</span>';
-    taskTag.classList.remove('hidden');
-  }
+  $('#chatTitle').classList.remove('is-task');
   var empty = $('#chatEmpty');
   if (empty) empty.remove();
   messagesList.innerHTML = '';
@@ -209,10 +203,5 @@ export function initTeamSession() {
     var action = e.target.closest('[data-ts-action]');
     if (!action) return;
     if (action.getAttribute('data-ts-action') === 'verify') toast('原型演示：已提交测试，等待软件测试工程师认领');
-  });
-  /* 离开会话时隐藏关联任务标签 */
-  document.addEventListener('lingee:new-conversation', function () {
-    var tag = $('#chatHeaderTask');
-    if (tag) tag.classList.add('hidden');
   });
 }

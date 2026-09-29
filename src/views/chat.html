@@ -3,8 +3,7 @@
     <div class="chat-container">
       <div class="chat-header">
         <div class="chat-header-info">
-          <div class="chat-header-title" id="chatTitle">新会话</div>
-          <button class="chat-header-task hidden" id="chatHeaderTask" type="button" aria-label="打开关联任务详情"></button>
+          <button class="chat-header-title" id="chatTitle" type="button">新会话</button>
         </div>
         <button class="header-btn" id="historyBtn" data-tooltip="历史版本" aria-label="历史版本" tabindex="0" aria-keyshortcuts="Meta+Shift+H Control+Shift+H">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
@@ -29,7 +28,6 @@
             <span class="chat-stage-guide-text" id="chatStageGuideText"></span>
           </span>
           <button class="chat-stage-confirm" id="chatStageConfirmBtn" type="button" data-tooltip="确认产物" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M15 4v4h4M8 12h8M8 16h6"/></svg>
             <span class="chat-stage-confirm-label" id="chatStageConfirmLabel">确认</span>
           </button>
         </div>
@@ -580,8 +578,7 @@
     <div class="chat-doc-viewer" id="chatDocViewer" hidden aria-label="产物预览">
       <div class="chat-doc-viewer-resize" id="chatDocViewerResize" role="separator" aria-orientation="vertical" aria-label="调整产物预览宽度" tabindex="0"></div>
       <div class="chat-doc-viewer-head">
-        <span class="chat-doc-viewer-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
-        <div class="chat-doc-viewer-title"><strong id="chatDocViewerTitle"></strong></div>
+        <div class="chat-doc-viewer-tabs" id="chatDocViewerTabs" role="tablist" aria-label="会话预览页签"></div>
         <button type="button" class="chat-doc-viewer-close" id="chatDocViewerClose" aria-label="关闭产物预览" data-tooltip="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
       <div class="chat-doc-viewer-body" id="chatDocViewerBody"></div>

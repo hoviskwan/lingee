@@ -135,15 +135,16 @@ try {
     return session;
   });
 } catch (e) {}
-/* 苍穹项目会话样本：稳定 ID 让已有本地会话与用户回复在刷新后保留。 */
+/* 苍穹项目会话样本：稳定 ID 让已有本地会话与用户回复在刷新后保留。
+   response 仅为任务数据缺失时的兜底，正常展示由 demoExchangeText 按统一文案格式生成。 */
 var COSMIC_DEMO_SESSIONS = [
-  {id:'cosmicdemo1',title:'操作元模型四张注册表抽取方案设计',taskId:1201,demoState:'running',exchanges:[{prompt:'开始执行操作元模型四张注册表抽取方案设计。',done:false,response:'已读取任务说明与注册表资料，正在核对操作类型和参数类映射。'}]},
-  {id:'cosmicdemo2',title:'编辑器提交形状与 EntryId 冲突裁决实现',taskId:1202,demoState:'running',demoArtifact:true,exchanges:[{prompt:'开始执行编辑器提交形状与 EntryId 冲突裁决实现。',done:false,response:'已生成初版裁决方案，正在继续核对提交形状和冲突分支。'}]},
-  {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'规则动作类型的序列化槽位已验证，阶段报告已生成。'}]},
-  {id:'cosmicdemo4',title:'属性继承链取值域合并验证',taskId:1207,demoState:'review',demoArtifact:true,exchanges:[{prompt:'开始执行属性继承链取值域合并验证。',done:true,response:'37 个属性的继承链取值域合并结果已核对，验证报告等待确认。'}]},
+  {id:'cosmicdemo1',title:'操作元模型四张注册表抽取方案设计',taskId:1201,demoState:'running',exchanges:[{prompt:'开始执行操作元模型四张注册表抽取方案设计。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
+  {id:'cosmicdemo2',title:'编辑器提交形状与 EntryId 冲突裁决实现',taskId:1202,demoState:'running',demoArtifact:true,exchanges:[{prompt:'开始执行编辑器提交形状与 EntryId 冲突裁决实现。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
+  {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'当前阶段已执行完成，请确认产物。'}]},
+  {id:'cosmicdemo4',title:'属性继承链取值域合并验证',taskId:1207,demoState:'review',demoArtifact:true,exchanges:[{prompt:'开始执行属性继承链取值域合并验证。',done:true,response:'当前阶段已执行完成，请确认产物。'}]},
   {id:'cosmicdemo5',title:'采购订单规则配置清单交付',taskId:1205,demoState:'question',exchanges:[],demoQuestion:{text:'归档 evidence 时，系统导出的动作参数映射与项目手工维护版本有差异。交付清单应以哪份为准？',options:['以当前系统导出的注册表为准，记录手工版本差异','保留项目手工维护版本，标注与注册表的差异'],answer:''}},
-  {id:'cosmicdemo6',title:'扩展表单属性锁定规则解析修复',taskId:1204,demoState:'blocked',exchanges:[{prompt:'开始执行扩展表单属性锁定规则解析修复。',done:true,response:'已读取任务说明并开始解析扩展属性规则。'}]},
-  {id:'cosmicdemo7',title:'属性元模型与 app-build 契约交叉比对集成',taskId:1206,demoState:'confirmed',demoArtifact:true,exchanges:[{prompt:'开始执行属性元模型与 app-build 契约交叉比对集成。',done:true,response:'交叉比对已完成，差异清单已交付，产物已确认。'}]},
+  {id:'cosmicdemo6',title:'扩展表单属性锁定规则解析修复',taskId:1204,demoState:'blocked',exchanges:[{prompt:'开始执行扩展表单属性锁定规则解析修复。',done:true,response:'当前阶段执行中断，请查看失败原因。'}]},
+  {id:'cosmicdemo7',title:'属性元模型与 app-build 契约交叉比对集成',taskId:1206,demoState:'confirmed',demoArtifact:true,exchanges:[{prompt:'开始执行属性元模型与 app-build 契约交叉比对集成。',done:true,response:'当前阶段已确认，任务交付完成。'}]},
   {id:'cosmicdemo8',title:'操作业务规则类型目录构建',taskId:84,demoState:'question',exchanges:[],demoQuestion:{
     prompt:'执行「需求分析」：整理 174 个操作业务规则类型及 RunClass、SettingFormId 映射。',
     intro:'正在核对操作业务规则类型目录的映射来源。',
@@ -165,7 +166,8 @@ COSMIC_DEMO_SESSIONS.forEach(function (sample) {
     existing.title = sample.title;
     existing.demoArtifact = !!sample.demoArtifact || !!existing.demoQuestion?.continuationDone;
     var progressed = sample.demoState === 'running' && existing.demoState === 'review' && existing.exchanges[0]?.done;
-    if (!progressed) {
+    var confirmedHere = Array.isArray(existing.stageEndMarkers) && existing.stageEndMarkers.length > 0;
+    if (!progressed && !confirmedHere) {
       existing.demoState = sample.demoState;
       if (sample.exchanges.length) existing.exchanges[0] = sample.exchanges[0];
     } else existing.demoArtifact = true;
@@ -255,6 +257,20 @@ function finishSessionExchange(sessionId, index) {
   renderChatSessions();
   if (sessionId === activeSessionId) renderChatTaskSide();
 }
+function appendChatStageEndMarker(marker) {
+  var line = document.createElement('div');
+  line.className = 'chat-stage-end';
+  line.dataset.stageId = marker.stageId;
+  var label = document.createElement('span');
+  label.textContent = '「' + marker.stageName + '」已完成';
+  line.appendChild(label);
+  messagesList.appendChild(line);
+}
+function renderChatStageEndMarkers(session, exchangeIndex, afterQuestion) {
+  (session.stageEndMarkers || []).forEach(function (marker) {
+    if (marker.afterExchangeIndex === exchangeIndex && !!marker.afterQuestion === !!afterQuestion) appendChatStageEndMarker(marker);
+  });
+}
 function openChatSession(sessionId) {
   var session = chatSessions.find(function (row) { return row.id === sessionId; });
   if (!session) return;
@@ -262,26 +278,25 @@ function openChatSession(sessionId) {
   activeSessionId = session.id;
   activeSessionTaskId = session.taskId == null ? null : Number(session.taskId);
   showView('chat');
-  $('#chatHeaderTask')?.classList.add('hidden');
   messagesList.innerHTML = '';
   closeChatDocViewer();
+  chatViewerTabs = [];
+  chatViewerActiveKey = null;
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
-  $('#chatTitle').textContent = session.title;
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  $('#chatTitle').textContent = task ? task.title : session.title;
   if (session.demoState && session.demoState !== 'running') {
-    if (session.demoState !== 'question') session.exchanges.forEach(function (exchange) {
+    if (session.demoState !== 'question') session.exchanges.forEach(function (exchange, index) {
       if (!exchange) return;
       appendUserMessage(exchange.prompt);
       var response = appendAssistantMessage(resolveChatTeam(session, task));
       if (task) appendTaskReadingSummary(response, task);
       var timeline = document.createElement('div');
       timeline.className = 'work-steps';
-      timeline.appendChild(createWorkStep('读取任务资料', 'done'));
-      timeline.appendChild(createWorkStep(session.demoState === 'blocked' ? '解析扩展属性锁定规则' : '执行当前阶段', session.demoState === 'running' ? 'running' : 'done'));
       response.appendChild(timeline);
       var result = createFinalResult(false);
-      result.querySelector('.markdown-content').innerHTML = renderMarkdown(exchange.response);
+      result.querySelector('.markdown-content').innerHTML = renderMarkdown(demoExchangeText(session, task, exchange));
       timeline.appendChild(result);
       if (session.demoState === 'blocked') {
         var failure = document.createElement('div');
@@ -289,15 +304,11 @@ function openChatSession(sessionId) {
         failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
         result.appendChild(failure);
       }
-      var state = response.closest('.message')?.querySelector('.chat-agent-state');
-      if (state) {
-        state.textContent = ({running:'执行中',ended:'已结束',review:'待确认',blocked:'已阻塞',confirmed:'已确认'})[session.demoState] || '执行中';
-        if (session.demoState !== 'running') state.classList.add(session.demoState === 'review' ? 'is-review' : 'is-done');
-      }
       if (task && session.demoArtifact) {
         var artifact = taskStageArtifact(task);
         if (artifact) result.appendChild(createChatResultArtifactCard(task, artifact));
       }
+      renderChatStageEndMarkers(session, index, false);
     });
     if (session.demoQuestion) {
       renderTaskQuestion(session, task);
@@ -316,6 +327,8 @@ function openChatSession(sessionId) {
       var previewArtifact = taskStageArtifact(task);
       if (previewArtifact) openChatDocViewer(task, previewArtifact);
     }
+    if (session.demoQuestion) renderChatStageEndMarkers(session, session.exchanges.length - 1, true);
+    else if (!session.exchanges.length) renderChatStageEndMarkers(session, -1, false);
     renderChatSessions();
     refreshChatStageConfirm();
     scrollChatBottom();
@@ -326,6 +339,7 @@ function openChatSession(sessionId) {
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
     var response = appendAssistantMessage(resolveChatTeam(session, task));
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
+    renderChatStageEndMarkers(session, index, false);
   });
   if (session.demoState === 'running' && task?.status === 'in_review' && session.exchanges.some(function (exchange) { return exchange.done; })) {
     var readyArtifact = taskStageArtifact(task);
@@ -333,6 +347,8 @@ function openChatSession(sessionId) {
   }
   if (session.demoQuestion) renderTaskQuestion(session, task);
   else document.getElementById('chatTaskQuestionPanel')?.remove();
+  if (session.demoQuestion) renderChatStageEndMarkers(session, session.exchanges.length - 1, true);
+  else if (!session.exchanges.length) renderChatStageEndMarkers(session, -1, false);
   renderChatSessions();
   scrollChatBottom();
 }
@@ -357,8 +373,8 @@ export function openTaskStatusConversation(task) {
     var finished = task.status === 'in_review' || task.status === 'blocked';
     session.exchanges.push({
       prompt:tkTaskSessionOpeningMessage(task, 'start', task.executionStageId), done:finished,
-      ...(task.status === 'blocked' ? {response:'执行在当前阶段中断，以下是失败结果。'}
-        : task.status === 'in_review' ? {response:'当前阶段已执行完成，产物已提交，等待确认。'} : {}),
+      ...(task.status === 'blocked' ? {response:statusConversationOpeningText(task, true)}
+        : task.status === 'in_review' ? {response:statusConversationOpeningText(task, false)} : {}),
     });
     if (finished) session.demoState = task.status === 'blocked' ? 'blocked' : 'review';
     if (task.status === 'blocked') session.demoFailure = task.blockedRun?.reason || '本次执行失败，请检查任务中的阻塞原因。';
@@ -376,8 +392,12 @@ export function openTaskStatusConversation(task) {
       saveChatSessions();
     }
   }
-  if (!created && activeSessionId === session.id && messagesList.querySelector('.message') && $('#chatTitle').textContent === session.title) {
+  if (!created && activeSessionId === session.id && messagesList.querySelector('.message') && $('#chatTitle').textContent === task.title) {
     showView('chat');
+    if (session.demoArtifact) {
+      var existingArtifact = taskStageArtifact(task);
+      if (existingArtifact) openChatDocViewer(task, existingArtifact);
+    }
     renderChatSessions();
     return;
   }
@@ -398,8 +418,6 @@ function renderTaskQuestion(session, task) {
   process.innerHTML = '<div class="chat-task-process"><p>' + escapeHtml(question.intro || '正在完成采购订单规则配置清单的交付收口。') + '</p><ol>'
     + steps.map(function (step) { return '<li><strong>' + escapeHtml(step[0]) + '</strong><span>' + escapeHtml(step[1]) + '</span></li>'; }).join('')
     + '</ol><p>' + escapeHtml(question.closing || '归档前需要你确认一项取舍。') + '</p></div>';
-  var state = response.closest('.message')?.querySelector('.chat-agent-state');
-  if (state) state.textContent = question.answer ? '已回复' : '待回复';
   document.getElementById('chatTaskQuestionPanel')?.remove();
   if (!question.answer) {
     var panel = document.createElement('section');
@@ -468,13 +486,13 @@ function renderChatTaskSide() {
     if (preview) { preview.style.width = ''; preview.style.maxWidth = ''; }
     syncTogglePreviewBtn();
   }
-  var tag = document.getElementById('chatHeaderTask');
-  tag.classList.toggle('hidden', !task);
-  tag.dataset.taskId = task ? String(task.id) : '';
-  if (task) tag.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="chat-header-task-label">' + escapeHtml(String(task.code || '')) + ' ' + escapeHtml(String(task.title || '')) + '</span>';
+  var title = document.getElementById('chatTitle');
+  title.classList.toggle('is-task', !!task);
+  title.setAttribute('aria-label', task ? '打开任务详情：' + task.title : '会话标题');
+  if (task) title.textContent = task.title;
   refreshChatStageConfirm();
   /* 任务会话确认流转/完成后任务不再处于执行态，隐藏输入区；任务重新执行时恢复。 */
-  document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !['in_progress', 'in_review'].includes(task.status));
+  document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !['in_progress', 'in_review', 'blocked'].includes(task.status));
 }
 /* ---------- 任务会话「确认」按钮：执行结束确认产物、流转下一阶段 ---------- */
 /* 只在本轮回复结束、任务进入待审核后显示；点击与任务详情「通过审核」同一条流转链路。 */
@@ -495,16 +513,9 @@ function chatStageConfirmInfo() {
   var ready = task.status === 'in_review' && (session?.demoQuestion?.continuationDone || !!lastExchange && lastExchange.done && !lastExchange.waiting);
   return { task: task, ready: ready, nextStage: stages[index + 1] || null };
 }
-function chatStageConfirmTooltip(nextStage) {
-  if (!nextStage) return '确认最终产物，完成任务';
-  var next = nextStage.name || '下一阶段';
-  return ({
-    '方案设计':'确认需求，开始方案设计',
-    '实现规划':'确认方案，开始实现规划',
-    '编码实现':'确认规划，开始开发',
-    '测试验证':'确认开发结果，开始测试',
-    '部署交付':'确认测试结果，开始交付',
-  })[next] || '确认当前产物，开始「' + next + '」';
+function chatStageConfirmTooltip(task, nextStage) {
+  if (!nextStage) return '确认产物，完成任务';
+  return '确认产物，进入「' + (nextStage.name || '下一阶段') + '」';
 }
 function refreshChatStageConfirm() {
   var btn = document.getElementById('chatStageConfirmBtn');
@@ -518,11 +529,11 @@ function refreshChatStageConfirm() {
   var guide = document.getElementById('chatStageGuideText');
   var isLast = !info.nextStage;
   var currentStage = taskExecutionStages(info.task).find(function (stage) { return stage.id === info.task.executionStageId; });
-  if (title) title.textContent = (currentStage?.name || '当前阶段') + '已完成，请确认';
-  if (guide) guide.textContent = isLast ? '确认后任务将标记为已完成。' : '确认后任务将流转至下一阶段。';
+  if (title) title.textContent = '「' + (currentStage?.name || '当前阶段') + '」已执行完成，请确认产物。';
+  if (guide) guide.textContent = isLast ? '确认后任务完成。' : '确认后流转至「' + (info.nextStage?.name || '下一阶段') + '」。';
   if (label) label.textContent = isLast ? '完成' : '确认';
-  btn.setAttribute('aria-label', chatStageConfirmTooltip(info.nextStage));
-  btn.setAttribute('data-tooltip', chatStageConfirmTooltip(info.nextStage));
+  btn.setAttribute('aria-label', chatStageConfirmTooltip(info.task, info.nextStage));
+  btn.setAttribute('data-tooltip', chatStageConfirmTooltip(info.task, info.nextStage));
 }
 function confirmChatStage() {
   var info = chatStageConfirmInfo();
@@ -531,6 +542,24 @@ function confirmChatStage() {
   if (!reviewed.ok) {
     if (reviewed.message) toast(reviewed.message, 'warning');
     return;
+  }
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  if (session && reviewed.stage) {
+    session.demoState = reviewed.done ? 'confirmed' : 'ended';
+    if (!Array.isArray(session.stageEndMarkers)) session.stageEndMarkers = [];
+    if (!session.stageEndMarkers.some(function (marker) { return marker.stageId === reviewed.stage.id; })) {
+      var marker = {
+        stageId: reviewed.stage.id,
+        stageName: reviewed.stage.name,
+        afterExchangeIndex: session.exchanges.length - 1,
+        afterQuestion: !!session.demoQuestion,
+      };
+      session.stageEndMarkers.push(marker);
+      saveChatSessions();
+      appendChatStageEndMarker(marker);
+      scrollChatBottom();
+    }
+    renderChatSessions();
   }
   /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
   toast(reviewed.done ? '任务完成' : '流转成功', 'success');
@@ -544,12 +573,57 @@ function clearChatTaskSide() {
   renderChatSessions();
 }
 var chatDocViewerCloseTimer = null;
-function openChatDocViewer(task, artifact, keepConversationAtBottom) {
+var chatViewerTabs = [];
+var chatViewerActiveKey = null;
+var chatTaskMountVersion = 0;
+function unmountChatTaskDrawer() {
+  var drawer = document.querySelector('#chatDocViewerBody > #tkDrawer');
+  if (!drawer) return;
+  drawer.querySelector('#tkDrawerClose')?.click();
+  drawer.classList.remove('chat-task-embedded');
+  drawer.classList.add('chat-task-drawer-parked');
+  document.body.appendChild(drawer);
+  document.body.classList.remove('chat-task-preview-mounted');
+}
+function mountChatTaskDrawer(taskId, version) {
+  import('./tasks-v2/index.js').then(function (module) {
+    var selected = chatViewerTabs.find(function (tab) { return tab.key === chatViewerActiveKey; });
+    if (version !== chatTaskMountVersion || selected?.kind !== 'task' || selected.taskId !== taskId) return;
+    module.openTaskDetailFromSession(taskId);
+    var drawer = document.getElementById('tkDrawer');
+    var body = document.getElementById('chatDocViewerBody');
+    if (!drawer || !body || drawer.getAttribute('data-task-id') !== String(taskId)) return;
+    drawer.classList.remove('chat-task-drawer-parked');
+    drawer.classList.add('chat-task-embedded');
+    body.replaceChildren(drawer);
+    document.body.classList.add('chat-task-preview-mounted');
+    document.getElementById('tkDrawerClickaway')?.classList.add('hidden');
+  });
+}
+function renderChatViewerTab() {
+  chatTaskMountVersion++;
+  unmountChatTaskDrawer();
+  var tabs = document.getElementById('chatDocViewerTabs');
+  var body = document.getElementById('chatDocViewerBody');
+  if (!tabs || !body) return;
+  tabs.innerHTML = chatViewerTabs.map(function (tab, index) {
+    var active = tab.key === chatViewerActiveKey;
+    var icon = tab.kind === 'task' ? '<path d="M8 6h11M8 12h11M8 18h7M3 6h.01M3 12h.01M3 18h.01"/>' : '<path d="M6 3h9l5 5v13H6zM15 3v6h5M9 14h8M9 18h6"/>';
+    return '<div class="chat-doc-viewer-tab' + (active ? ' is-active' : '') + '" role="presentation"><button type="button" role="tab" aria-selected="' + active + '" class="chat-doc-viewer-tab-main" data-chat-preview-tab="' + index + '" title="' + escapeHtml(tab.title) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + icon + '</svg><span>' + escapeHtml(tab.title) + '</span></button><button type="button" class="chat-doc-viewer-tab-remove" data-chat-preview-close="' + index + '" aria-label="关闭' + escapeHtml(tab.title) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>';
+  }).join('');
+  var selected = chatViewerTabs.find(function (tab) { return tab.key === chatViewerActiveKey; });
+  if (!selected) { body.innerHTML = ''; return; }
+  var task = tkGetTasks().find(function (row) { return row.id === selected.taskId; });
+  body.innerHTML = selected.kind === 'task' ? (task ? '' : '<p>任务已不存在</p>')
+    : '<article class="chat-artifact-markdown"><h1>' + escapeHtml(String(selected.artifact.docTitle || selected.artifact.type || '产物预览')) + '</h1>' + renderArtifactPreview(selected.artifact, 'h2') + '</article>';
+  if (selected.kind === 'task' && task) mountChatTaskDrawer(task.id, chatTaskMountVersion);
+  body.scrollTop = 0;
+}
+function showChatViewer(keepConversationAtBottom) {
   var viewer = document.getElementById('chatDocViewer');
   if (!viewer) return;
   clearTimeout(chatDocViewerCloseTimer);
-  document.getElementById('chatDocViewerTitle').textContent = task.title + ' · ' + artifact.type;
-  document.getElementById('chatDocViewerBody').innerHTML = renderArtifactPreview(artifact);
+  renderChatViewerTab();
   viewer.hidden = false;
   viewChat.classList.add('doc-open');
   syncTogglePreviewBtn();
@@ -557,19 +631,29 @@ function openChatDocViewer(task, artifact, keepConversationAtBottom) {
     scrollChatBottom();
     var scrollObserver = new ResizeObserver(scrollChatBottom);
     scrollObserver.observe(chatMessages);
-    setTimeout(function () {
-      scrollObserver.disconnect();
-      scrollChatBottom();
-    }, 350);
+    setTimeout(function () { scrollObserver.disconnect(); scrollChatBottom(); }, 350);
   }
   if (viewer.classList.contains('show')) { setChatDocViewerWidth(viewer); return; }
   viewer.style.width = '';
-  requestAnimationFrame(function () {
-    setChatDocViewerWidth(viewer);
-    viewer.classList.add('show');
-  });
+  requestAnimationFrame(function () { setChatDocViewerWidth(viewer); viewer.classList.add('show'); });
+}
+function openChatDocViewer(task, artifact, keepConversationAtBottom) {
+  var key = 'artifact:' + task.id + ':' + (artifact.id || artifact.type || 'result') + ':' + (artifact.stageId || '');
+  var tab = { key: key, kind: 'artifact', taskId: task.id, artifact: artifact, title: String(artifact.type || '产物预览') };
+  var existing = chatViewerTabs.findIndex(function (row) { return row.key === key; });
+  if (existing < 0) chatViewerTabs.push(tab); else chatViewerTabs[existing] = tab;
+  chatViewerActiveKey = key;
+  showChatViewer(keepConversationAtBottom);
+}
+function openChatTaskViewer(task) {
+  var key = 'task:' + task.id;
+  if (!chatViewerTabs.some(function (row) { return row.key === key; })) chatViewerTabs.push({ key: key, kind: 'task', taskId: task.id, title: task.title || '任务详情' });
+  chatViewerActiveKey = key;
+  showChatViewer(false);
 }
 function closeChatDocViewer() {
+  chatTaskMountVersion++;
+  unmountChatTaskDrawer();
   var viewer = document.getElementById('chatDocViewer');
   if (!viewer || viewer.hidden) return;
   clearTimeout(chatDocViewerCloseTimer);
@@ -624,9 +708,51 @@ function initChatDocViewerResize(handle, viewer) {
     viewer.style.width = Math.round(Math.min(bounds.max, Math.max(bounds.min, current + (e.key === 'ArrowLeft' ? 24 : -24)))) + 'px';
   });
 }
+/* ---------- 任务会话统一文案格式 ----------
+   提示语里的阶段名与产物一律从当前任务数据解析，不单独写死，
+   保证「XX已完成，请确认」与产物卡片指向同一份阶段产物。 */
+/* 阶段名 → 六阶段语义；「实现规划」须先于「实现」判断，避免误入编码实现 */
+function stageSemantic(name) {
+  var text = String(name || '');
+  if (/需求/.test(text)) return 'requirements';
+  if (/规划/.test(text)) return 'planning';
+  if (/设计/.test(text)) return 'design';
+  if (/编码|实现|开发/.test(text)) return 'implementation';
+  if (/测试|验证/.test(text)) return 'verification';
+  if (/部署|交付|发布/.test(text)) return 'delivery';
+  return '';
+}
+/* 语义 → 标准产物模板 id：实现规划暂无独立产物，并入技术文档（与 submitTaskStage 的模板口径一致） */
+var STAGE_ARTIFACT_TEMPLATE = { requirements:'requirements', design:'technical', planning:'technical', implementation:'implementation', verification:'test', delivery:'delivery' };
 function taskStageArtifact(task) {
   var artifacts = tkGetTaskArtifacts(task);
-  return artifacts.find(function (artifact) { return artifact.stageId === task.executionStageId; }) || artifacts[0];
+  var exact = artifacts.find(function (artifact) { return artifact.stageId === task.executionStageId; });
+  if (exact) return exact;
+  var stage = taskExecutionStages(task).find(function (row) { return row.id === task.executionStageId; });
+  var templateId = stage ? STAGE_ARTIFACT_TEMPLATE[stageSemantic(stage.name)] : '';
+  return (templateId && artifacts.find(function (artifact) { return artifact.id === templateId; })) || artifacts[0];
+}
+function taskStageName(task) {
+  var stage = taskExecutionStages(task).find(function (row) { return row.id === task.executionStageId; });
+  return stage?.name || '当前阶段';
+}
+/* 模拟会话静态提示语：按会话状态套统一句式「{阶段}+状态+行动指令」，阶段名从任务数据解析 */
+function demoExchangeText(session, task, exchange) {
+  if (!task) return exchange?.response || '';
+  var stageName = taskStageName(task);
+  switch (session.demoState) {
+    case 'running': return '「' + stageName + '」正在执行，完成后提交产物。';
+    case 'review': case 'ended': return '「' + stageName + '」已执行完成，请确认产物。';
+    case 'confirmed': return '「' + stageName + '」已确认，任务交付完成。';
+    case 'blocked': return '「' + stageName + '」执行中断，请查看失败原因。';
+    default: return exchange?.response || '';
+  }
+}
+/* 任务状态卡片回看补建的会话开场提示，同口径生成 */
+function statusConversationOpeningText(task, blocked) {
+  var stageName = taskStageName(task);
+  if (blocked) return '「' + stageName + '」执行中断，请查看失败原因。';
+  return '「' + stageName + '」已执行完成，请确认产物。';
 }
 function appendTaskArtifact(result, task, autoOpen) {
   var artifact = taskStageArtifact(task);
@@ -636,7 +762,7 @@ function appendTaskArtifact(result, task, autoOpen) {
   var next = stages[stages.findIndex(function (stage) { return stage.id === task.executionStageId; }) + 1];
   var closing = document.createElement('p');
   closing.className = 'chat-task-result-closing';
-  closing.textContent = artifact.type + '已生成，覆盖「' + task.title + '」当前阶段的交付范围。' + (next ? '请确认是否进入「' + next.name + '」，或先提出需要调整的内容。' : '请确认最终交付内容，或先提出需要调整的内容。');
+  closing.textContent = '「' + taskStageName(task) + '」产物已提交，' + (next ? '确认后进入「' + next.name + '」。' : '确认后任务完成。');
   result.appendChild(closing);
   if (autoOpen) openChatDocViewer(task, artifact, true);
 }
@@ -677,24 +803,10 @@ function appendAssistantMessage(team){
   var msg=document.createElement('div');
   msg.className='message assistant';
   msg.innerHTML='<div class="message-content">'
-    + (team ? '<div class="chat-agent-identity">' + teamAvatarHtml(team) + '<strong>' + escapeHtml(team.name) + '</strong><span class="chat-agent-state">执行中</span></div>' : '')
+    + (team ? '<div class="chat-agent-identity">' + teamAvatarHtml(team) + '<strong>' + escapeHtml(team.name) + '</strong></div>' : '')
     + '<div class="assistant-response"></div></div>';
   messagesList.appendChild(msg);
   return msg.querySelector('.assistant-response');
-}
-
-function createWorkStep(title,status){
-  var step=document.createElement('div');
-  step.className='work-step '+status;
-  var iconHtml=status==='done'
-    ?'<svg class="step-icon done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
-    :'<svg class="step-icon running" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-  var statusHtml=status==='running'?'<span class="step-status">执行中…</span>':'';
-  step.innerHTML='<div class="step-header">'
-    +'<div class="step-left">'+iconHtml+'<span class="step-title">'+title+'</span></div>'
-    +'<div class="step-right">'+statusHtml+'</div>'
-    +'</div>';
-  return step;
 }
 
 function createFinalResult(withHeader){
@@ -910,7 +1022,6 @@ function syncPreviewOpen(artifact){
 function buildTaskResultText(task){
   var stages=taskExecutionStages(task);
   var stage=stages.find(function(s){return s.id===task.executionStageId;})||stages[0]||{};
-  var doc=taskStageArtifact(task);
   var points=requirementPoints(task);
   var core=String(task.desc||'').split(/[。；;\n]/)[0].trim()||('完成「'+task.title+'」主流程');
   var details={
@@ -920,11 +1031,11 @@ function buildTaskResultText(task){
     implementation:['按已确认方案实现页面交互与业务接口','补齐输入校验、状态反馈和异常处理','记录关键接口与组件的实现说明'],
     verification:['验证主流程、边界条件与权限场景','复测异常输入和失败恢复路径','汇总缺陷、回归结果与验收结论'],
     delivery:['核对交付文件、部署配置和接口清单','整理上线验证步骤与回滚说明','汇总已知限制和后续维护事项'],
-  }[stage.id] || ['核对当前阶段的目标与交付边界','按任务描述完成执行和自检','整理可审核的阶段产物'];
+  }[stageSemantic(stage.name) || stage.id] || ['核对当前阶段的目标与交付边界','按任务描述完成执行和自检','整理可审核的阶段产物'];
   return '我已读取任务「'+task.title+'」的说明。'+(core ? '本次重点是：'+core+'。' : '')+'接下来按「'+(stage.name||'当前阶段')+'」的目标整理交付内容。\n\n'
     +'**'+(stage.name||'当前阶段')+'要点说明：**\n'
     +details.map(function (item) { return '- '+item; }).join('\n')
-    +'\n\n现在提交'+(doc?.type||'阶段产物')+'：';
+    +'\n\n「'+(stage.name||'当前阶段')+'」已执行完成，请确认产物：';
 }
 
 function appendTaskReadingSummary(responseEl, task) {
@@ -939,8 +1050,7 @@ function appendTaskReadingSummary(responseEl, task) {
 
 function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   var run = activeResponseRun;
-  /* 任务会话不展示执行步骤，直接流式输出结果 */
-  var steps=task ? [] : [{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
+  /* 所有会话直接流式输出结果，不展示打钩进度。 */
   var taskResultText=task ? buildTaskResultText(task) : '';
   var timeline=document.createElement('div');
   timeline.className='work-steps';
@@ -965,22 +1075,17 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       saveChatSessions();
       renderChatSessions();
     }
-    var state=responseEl.closest('.message')?.querySelector('.chat-agent-state');
-    var waitingReview = submitted?.ok || (task && tkGetTasks().find(function (row) { return row.id === task.id; })?.status === 'in_review');
-    if(state){state.textContent=waitingReview ? '待审核' : '已完成';state.classList.add(waitingReview ? 'is-review' : 'is-done');}
   }
   function showCompletedResult(){
     if(completed || run !== activeResponseRun || !responseEl.isConnected)return;
     if(cancelStream)cancelStream();
     timeline.replaceChildren();
-    steps.forEach(function(step){timeline.appendChild(createWorkStep(step.title,'done'));});
     var result=createFinalResult(!task);
     timeline.appendChild(result);
     var artifact=task ? null : createArtifactCard();
     result.querySelector('.markdown-content').innerHTML=renderMarkdown(task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)]);
-    if(task)appendTaskArtifact(result,task,!instant);else result.appendChild(artifact);
+    if(task)appendTaskArtifact(result,task,true);else { result.appendChild(artifact); artifact._openPreview(); }
     scrollChatBottom();
-    if(!task)syncPreviewOpen(artifact);
     finishRun();
   }
 
@@ -991,47 +1096,23 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
 
   watchdog=setTimeout(showCompletedResult,8000);
 
-  var currentStepIdx=0;
-
-  function addNextStep(){
+  function beginStream(){
     if (run !== activeResponseRun || !responseEl.isConnected) return;
-    if(currentStepIdx>=steps.length){
-      function beginStream(){
-        if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
-        var result=createFinalResult(!task);
-        timeline.appendChild(result);
-        var mc=result.querySelector('.markdown-content');
-        var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
-        cancelStream=streamText(mc,text,function(){
-          if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
-          if (task) appendTaskArtifact(result,task,true);
-          else result.appendChild(createArtifactCard());
-          scrollChatBottom();
-          finishRun();
-        }, task ? TASK_STREAM_PACE : null);
-      }
-      /* 任务会话没有步骤铺垫，输出前留一个接收任务的间隙 */
-      if (task) setTimeout(beginStream, 500);
-      else beginStream();
-      return;
-    }
-    var step=createWorkStep(steps[currentStepIdx].title,'running');
-    timeline.appendChild(step);
-    scrollChatBottom();
-    function finishStep(){
-      if (run !== activeResponseRun || !responseEl.isConnected) return;
-      step.classList.remove('running');
-      step.classList.add('done');
-      var icon=step.querySelector('.step-icon');
-      icon.className='step-icon done';
-      icon.innerHTML='<path d="M20 6 9 17l-5-5"/>';
-      step.querySelector('.step-status')&&step.querySelector('.step-status').remove();
-      currentStepIdx++;
-      setTimeout(addNextStep,120);
-    }
-    setTimeout(finishStep,350);
+    if (completed) return;
+    var result=createFinalResult(!task);
+    timeline.appendChild(result);
+    var mc=result.querySelector('.markdown-content');
+    var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
+    cancelStream=streamText(mc,text,function(){
+      if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
+      if (task) appendTaskArtifact(result,task,true);
+      else { var completedArtifact=createArtifactCard(); result.appendChild(completedArtifact); completedArtifact._openPreview(); }
+      scrollChatBottom();
+      finishRun();
+    }, task ? TASK_STREAM_PACE : null);
   }
-  addNextStep();
+  if (task) setTimeout(beginStream, 500);
+  else beginStream();
 }
 
 function doSend(automatic){
@@ -1058,6 +1139,8 @@ function doSend(automatic){
   activeSessionTaskId = linkedTask ? linkedTask.id : null;
   activeResponseRun++;
   closeChatDocViewer();
+  chatViewerTabs = [];
+  chatViewerActiveKey = null;
   $('#chatTitle').textContent = linkedTask ? linkedTask.title : t.slice(0, 60);
   var session = createChatSession($('#chatTitle').textContent, activeSessionTaskId);
   var exchangeIndex = addSessionExchange(t);
@@ -1105,7 +1188,6 @@ export function sendComposerText(text){
   text=String(text||'').trim();
   if(!text) return;
   closeTaskExceptionHistory();
-  $('#chatHeaderTask')?.classList.add('hidden');
   input.textContent=text;
   refreshSend();
   doSend();
@@ -1418,14 +1500,25 @@ export function initComposer() {
     if (event.detail?.task?.id === activeSessionTaskId) renderChatTaskSide();
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
-  document.getElementById('chatHeaderTask').addEventListener('click', function (event) {
-    var taskId = Number(event.currentTarget.dataset.taskId);
-    if (!taskId) return;
-    import('./tasks-v2/index.js').then(function (module) { module.openTaskDetailFromSession(taskId); });
+  document.getElementById('chatTitle').addEventListener('click', function () {
+    var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+    if (task) openChatTaskViewer(task);
   });
   var chatDocViewer = document.getElementById('chatDocViewer');
   if (chatDocViewer) {
     document.getElementById('chatDocViewerClose').addEventListener('click', closeChatDocViewer);
+    document.getElementById('chatDocViewerTabs').addEventListener('click', function (event) {
+      var remove = event.target.closest('[data-chat-preview-close]');
+      if (remove) {
+        var index = Number(remove.dataset.chatPreviewClose);
+        var removed = chatViewerTabs.splice(index, 1)[0];
+        if (removed?.key === chatViewerActiveKey) chatViewerActiveKey = chatViewerTabs[Math.min(index, chatViewerTabs.length - 1)]?.key || null;
+        if (chatViewerTabs.length) renderChatViewerTab(); else closeChatDocViewer();
+        return;
+      }
+      var tab = event.target.closest('[data-chat-preview-tab]');
+      if (tab) { chatViewerActiveKey = chatViewerTabs[Number(tab.dataset.chatPreviewTab)]?.key || null; renderChatViewerTab(); }
+    });
     var chatDocResize = document.getElementById('chatDocViewerResize');
     if (chatDocResize) initChatDocViewerResize(chatDocResize, chatDocViewer);
     window.addEventListener('resize', function () {

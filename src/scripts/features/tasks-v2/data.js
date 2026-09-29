@@ -12,7 +12,7 @@ export const TK_STATUSES = [
   { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
   { id: 'backlog',     name: '待开始', color: 'gray',   icon: 'circle' },
   { id: 'in_progress', name: '执行中', color: 'orange', icon: 'half' },
-  { id: 'in_review',  name: '审核中', color: 'green',  icon: 'three_quarters' },
+  { id: 'in_review',  name: '待审核', color: 'green',  icon: 'three_quarters' },
   { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
   { id: 'done',       name: '已完成', color: 'blue',   icon: 'check' },
   { id: 'cancelled',  name: '已取消', color: 'gray',   icon: 'cross' },
@@ -276,8 +276,8 @@ function tkConvertCvTasks(projectId, startId) {
 }
 /* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「执行中」预置数量。 */
 const TK_COSMIC_TRIM_CODES = new Set(['T1000077', 'T1000092', 'T1000095']);
-/* 审核中保留三条有完整执行计划的样本：1203、1207、1208。 */
-const TK_COSMIC_REVIEW_TRIM_CODES = new Set(['T1000076', 'T1000088', 'T1000091', 'T1000097']);
+/* 待审核保留三条有完整执行计划的样本：1203、1207、1208。 */
+const TK_COSMIC_REVIEW_TRIM_CODES = new Set(['T1000076', 'T1000078', 'T1000085', 'T1000088', 'T1000091', 'T1000097']);
 TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) {
   return !TK_COSMIC_TRIM_CODES.has(task.code) && !TK_COSMIC_REVIEW_TRIM_CODES.has(task.code);
 }));
@@ -475,7 +475,7 @@ export function tkGetPriorityObj(id) {
 }
 
 /* ---------- 可变状态（原型用内存数组，支持增删改） ---------- */
-/* 示例运行停在不同交付阶段；审核中表示该阶段运行已结束，等待人工确认。 */
+/* 示例运行停在不同交付阶段；待审核表示该阶段运行已结束，等待人工确认。 */
 const DEMO_EXECUTION_STAGES = ['requirements','design','planning','implementation','verification','delivery'];
 const DEMO_TASK_STAGE = {
   1:'implementation',5:'implementation',8:'verification',11:'requirements',15:'implementation',19:'implementation',
@@ -539,7 +539,7 @@ try {
     localStorage.setItem('lingee_tasks_cosmic_wuxf_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时跳过 */ }
-  /* 「审核中/待开始」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
+  /* 「待审核/待开始」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
 try {
   var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210']);
   var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));
@@ -559,7 +559,7 @@ try {
     localStorage.setItem('lingee_tasks_trim_cosmic_overlap_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
-/* 已缓存的四条旧审核样本同步移出任务看板；不影响用户已流转到其他状态的任务。 */
+/* 已缓存的旧审核样本同步移出任务看板；不影响用户已流转到其他状态的任务。 */
 try {
   var reviewTrimBefore = _tasks.length;
   _tasks = _tasks.filter(function (task) {

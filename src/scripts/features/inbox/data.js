@@ -47,7 +47,7 @@ function initialItems() {
     ['backlog',1,'due_date_changed',30,'截止日期已调整，请关注最新交付时间。'],
     ['in_review',3,'mentioned',39,'请协助核对验收清单中的第 3 项。'],
     ['blocked',2,'agent_blocked',48,'测试环境无法连接，正在等待环境维护人处理。','agent'],
-    ['done',2,'status_changed',54,'状态由「审核中」变更为「已完成」。'],
+    ['done',2,'status_changed',54,'状态由「待审核」变更为「已完成」。'],
     ['backlog',2,'assignee_changed',63,'任务负责人已调整，请查看新的协作分工。'],
     ['in_progress',4,'new_comment',72,'接口联调记录已上传，发现两处字段命名待确认。'],
   ];

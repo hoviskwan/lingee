@@ -436,7 +436,7 @@ function renderCard(t, opts) {
     ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" aria-label="开始"><span>开始</span></button>'
     : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
-    + (startBtn ? '' : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
+    + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
@@ -858,7 +858,7 @@ function filterOptionsFor(section) {
   /* 计数与列表实际结果同口径：按当前视图可见基准统计（跳过本分类已选筛选） */
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
-    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','审核中'],
+    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待审核'],
     ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });

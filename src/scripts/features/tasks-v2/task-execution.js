@@ -47,7 +47,7 @@ export function startTaskStage(task) {
     return {ok:!!current, stage:current};
   }
   if (!['planned','backlog'].includes(task.status)) return {ok:false};
-  if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return stage.requiresConfirmation !== false && !stage.assigneeId; })) return {ok:false, message:'请为需要确认的节点指定确认人'};
+  if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
   var stages = taskExecutionStages(task);
   var stage = stages.find(function (row) { return row.id === task.executionStageId; })
     || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
@@ -69,27 +69,22 @@ export function submitTaskStage(task) {
     var now = new Date();
     var date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
       + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-    artifacts = artifacts.concat({
-      id:'stage-' + stage.id, stageId:stage.id, type:stage.name + '产物', summary:stage.desc || '「' + task.title + '」的阶段执行结果',
+    var templateId = /需求/.test(stage.name) ? 'requirements'
+      : /设计|规划/.test(stage.name) ? 'technical'
+      : /编码|实现|开发/.test(stage.name) ? 'implementation'
+      : /测试|验证/.test(stage.name) ? 'test'
+      : /部署|交付|发布/.test(stage.name) ? 'delivery' : 'technical';
+    var template = tkGetTaskArtifacts(task).find(function (artifact) { return artifact.id === templateId; });
+    artifacts = artifacts.concat(template ? {
+      ...template, id:'stage-' + stage.id, stageId:stage.id,
+      status:'待审核', date:date,
+    } : {
+      id:'stage-' + stage.id, stageId:stage.id, type:'技术文档',
+      docTitle:'《' + task.title + '》阶段执行记录', summary:stage.desc || task.title,
       status:'待审核', date:date, author:'执行 Agent',
-      sections:[{heading:'阶段目标', text:stage.desc || task.desc || task.title},
-        {heading:'执行结果', text:'「' + stage.name + '」阶段已完成模拟执行，提交当前产物等待审核。'}],
+      sections:[{heading:'执行目标',blocks:[{p:stage.desc || task.desc || task.title}]},
+        {heading:'提交说明',blocks:[{p:'本阶段已提交，等待项目负责人确认。'}]}],
     });
-  }
-  var currentRow = task.executionPlan?.find(function (row) { return row.id === stage.id; });
-  if (currentRow?.requiresConfirmation === false) {
-    var stages = taskExecutionStages(task);
-    var next = stages[stages.findIndex(function (row) { return row.id === stage.id; }) + 1];
-    var nextAssignee = next?.assigneeId || task.assignee;
-    var plan = stagePlan(task, stage.id, 'done');
-    var history = (task.assigneeHistory || []).slice();
-    if (task.assignee && task.assignee !== nextAssignee && !history.includes(task.assignee)) history.push(task.assignee);
-    tkUpdateTask(task.id, {
-      status: next ? 'backlog' : 'done', executionStageId: next?.id || stage.id,
-      executionPlan: plan, executionArtifacts: artifacts.map(function (artifact) { return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact; }),
-      assignee: next ? nextAssignee : task.assignee, assigneeHistory: history,
-    });
-    return {ok:true, stage:stage, next:next, done:!next, continuous:true};
   }
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
   return {ok:true, stage:stage};

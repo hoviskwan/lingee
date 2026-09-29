@@ -309,8 +309,8 @@ function cvEnsureSeedPersons(){
   });
   if(changed)cvPersistPersons();
 }
-/* 团队人员种子：localStorage 恢复人员目录后，补回缺失的团队成员（人员记录不由 UI 删除，幂等安全） */
-var CV_TEAM_SEED_IDS=['p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
+/* 人员种子：localStorage 恢复目录后，补回当前演示账号与缺失的团队成员（人员记录不由 UI 删除，幂等安全） */
+var CV_TEAM_SEED_IDS=['p23','p29','p30','p31','p32','p33','p35','p36','p37','p38','p39','p40','p41'];
 var CV_TEAM_SEED_PERSONS=CV_TEAM_SEED_IDS.map(function(id){return CV_MEMBERS.find(function(person){return person.id===id;});}).filter(Boolean);
 function cvEnsureTeamPersons(){
   var changed=false;

@@ -1,4 +1,4 @@
-/* 审核中任务的本地演示报告。成员名称始终取专家团主数据，报告内容不代表真实执行。 */
+/* 待审核任务的本地演示报告。成员名称始终取专家团主数据，报告内容不代表真实执行。 */
 import { CV_PROJECTS } from '../collab/data.js';
 import { TEAMS } from '../expert/store.js';
 import { EXPERTS } from '../expert/data.js';
@@ -25,11 +25,11 @@ const REVIEW_REPORT_CONTENT = {
     'cosmic-api':'核对专家配置和项目绑定的读写契约、空值及错误反馈。',
     'software-qa-engineer':'整理 12 条验收场景，保留 2 条需人工确认的权限用例。',
   } },
-  70: { summary:'任务执行模拟与对话流转已完成多智能体分工和结果回传。', evidence:['交付任务启动、专家分派、消息回传和审核中停机的流程样例。','核对重复提交、失败重试与人工接管的状态记录。'], review:'请确认审核中是否暂停自动续跑，以及退回后从哪个节点重试。', agentResults:{
+  70: { summary:'任务执行模拟与对话流转已完成多智能体分工和结果回传。', evidence:['交付任务启动、专家分派、消息回传和审核中停机的流程样例。','核对重复提交、失败重试与人工接管的状态记录。'], review:'请确认待审核期间是否暂停自动续跑，以及退回后从哪个节点重试。', agentResults:{
     'software-team-lead':'编排 8 位专家的工作项顺序，汇总执行记录并提交人工审核。',
     'software-product-manager':'定义启动、等待、完成、退回四类用户可见反馈及验收条件。',
     'cosmic-form':'核对任务输入字段与对话补充信息的映射和必填提示。',
-    'cosmic-workflow':'完成派发 → 执行 → 回传 → 审核中的状态路径。',
+    'cosmic-workflow':'完成派发 → 执行 → 回传 → 待审核的状态路径。',
     'cosmic-report':'整理每个工作项的耗时、产物与结果摘要展示字段。',
     'cosmic-plugin':'检查插件型工作项的调用入口与失败回退边界。',
     'cosmic-api':'核对消息回传的幂等键、重试与重复事件处理。',

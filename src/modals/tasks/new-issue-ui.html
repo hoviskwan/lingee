@@ -1,33 +1,28 @@
     <div class="niu-overlay" id="niuCreateOverlay" hidden>
       <section class="niu-create" role="dialog" aria-modal="true" aria-labelledby="niuCreateHeading">
         <header class="niu-create-head"><div class="niu-breadcrumb"><span id="niuCreateHeading">新建任务</span></div><button type="button" class="niu-icon-button" data-niu-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></header>
-        <div class="niu-create-scroll" id="niuCreateScroll">
-          <section class="niu-create-section" id="niuInfoPane" aria-labelledby="niuInfoTab">
-            <div class="niu-create-section-head"><span class="niu-step">01</span><div><h2 id="niuInfoTab">任务信息</h2><p>写清楚目标，再设置任务属性</p></div></div>
-            <div class="niu-create-columns">
-              <div class="niu-create-writing">
-                <label class="niu-field"><span>任务标题 <b>*</b></span><input id="niuTitle" type="text" maxlength="120" placeholder="这项任务要完成什么？" autocomplete="off" required></label>
-                <label class="niu-field"><span>任务描述 <b>*</b></span><textarea id="niuDescription" rows="4" placeholder="描述目标、范围和期望结果" required></textarea></label>
-              </div>
-              <aside class="niu-create-properties" aria-label="任务属性">
-                <div class="niu-field"><span>所属项目 <b>*</b></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属项目"><span id="niuProjectName">选择项目</span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
-                <label class="niu-field"><span>任务类型 <b>*</b></span><select id="niuType" required><option value="">请选择任务类型</option><option value="需求">需求</option><option value="缺陷">缺陷</option></select></label>
-                <label class="niu-field"><span>优先级</span><select id="niuPriority"><option value="medium">中</option><option value="high">高</option><option value="urgent">紧急</option><option value="low">低</option></select></label>
-              </aside>
+        <nav class="niu-create-tabs" role="tablist" aria-label="任务设置"><button type="button" class="is-active" id="niuInfoTab" role="tab" aria-selected="true" aria-controls="niuInfoPane">任务信息</button><button type="button" id="niuCreatePlanTab" role="tab" aria-selected="false" aria-controls="niuCreatePlanPane" aria-label="执行计划，必填">执行计划 <b aria-hidden="true">*</b> <span id="niuCreateStageCount">0</span></button></nav>
+        <div class="niu-create-body" id="niuInfoPane" role="tabpanel" aria-labelledby="niuInfoTab">
+          <div class="niu-create-columns">
+            <div class="niu-create-writing">
+              <label class="niu-field"><span>任务标题 <b>*</b></span><input id="niuTitle" type="text" maxlength="120" placeholder="这项任务要完成什么？" autocomplete="off" required></label>
+              <label class="niu-field"><span>任务描述 <b>*</b></span><textarea id="niuDescription" rows="5" placeholder="描述目标、范围和期望结果" required></textarea></label>
             </div>
-          </section>
-          <section class="niu-create-section niu-create-section--plan" id="niuCreatePlanPane" aria-labelledby="niuCreatePlanTab">
-            <div class="niu-create-section-head"><span class="niu-step">02</span><div><h2 id="niuCreatePlanTab">执行节点 <span id="niuCreateStageCount">0</span></h2><p>按顺序执行；每个节点可直接继续，或完成后交给确认人</p></div><button type="button" class="niu-button niu-button-primary" id="niuCreateAdd">＋ 添加节点</button></div>
-            <div class="niu-stage-list" id="niuCreateStageList"></div>
-          </section>
+            <aside class="niu-create-properties" aria-label="任务属性">
+              <div class="niu-field"><span>所属项目 <b>*</b></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属项目"><span id="niuProjectName">选择项目</span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
+              <label class="niu-field"><span>任务类型 <b>*</b></span><select id="niuType" required><option value="">请选择任务类型</option><option value="需求">需求</option><option value="缺陷">缺陷</option></select></label>
+              <label class="niu-field"><span>优先级</span><select id="niuPriority"><option value="medium">中</option><option value="high">高</option><option value="urgent">紧急</option><option value="low">低</option></select></label>
+            </aside>
+          </div>
         </div>
+        <div class="niu-create-plan-pane" id="niuCreatePlanPane" role="tabpanel" aria-labelledby="niuCreatePlanTab" hidden><div class="niu-plan-intro"><div><div class="tk-flow-help-heading"><h3>执行计划</h3><button type="button" class="tk-flow-help-trigger" data-task-flow-help aria-label="查看任务状态与处理人流程图" title="查看任务状态与处理人流程图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4"/><path d="M12 17h.01"/></svg></button></div></div><div class="niu-plan-actions"><button type="button" class="niu-button niu-button-primary" id="niuCreateAdd">＋ 添加阶段</button></div></div><div class="niu-stage-columns" aria-hidden="true"><span>序号</span><span>执行阶段</span><span>阶段工作说明</span><span>确认人</span></div><div class="niu-stage-list" id="niuCreateStageList"></div></div>
         <footer class="niu-create-foot"><div><button type="button" class="niu-button niu-button-ghost" data-niu-close>取消</button><button type="button" class="niu-button niu-button-primary" id="niuCreateSubmit">保存</button></div></footer>
       </section>
     </div>
     <div class="niu-overlay niu-plan-overlay" id="niuPlanOverlay" hidden>
       <section class="niu-plan" role="dialog" aria-modal="true" aria-labelledby="niuPlanHeading">
         <header class="niu-plan-head"><div><div class="niu-breadcrumb" id="niuBreadcrumb"></div><h2 id="niuPlanHeading"></h2><p id="niuPlanCode"></p></div><div class="niu-plan-head-actions"><button type="button" class="niu-button niu-button-ghost" id="niuPlanSave">保存计划</button><button type="button" class="niu-button niu-button-primary" id="niuPlanConfirm">确认计划</button><button type="button" class="niu-icon-button" data-niu-close aria-label="关闭">×</button></div></header>
-        <div class="niu-plan-layout"><main class="niu-plan-main"><div class="niu-tabs"><span>任务详情</span><strong id="niuPlanTab">执行计划</strong><span>动态与评论</span></div><div class="niu-plan-content"><div class="niu-plan-intro"><div><div class="tk-flow-help-heading"><button type="button" class="tk-flow-help-trigger" data-task-flow-help aria-label="查看任务状态与处理人流程图" title="查看任务状态与处理人流程图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4"/><path d="M12 17h.01"/></svg></button></div><p>安排执行节点和完成方式。无需确认的节点完成后会直接进入下一节点。</p></div><div class="niu-plan-actions"><button type="button" class="niu-button niu-button-primary" id="niuAddToggle">＋ 添加阶段</button></div></div><div class="niu-plan-banner" id="niuPlanBanner"></div><div class="niu-stage-columns" aria-hidden="true"><span>序号</span><span>执行阶段</span><span>阶段工作说明</span><span>完成方式</span></div><div class="niu-stage-list" id="niuStageList"></div></div></main><aside class="niu-plan-aside" id="niuPlanAside"></aside></div>
+        <div class="niu-plan-layout"><main class="niu-plan-main"><div class="niu-tabs"><span>任务详情</span><strong id="niuPlanTab">执行计划</strong><span>动态与评论</span></div><div class="niu-plan-content"><div class="niu-plan-intro"><div><div class="tk-flow-help-heading"><h3>执行计划</h3><button type="button" class="tk-flow-help-trigger" data-task-flow-help aria-label="查看任务状态与处理人流程图" title="查看任务状态与处理人流程图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2.2-2.5 4"/><path d="M12 17h.01"/></svg></button></div><p>为任务安排各执行阶段和确认人。确认后可以按阶段推进。</p></div><div class="niu-plan-actions"><button type="button" class="niu-button niu-button-primary" id="niuAddToggle">＋ 添加阶段</button></div></div><div class="niu-plan-banner" id="niuPlanBanner"></div><div class="niu-stage-columns" aria-hidden="true"><span>序号</span><span>执行阶段</span><span>阶段工作说明</span><span>确认人</span></div><div class="niu-stage-list" id="niuStageList"></div></div></main><aside class="niu-plan-aside" id="niuPlanAside"></aside></div>
       </section>
     </div>
     <div class="tk-flow-help-overlay" id="tkFlowHelpOverlay" hidden>
