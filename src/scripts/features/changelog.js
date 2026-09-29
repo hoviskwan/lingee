@@ -8,13 +8,8 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'65',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目管理重构卡片分组与字段筛选工具栏，新增搜索、刷新及显示设置；项目详情统一概览与产物布局，支持权限化编辑基本信息和成员属性。'},
-  {id:'64',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板、详情与会话的产物确认统一弹窗并直接流转，提示显示下一阶段处理人；任务列表与筛选移除截止日期、标签等旧入口。'},
-  {id:'63',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：看板隐藏已办与已取消状态及筛选入口，显示设置的字段与筛选同新建弹窗对齐并新增任务类型列、描述列与任务类型筛选；会话侧栏超过五条的项目默认收起，项目筛选隐藏无匹配选项，任务删除改用独立确认弹窗。'},
-  {id:'62',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务管理新增 Excel 模板下载与文件导入流程，导入字段支持执行阶段；新建任务执行计划支持逐阶段设置自动审核与执行人。'},
-  {id:'61',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务产物重构为需求、技术、开发、测试与交付五份标准阶段文档并按阶段复用，会话提示语统一为「阶段已执行完成，请确认产物」且与产物卡片对齐；新建任务弹窗改为任务信息与执行计划页签并按阶段指定确认人，任务状态文案统一为待审核。'},
-  {id:'60',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：看板任务卡按状态提供开始、回复、确认与查看结果操作并直达对应会话，待办列更名为待开始；任务会话支持阻塞、提问与待确认状态并同步侧栏状态点，阶段确认移至输入区引导条、产物在会话内展示；新建任务弹窗改为任务信息与执行节点单页分区；本地共享数据库迁移到 data.nosync 目录避免 iCloud 同步干扰。'},
-  {id:'59',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目产物支持右侧内嵌预览、全屏、按格式筛选与下载，任务列表默认仅展示本人参与或创建的任务，本地开发默认使用浏览器存储。'},
+  {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
+  {id:'66',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目列表和详情重构分组、搜索筛选、显示设置与权限化编辑，产物支持侧栏预览、全屏、筛选和下载；新建任务支持两步式智能创建及逐阶段执行人和自动审核配置，任务管理新增 Excel 模板下载与导入。'},
   {id:'58',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',body:'功能·任务管理：看板按状态分组保留空列并与有数据列等高，收起分组时恢复自适应高度，待规划任务并入待办列；任务会话结果汇报改为按任务数据生成；任务详情去除专家团卡片重复状态；协作开发徽标与看板审核中列同口径；本地预览服务在构建后自动刷新页面。'},
   {id:'57',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：新建任务按专家团生成执行计划并按成员分工预填各阶段负责人，开始执行即发起会话，执行结束可在会话内确认产物并流转下一阶段；看板已办列改为展示本人处理或审核过且已流转的任务，协作开发菜单显示待审核数，新建任务可查看状态与处理人流程图；项目成员改在独立弹窗逐人设置角色，项目表单随内容调整高度。'},
   {id:'56',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务执行会话支持连续流式输出，展示专家团头像和可恢复产物；产物生成后自动转待审核，并同步显示任务状态。'},
@@ -63,13 +58,8 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
-  '65':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 12h8M8 16h5"/></svg>',
-  '64':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
-  '63':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18"/><path d="M13 14l2 2 4-4"/></svg>',
-  '62':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 4v16"/><path d="m13 14 2 2 4-4"/></svg>',
-  '61':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>',
-  '60':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 5v11"/><path d="M12 5v6"/><path d="M18 5v14"/></svg>',
-  '59':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h4M8 13h8M8 17h8"/></svg>',
+  '67':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
+  '66':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 12h8M8 16h5"/></svg>',
   '58':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>',
   '57':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h16M4 12h10M4 18h6"/><path d="M16 15l2 2 4-4"/></svg>',
   '56':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="12" r="3"/><circle cx="17" cy="8" r="3"/><path d="M2 21v-2a5 5 0 0 1 10 0v2m0 0v-3a5 5 0 0 1 10 0v3"/></svg>',

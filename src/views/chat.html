@@ -12,6 +12,17 @@
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
         </button>
       </div>
+      <section class="chat-current-stage" id="chatCurrentStage" hidden aria-label="执行阶段">
+        <button class="chat-current-stage-toggle" id="chatCurrentStageToggle" type="button" aria-expanded="false" aria-controls="chatCurrentStageDetails">
+          <span class="chat-current-stage-tag">执行阶段</span>
+          <strong class="chat-current-stage-name" id="chatCurrentStageName"></strong>
+          <span class="chat-current-stage-count" id="chatCurrentStageCount"></span>
+          <svg class="chat-current-stage-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="chat-current-stage-details" id="chatCurrentStageDetails" hidden>
+          <ol class="chat-current-stage-list" id="chatCurrentStageList"></ol>
+        </div>
+      </section>
       <div class="chat-messages" id="chatMessages">
         <div class="messages-list" id="messagesList">
           <div class="chat-empty" id="chatEmpty">

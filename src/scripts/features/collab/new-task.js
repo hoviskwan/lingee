@@ -461,7 +461,8 @@ function cvSubmitNewTask(keepOpen) {
     if (pending.length) toast('还有 ' + pending.length + ' 位专家未指定负责人，将继承「' + fallback + '」', 'warning');
     expertPlan = ntExpertPlan.map(e => ({ id: e.id, name: (EX[e.id] || {}).name || e.id, lead: !!e.lead, modes: ((EX[e.id] || {}).modes || []).slice(), assignee: e.assignee || fallback }));
     stagePlan = ntDeriveStagePlan(team, expertPlan, fallback);
-    assignee = (expertPlan.find(e => e.lead) || expertPlan[0]).assignee;
+    // 任务详情的负责人代表当前环节的执行人，需与阶段分工保持一致。
+    assignee = stagePlan[0]?.assignee || fallback;
   } else {
     if (!ntAssignee) { window.alert('请选择任务负责人'); return; }
     assignee = ntAssignee;

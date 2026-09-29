@@ -417,7 +417,7 @@ function renderCard(t, opts) {
     footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
   }
   var startBtn = isBacklog
-    ? '<button class="tk-card-action tk-card-action--primary" type="button" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' disabled title="仅当前阶段处理人可开始"') + '>开始</button>'
+    ? '<button class="tk-card-action tk-card-action--primary" type="button" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' aria-disabled="true" title="仅当前阶段处理人可开始"') + '>开始</button>'
     : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'

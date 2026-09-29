@@ -49,6 +49,14 @@ function renderExpertChips(){
   var has=pickValid();
   ['nt','chat','tkForm'].forEach(function(pfx){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
+    var dd=$('#'+pfx+'ExpertDropdown');
+    if(pfx==='chat' && dd?.classList.contains('task-team-locked')){
+      var lockedTeam=teamById(dd.dataset.lockedTeamId);
+      if(label) label.textContent=lockedTeam?.name || '未配置专家团';
+      if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
+      dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);
+      return;
+    }
     if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择专家团' : '选择专家');
     if(faces){
       faces.innerHTML = has
@@ -58,7 +66,6 @@ function renderExpertChips(){
             : '<img src="'+xav(EX[activePick.id].k)+'" alt="">')
         : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>';
     }
-    var dd=$('#'+pfx+'ExpertDropdown');
     if(dd){ var c=dd.querySelector('[data-chip]'); if(c) c.classList.toggle('muted', !has); }
   });
 }
@@ -157,6 +164,7 @@ function refloatTkFormMenu(){
 }
 export function openExpertPicker(pfx){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
+  if(dd.classList.contains('task-team-locked')) return;
   var si=$('#'+pfx+'ExpertSearchInput');
   closeAll(null);
   renderExpertPicker(pfx, si?si.value:'');
@@ -197,6 +205,7 @@ export function initExpertChips() {
     }
     chipEl.addEventListener('click',function(ev){
       ev.stopPropagation();
+      if(dd.classList.contains('task-team-locked')) return;
       if(dd.classList.contains('open')) dd.classList.remove('open');
       else openExpertPicker(pfx);
     });

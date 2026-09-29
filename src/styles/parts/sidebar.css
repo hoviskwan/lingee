@@ -205,9 +205,9 @@
   .chat-project-sessions{display:flex;flex-direction:column;background:var(--fill-1);border-radius:10px;padding:3px;margin:2px 0 6px 2px}
   .chat-project-sessions .chat-session-entry{padding-left:21px}
   .chat-project-sessions .chat-session-entry.active{background:var(--hover)}
-  .chat-project-more{display:flex;align-items:center;gap:9px;width:100%;box-sizing:border-box;padding:4px 12px 4px 21px;border:0;border-radius:8px;background:transparent;color:var(--neutral-500);font-size:12px;cursor:pointer}
+  .chat-project-more{align-self:flex-start;display:inline-flex;align-items:center;width:auto;margin-left:16px;padding:4px 5px;border:0;border-radius:8px;background:transparent;color:var(--neutral-500);font-size:12px;cursor:pointer}
   .chat-project-more:hover{background:var(--hover);color:var(--neutral-900)}
-  .chat-project-more .txt{flex:1;min-width:0;text-align:left}
+  .chat-project-more .txt{text-align:left}
   .dot{width:7px;height:7px;border-radius:50%;flex:none}
   /* 运行中：蓝色圆点脉冲（对齐工程 status-dot[data-variant="running"]，1.5s 环扩散） */
   @keyframes dot-pulse{

@@ -2,7 +2,7 @@
 import { CV_PROJECTS } from '../collab/data.js';
 import { STAGES } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
-import { tkCurrentUserId } from './data.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
 export const TASK_SESSION_ORIGINS = { start:'开始执行', revise:'退回修改', retry:'重试执行', manual:'发起会话' };
@@ -75,7 +75,7 @@ function seedDemoSessions(task, ownerId) {
   if (_sessions.some(function (session) { return session.taskId === task.id && session.ownerId === ownerId; })) return;
   var stageId = task.executionStageId || taskExecutionStages(task)[0].id;
   var stageOwner = taskExecutionStages(task).find(function (stage) { return stage.id === stageId; })?.assigneeId;
-  if (stageOwner ? stageOwner !== ownerId && !(task.id === 1205 && task.createdBy === ownerId) : task.assignee !== ownerId && task.createdBy !== ownerId) return;
+  if (stageOwner ? stageOwner !== ownerId : task.assignee !== ownerId && task.createdBy !== ownerId) return;
   var status = task.initialStatus || task.status;
   if (!['in_progress', 'in_review', 'blocked', 'done'].includes(status)) {
     if (!['in_progress', 'in_review', 'blocked'].includes(task.status)) return;
@@ -132,7 +132,7 @@ export function tkGetMySessions(task) {
   if (!task || !ownerId) return [];
   seedDemoSessions(task, ownerId);
   /* 已保存旧版演示会话时也补齐待回复场景，避免只在首次打开时出现。 */
-  if (task.id === 1205 && task.status === 'in_progress' && task.createdBy === ownerId) {
+  if (task.id === 1205 && task.status === 'in_progress' && tkCurrentStageHandlerId(task) === ownerId) {
     var currentDemoSession = _sessions.find(function (session) {
       return session.taskId === task.id && session.ownerId === ownerId && session.stageId === task.executionStageId && session.status === 'active';
     });
@@ -163,7 +163,10 @@ export function tkGetMySessions(task) {
       });
     }
   }
-  return _sessions.filter(function (session) { return session.taskId === task.id && session.ownerId === ownerId; })
+  return _sessions.filter(function (session) {
+    return session.taskId === task.id && session.ownerId === ownerId
+      && !(task.id === 1205 && session.stageId === task.executionStageId && session.origin === 'start' && ownerId !== tkCurrentStageHandlerId(task));
+  })
     .sort(function (a, b) { return b.lastAt.localeCompare(a.lastAt) || b.id - a.id; });
 }
 

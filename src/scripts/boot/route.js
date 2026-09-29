@@ -2,7 +2,7 @@ import { $, $$ } from '../core/dom.js';
 import { navItems, setNavActive, showView } from '../core/view.js';
 import { chatAppDd, selectChatApp } from '../features/attach-app.js';
 import { set_cvPendingProj, set_cvPendingTab } from '../features/collab/view.js';
-import { appendAssistantMessage, appendUserMessage, messagesList, simulateAIResponse } from '../features/composer.js';
+import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSession, simulateAIResponse } from '../features/composer.js';
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
 import { openChangelog } from '../features/changelog.js';
@@ -47,15 +47,17 @@ export function initRoute() {
   }else if(dsViewParam==='chat'){
     showView('chat');
     setNavActive('新会话');
-    /* 恢复会话内容 */
-    var title='采购订单管理应用开发';
-    $('#chatTitle').textContent=title;
-    if(messagesList) messagesList.innerHTML='';
-    appendUserMessage('帮我开发'+title+'功能');
-    var responseEl=appendAssistantMessage();
-    simulateAIResponse(responseEl,true);
-    selectChatApp('采购订单管理');
-    if(chatAppDd) chatAppDd.classList.add('disabled');
+    if(!restoreChatSession()){
+      /* 没有可恢复的会话时保留原有演示内容 */
+      var title='采购订单管理应用开发';
+      $('#chatTitle').textContent=title;
+      if(messagesList) messagesList.innerHTML='';
+      appendUserMessage('帮我开发'+title+'功能');
+      var responseEl=appendAssistantMessage();
+      simulateAIResponse(responseEl,true);
+      selectChatApp('采购订单管理');
+      if(chatAppDd) chatAppDd.classList.add('disabled');
+    }
   }else if(dsViewParam==='changelog'){
     openChangelog();
   }else if(dsViewParam && dsViewParam!=='newtask'){

@@ -260,7 +260,7 @@
 .tk-card-action:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
 .tk-card-action--primary{border-color:var(--brand);background:var(--brand);color:#fff}
 .tk-card-action--primary:hover{border-color:var(--brand-hover);background:var(--brand-hover);box-shadow:0 2px 7px rgba(73,93,255,.24);color:#fff}
-.tk-card-action:disabled,.tk-card-action:disabled:hover{opacity:.5;cursor:not-allowed;box-shadow:none;border-color:var(--brand);background:var(--brand);color:#fff}
+.tk-card-action:disabled,.tk-card-action:disabled:hover,.tk-card-action[aria-disabled="true"],.tk-card-action[aria-disabled="true"]:hover{opacity:.5;cursor:pointer;box-shadow:none;border-color:var(--brand);background:var(--brand);color:#fff}
 .tk-card-priority{font-size:10px}
 .tk-card-due{font-size:11px;display:flex;align-items:center;gap:3px}
 .tk-card-due.overdue{color:var(--danger)}
@@ -683,7 +683,6 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-feed-stage-state{font-size:10px;white-space:nowrap}
 .tk-feed-stage-review-actions{display:inline-flex;align-items:center;gap:4px;margin-top:3px;white-space:nowrap}
 .tk-feed-stage-review-btn{min-height:24px;padding:2px 7px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font:inherit;font-size:11px;cursor:pointer}
-.tk-feed-stage-review-btn.is-reject{border-color:var(--border);background:var(--bg);color:var(--text-secondary)}
 .tk-feed-stage-review-btn:hover{filter:brightness(.92)}
 .tk-feed-stage-review-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 .tk-feed-stage.is-running .tk-feed-stage-mark{color:var(--brand)}

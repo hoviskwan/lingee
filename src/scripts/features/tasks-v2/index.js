@@ -104,7 +104,6 @@ function taskHeaderAction(task) {
   return {
     planned:{label:'加入待开始',action:'queue'},
     backlog:{label:'开始执行',action:'start'},
-    in_progress:{label:'查看执行',action:'view-run'},
     blocked:{label:'重试执行',action:'retry'},
   }[task.status] || null;
 }
@@ -285,8 +284,6 @@ function handleTaskHeaderAction() {
     openDrawer(task.id);
   } else if (action === 'start') {
     startTaskExecution(task.id);
-  } else if (action === 'view-run') {
-    els.tkDrawerBody.querySelector('.tk-feed-stage-overview')?.scrollIntoView({behavior:'smooth',block:'start'});
   } else if (action === 'retry') retryBlockedTask(task);
 }
 function returnToTaskDetail(task) {
@@ -676,7 +673,7 @@ function renderCard(t, opts) {
     footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
   }
   var needsReply = taskConversationNeedsReply(t);
-  var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' disabled title="仅当前阶段处理人可开始"') + '>开始</button>'
+  var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' aria-disabled="true" title="仅当前阶段处理人可开始"') + '>开始</button>'
     : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
@@ -2232,9 +2229,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         return session.stageId === stage.id || (!session.stageId && isCurrent);
       }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var actions = (inReviewStage
-        ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，流转到下一阶段">通过</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
-        + (task.status === 'blocked' && state === 'blocked'
+      var actions = (task.status === 'blocked' && state === 'blocked'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
         + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
       var sessionsHtml = state !== 'done' && stageSessions.length ? '<div class="tk-feed-stage-sessions" aria-label="' + escapeHtml(stage.name) + '的会话">'
@@ -3295,24 +3290,6 @@ function bindEvents() {
     if (e.target.closest('[data-stage-view-session]')) {
       var blockedTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
       if (blockedTask?.status === 'blocked') viewBlockedTaskSession(blockedTask);
-      return;
-    }
-    var stageReviewButton = e.target.closest('[data-stage-review-status]');
-    if (stageReviewButton) {
-      var reviewTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
-      var nextStatus = stageReviewButton.getAttribute('data-stage-review-status');
-      if (taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
-        var approved = nextStatus === 'done';
-        if (approved) {
-          confirmTaskStageApproval(reviewTask, true);
-        } else {
-          var reviewed = reviewTaskStage(reviewTask, false);
-          if (!reviewed.ok) { if (reviewed.message) toast(reviewed.message, 'warning'); return; }
-          render();
-          openTaskConversationWithTask(reviewTask.id, 'revise');
-          toast('已退回修改，可在会话中二次修改', 'success');
-        }
-      }
       return;
     }
     var artifactTrigger = e.target.closest('[data-artifact-preview]');

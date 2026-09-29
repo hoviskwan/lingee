@@ -12,7 +12,7 @@ import { activePick, pickValid, set_activePick, teamById } from './expert/store.
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
 import { tbTeamStages } from './collab/tb-core.js';
-import { tkAddTask, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
+import { tkAddTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
 import { defaultStageAssigneeId } from './tasks-v2/stage-owner.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
@@ -130,7 +130,9 @@ var conversationTaskId = null;
 var activeSessionTaskId = null;
 var activeResponseRun = 0;
 var activeSessionId = null;
+var restoringChatSession = false;
 var CHAT_SESSIONS_KEY = 'lingee-chat-sessions-v1';
+var ACTIVE_CHAT_SESSION_KEY = 'lingee-chat-active-session-v1';
 var chatSessions = [];
 var collapsedChatProjects = new Set();
 /* 项目会话超过 5 条时默认收起，点第 5 条下的「展开显示」查看全部（参考 Codex） */
@@ -140,7 +142,7 @@ try {
   var savedSessions = JSON.parse(localStorage.getItem(CHAT_SESSIONS_KEY) || '[]');
   if (Array.isArray(savedSessions)) chatSessions = savedSessions.filter(function (session) {
     return session && /^[a-z0-9]+$/i.test(session.id) && typeof session.title === 'string' && Array.isArray(session.exchanges);
-  }).slice(0, 60).map(function (session) {
+  }).slice(0, 200).map(function (session) {
     session.exchanges = session.exchanges.filter(function (exchange) { return exchange && typeof exchange.prompt === 'string'; });
     return session;
   });
@@ -150,8 +152,8 @@ try {
 var COSMIC_DEMO_SESSIONS = [
   {id:'cosmicdemo1',title:'操作元模型四张注册表抽取方案设计',taskId:1201,demoState:'running',exchanges:[{prompt:'开始执行操作元模型四张注册表抽取方案设计。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
   {id:'cosmicdemo2',title:'编辑器提交形状与 EntryId 冲突裁决实现',taskId:1202,demoState:'running',demoArtifact:true,exchanges:[{prompt:'开始执行编辑器提交形状与 EntryId 冲突裁决实现。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
-  {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'当前阶段已执行完成，请确认产物。'}]},
-  {id:'cosmicdemo4',title:'属性继承链取值域合并验证',taskId:1207,demoState:'review',demoArtifact:true,exchanges:[{prompt:'开始执行属性继承链取值域合并验证。',done:true,response:'当前阶段已执行完成，请确认产物。'}]},
+  {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'当前阶段已完成，请确认产物。'}]},
+  {id:'cosmicdemo4',title:'属性继承链取值域合并验证',taskId:1207,demoState:'review',demoArtifact:true,exchanges:[{prompt:'开始执行属性继承链取值域合并验证。',done:true,response:'当前阶段已完成，请确认产物。'}]},
   {id:'cosmicdemo5',title:'采购订单规则配置清单交付',taskId:1205,demoState:'question',exchanges:[],demoQuestion:{text:'归档 evidence 时，系统导出的动作参数映射与项目手工维护版本有差异。交付清单应以哪份为准？',options:['以当前系统导出的注册表为准，记录手工版本差异','保留项目手工维护版本，标注与注册表的差异'],answer:''}},
   {id:'cosmicdemo6',title:'扩展表单属性锁定规则解析修复',taskId:1204,demoState:'blocked',exchanges:[{prompt:'开始执行扩展表单属性锁定规则解析修复。',done:true,response:'当前阶段执行中断，请查看失败原因。'}]},
   {id:'cosmicdemo7',title:'属性元模型与 app-build 契约交叉比对集成',taskId:1206,demoState:'confirmed',demoArtifact:true,exchanges:[{prompt:'开始执行属性元模型与 app-build 契约交叉比对集成。',done:true,response:'当前阶段已确认，任务交付完成。'}]},
@@ -169,35 +171,76 @@ var COSMIC_DEMO_SESSIONS = [
     acknowledgement:'收到，我会按你选择的映射口径继续构建目录。',answer:'',
   }},
 ];
-var cosmicDemoChanged = false;
-COSMIC_DEMO_SESSIONS.forEach(function (sample) {
-  var existing = chatSessions.find(function (session) { return session.id === sample.id; });
-  if (existing) {
-    existing.title = sample.title;
-    existing.demoArtifact = !!sample.demoArtifact || !!existing.demoQuestion?.continuationDone;
-    var progressed = sample.demoState === 'running' && existing.demoState === 'review' && existing.exchanges[0]?.done;
-    var confirmedHere = Array.isArray(existing.stageEndMarkers) && existing.stageEndMarkers.length > 0;
-    if (!progressed && !confirmedHere) {
-      existing.demoState = sample.demoState;
-      if (sample.exchanges.length) existing.exchanges[0] = sample.exchanges[0];
-    } else existing.demoArtifact = true;
-    if (sample.demoQuestion) existing.demoQuestion = Object.assign({}, sample.demoQuestion, existing.demoQuestion || {});
-    cosmicDemoChanged = true;
-    return;
-  }
-  chatSessions.push(Object.assign({projectId:'cosmic-app-dev',teamId:'cosmic-app-dev'}, sample));
-  cosmicDemoChanged = true;
+/* 每位项目成员各有独立的演示会话，回复和阶段确认不会串到其他账号。 */
+function seedCosmicDemoSessions() {
+  var ownerId = tkCurrentUserId();
+  if (!ownerId || !tkProjectsForCurrentUser().some(function (project) { return project.id === 'cosmic-app-dev'; })) return;
+  var changed = false;
+  COSMIC_DEMO_SESSIONS.forEach(function (sample) {
+    var id = sample.id + ownerId;
+    var existing = chatSessions.find(function (session) { return session.id === id; });
+    if (existing) return;
+    var copy = JSON.parse(JSON.stringify(sample));
+    copy.id = id;
+    copy.ownerId = ownerId;
+    copy.projectId = 'cosmic-app-dev';
+    copy.teamId = 'cosmic-app-dev';
+    copy.stageId = tkGetTasks().find(function (task) { return task.id === copy.taskId; })?.executionStageId || '';
+    chatSessions.push(copy);
+    changed = true;
+  });
+  if (changed) saveChatSessions();
+}
+/* 旧版固定 ID 转为原持有人的独立副本，保留其回复记录。 */
+var legacyCosmicDemoChanged = false;
+chatSessions.forEach(function (session) {
+  if (!/^cosmicdemo\d+$/.test(session.id)) return;
+  var ownerId = session.ownerId || tkCurrentStageHandlerId(tkGetTasks().find(function (task) { return task.id === session.taskId; }));
+  if (ownerId) { session.id += ownerId; session.ownerId = ownerId; legacyCosmicDemoChanged = true; }
 });
-if (cosmicDemoChanged) saveChatSessions();
+if (legacyCosmicDemoChanged) saveChatSessions();
+seedCosmicDemoSessions();
 function saveChatSessions() {
-  try { localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(chatSessions.slice(0, 60))); } catch (e) {}
+  try { localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(chatSessions.slice(0, 200))); } catch (e) {}
+}
+function isMyChatSession(session) {
+  if (/^cosmicdemo\d+/.test(session.id)) return !!session.ownerId && session.ownerId === tkCurrentUserId();
+  return !session.ownerId || session.ownerId === tkCurrentUserId();
+}
+function activeChatSessionKey() { return ACTIVE_CHAT_SESSION_KEY + ':' + (tkCurrentUserId() || 'guest'); }
+function rememberActiveChatSession(sessionId) {
+  try {
+    if (sessionId) localStorage.setItem(activeChatSessionKey(), sessionId);
+    else localStorage.removeItem(activeChatSessionKey());
+  } catch (e) { /* 本地存储不可用时仅保留当前页面状态 */ }
+}
+export function restoreChatSession() {
+  var sessionId = '';
+  try { sessionId = localStorage.getItem(activeChatSessionKey()) || ''; } catch (e) {}
+  var session = chatSessions.find(function (row) { return row.id === sessionId; });
+  if (!session || !isMyChatSession(session)) {
+    if (sessionId) rememberActiveChatSession(null);
+    return false;
+  }
+  restoringChatSession = true;
+  try { openChatSession(session.id); }
+  finally {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        restoringChatSession = false;
+        document.getElementById('chatDocViewer')?.classList.remove('restoring');
+      });
+    });
+  }
+  return true;
 }
 export function taskConversationNeedsReply(task) {
   return task?.status === 'in_progress' && chatSessions.some(function (session) {
-    return Number(session.taskId) === task.id && !!session.demoQuestion && !session.demoQuestion.answer;
+    return Number(session.taskId) === task.id && isMyChatSession(session) && !!session.demoQuestion && !session.demoQuestion.answer;
   });
 }
 function renderChatSessions() {
+  seedCosmicDemoSessions();
   var list = document.getElementById('chatSessionList');
   var section = document.getElementById('chatSessionSection');
   var folders = document.getElementById('chatProjectFolders');
@@ -214,11 +257,12 @@ function renderChatSessions() {
     var state = session.demoState === 'blocked' ? 'red' : running ? 'blue' : waiting || session.demoState === 'review' ? 'orange' : 'green';
     return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '"><span class="dot ' + state + '"></span><span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
   }
-  var ungrouped = chatSessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
+  var mySessions = chatSessions.filter(isMyChatSession);
+  var ungrouped = mySessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
   section.hidden = !ungrouped.length;
   list.innerHTML = ungrouped.map(sessionHtml).join('');
   var groups = new Map();
-  chatSessions.forEach(function (session) {
+  mySessions.forEach(function (session) {
     var id = projectId(session);
     if (!id || (query && !session.title.toLowerCase().includes(query) && !projectName(id).toLowerCase().includes(query))) return;
     if (!groups.has(id)) groups.set(id, []);
@@ -253,12 +297,13 @@ function createChatSession(title, taskId) {
   var projectId = task?.project || '';
   var project = CV_PROJECTS.find(function (row) { return row.id === projectId; });
   var teamId = task?.teamId || project?.defaultTeam || (activePick.kind === 'team' ? activePick.id : '');
-  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, projectId: projectId, teamId: teamId, exchanges: [] };
+  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, stageId: task?.executionStageId || '', projectId: projectId, teamId: teamId, ownerId: tkCurrentUserId(), exchanges: [] };
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
   var regularCount = 0;
   chatSessions = chatSessions.filter(function (row) { return row.demoState || ++regularCount <= 30; });
   activeSessionId = session.id;
+  rememberActiveChatSession(session.id);
   saveChatSessions();
   renderChatSessions();
   return session;
@@ -433,10 +478,18 @@ export function startTaskCreationChat(projectId, initialPrompt) {
 }
 function openChatSession(sessionId) {
   var session = chatSessions.find(function (row) { return row.id === sessionId; });
-  if (!session) return;
+  if (!session || !isMyChatSession(session)) return;
+  if (session.taskId != null && !session.stageId) {
+    var sessionTask = tkGetTasks().find(function (row) { return row.id === Number(session.taskId); });
+    session.stageId = session.stageEndMarkers?.[0]?.stageId || sessionTask?.executionStageId || '';
+    saveChatSessions();
+  }
   activeResponseRun++;
   activeSessionId = session.id;
+  rememberActiveChatSession(session.id);
   activeSessionTaskId = session.taskId == null ? null : Number(session.taskId);
+  document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
+  document.getElementById('chatCurrentStageDetails').hidden = true;
   showView('chat');
   messagesList.innerHTML = '';
   closeChatDocViewer();
@@ -525,7 +578,8 @@ function openChatSession(sessionId) {
 /* 任务状态卡片回到对应的聊天；旧数据没有聊天记录时只补建一次。 */
 export function openTaskStatusConversation(task) {
   if (!task) return;
-  var linked = chatSessions.filter(function (session) { return Number(session.taskId) === task.id; });
+  seedCosmicDemoSessions();
+  var linked = chatSessions.filter(function (session) { return Number(session.taskId) === task.id && isMyChatSession(session); });
   var session = task.status === 'blocked'
     ? linked.find(function (row) { return row.demoState === 'blocked'; })
     : task.status === 'in_review'
@@ -650,6 +704,13 @@ function renderConversationTaskReference() {
 }
 function renderChatTaskSide() {
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  var expertDropdown = document.getElementById('chatExpertDropdown');
+  var taskTeam = task ? resolveChatTeam(null, task) : null;
+  expertDropdown.classList.toggle('task-team-locked', !!task);
+  expertDropdown.dataset.lockedTeamId = taskTeam?.id || '';
+  expertDropdown.classList.remove('open');
+  expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task ? 'true' : 'false');
+  renderExpertChips();
   if (task) {
     viewChat.classList.remove('preview-open');
     var preview = document.getElementById('chatPreviewSide');
@@ -658,10 +719,49 @@ function renderChatTaskSide() {
   }
   var title = document.getElementById('chatTitle');
   title.classList.toggle('is-task', !!task);
-  title.setAttribute('aria-label', task ? '打开任务详情：' + task.title : '会话标题');
+  title.setAttribute('aria-label', task ? '打开任务详情：' + task.title + (task.code ? ' #' + task.code : '') : '会话标题');
   if (task) title.setAttribute('data-tooltip', '打开任务详情');
   else title.removeAttribute('data-tooltip');
   if (task) title.textContent = task.title;
+  if (task?.code) title.setAttribute('data-task-code', task.code);
+  else title.removeAttribute('data-task-code');
+  var stagePanel = document.getElementById('chatCurrentStage');
+  var stages = task ? taskExecutionStages(task) : [];
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  var stageIndex = stages.findIndex(function (stage) { return stage.id === session?.stageId; });
+  if (stageIndex < 0) stageIndex = stages.findIndex(function (stage) { return stage.id === task?.executionStageId; });
+  if (stageIndex < 0 && task?.executionPlan?.length) stageIndex = stages.findIndex(function (stage) {
+    return task.executionPlan.find(function (row) { return row.id === stage.id; })?.status !== 'done';
+  });
+  if (stageIndex < 0 && stages.length) stageIndex = task?.status === 'done' ? stages.length - 1 : 0;
+  stagePanel.hidden = !task || stageIndex < 0;
+  if (!stagePanel.hidden) {
+    if (stagePanel.dataset.sessionId !== String(activeSessionId)) {
+      stagePanel.dataset.taskId = String(task.id);
+      stagePanel.dataset.sessionId = String(activeSessionId);
+      document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
+      document.getElementById('chatCurrentStageDetails').hidden = true;
+    }
+    var stage = stages[stageIndex];
+    var people = tkPeopleInProject(task.project);
+    document.getElementById('chatCurrentStageName').textContent = stage.name || '未命名阶段';
+    document.getElementById('chatCurrentStageCount').textContent = (stageIndex + 1) + '/' + stages.length;
+    document.getElementById('chatCurrentStageList').innerHTML = stages.map(function (row, index) {
+      var planStage = task.executionPlan?.find(function (item) { return item.id === row.id; });
+      var state = task.status === 'done' ? 'done' : planStage?.status || (index < stageIndex ? 'done' : 'pending');
+      if (session?.stageEndMarkers?.some(function (marker) { return marker.stageId === row.id; })) state = 'done';
+      if (!['done', 'running', 'review', 'blocked', 'pending'].includes(state)) state = 'pending';
+      if (row.id === task.executionStageId && state !== 'done' && task.status === 'blocked') state = 'blocked';
+      else if (row.id === task.executionStageId && state !== 'done' && task.status === 'in_review') state = 'review';
+      else if (row.id === task.executionStageId && task.status === 'in_progress' && state === 'pending') state = 'running';
+      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
+      var handlerId = row.id === task.executionStageId ? tkCurrentStageHandlerId(task) || row.assigneeId : row.assigneeId || (!task.executionPlan?.length ? task.assignee : '');
+      var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
+      var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
+      var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';
+      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong><small>处理人 ' + escapeHtml(handlerName) + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
+    }).join('');
+  } else { stagePanel.removeAttribute('data-task-id'); stagePanel.removeAttribute('data-session-id'); }
   /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */
   document.getElementById('historyBtn')?.classList.toggle('hidden', !!task || viewChat.classList.contains('task-exception-open'));
   refreshChatStageConfirm();
@@ -681,6 +781,8 @@ function chatStageConfirmInfo() {
   var visible = ['in_progress', 'in_review'].includes(task.status);
   if (!visible) return null;
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  if (session?.stageId && session.stageId !== task.executionStageId) return null;
+  if (session?.stageEndMarkers?.some(function (marker) { return marker.stageId === task.executionStageId; })) return null;
   if (session?.demoState && !['running','review','ended'].includes(session.demoState)
     && !(session.demoState === 'question' && session.demoQuestion?.continuationDone)) return null;
   var lastExchange = session?.exchanges.at(-1);
@@ -703,7 +805,7 @@ function refreshChatStageConfirm() {
   var guide = document.getElementById('chatStageGuideText');
   var isLast = !info.nextStage;
   var currentStage = taskExecutionStages(info.task).find(function (stage) { return stage.id === info.task.executionStageId; });
-  if (title) title.textContent = '「' + (currentStage?.name || '当前阶段') + '」已执行完成，请确认产物。';
+  if (title) title.textContent = '「' + (currentStage?.name || '当前阶段') + '」已完成，请确认产物。';
   if (guide) guide.textContent = isLast ? '确认后任务完成。' : '确认后流转至「' + (info.nextStage?.name || '下一阶段') + '」。';
   if (label) label.textContent = isLast ? '完成' : '确认';
   btn.setAttribute('aria-label', chatStageConfirmTooltip(info.task, info.nextStage));
@@ -734,6 +836,7 @@ function confirmChatStage() {
         session.stageEndMarkers.push(marker);
         saveChatSessions();
         appendChatStageEndMarker(marker);
+        renderChatTaskSide();
         scrollChatBottom();
       }
       renderChatSessions();
@@ -746,6 +849,7 @@ function clearChatTaskSide() {
   document.getElementById('chatTaskQuestionPanel')?.remove();
   activeSessionTaskId = null;
   activeSessionId = null;
+  rememberActiveChatSession(null);
   activeResponseRun++;
   renderChatTaskSide();
   renderChatSessions();
@@ -813,6 +917,12 @@ function showChatViewer(keepConversationAtBottom) {
   }
   if (viewer.classList.contains('show')) { setChatDocViewerWidth(viewer); return; }
   viewer.style.width = '';
+  if (restoringChatSession) {
+    viewer.classList.add('restoring');
+    setChatDocViewerWidth(viewer);
+    viewer.classList.add('show');
+    return;
+  }
   requestAnimationFrame(function () { setChatDocViewerWidth(viewer); viewer.classList.add('show'); });
 }
 function openChatDocViewer(task, artifact, keepConversationAtBottom) {
@@ -920,7 +1030,7 @@ function demoExchangeText(session, task, exchange) {
   var stageName = taskStageName(task);
   switch (session.demoState) {
     case 'running': return '「' + stageName + '」正在执行，完成后提交产物。';
-    case 'review': case 'ended': return '「' + stageName + '」已执行完成，请确认产物。';
+    case 'review': case 'ended': return '「' + stageName + '」已完成，请确认产物。';
     case 'confirmed': return '「' + stageName + '」已确认，任务交付完成。';
     case 'blocked': return '「' + stageName + '」执行中断，请查看失败原因。';
     default: return exchange?.response || '';
@@ -930,7 +1040,7 @@ function demoExchangeText(session, task, exchange) {
 function statusConversationOpeningText(task, blocked) {
   var stageName = taskStageName(task);
   if (blocked) return '「' + stageName + '」执行中断，请查看失败原因。';
-  return '「' + stageName + '」已执行完成，请确认产物。';
+  return '「' + stageName + '」已完成，请确认产物。';
 }
 function appendTaskArtifact(result, task, autoOpen) {
   var artifact = taskStageArtifact(task);
@@ -970,7 +1080,7 @@ function appendUserMessage(text){
 
 function resolveChatTeam(session, task){
   var project = CV_PROJECTS.find(function (row) { return row.id === (task?.project || session?.projectId); });
-  return teamById(session?.teamId || task?.teamId || project?.defaultTeam || '');
+  return teamById(task?.teamId || '') || teamById(project?.defaultTeam || '') || teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
   var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);
@@ -1213,7 +1323,7 @@ function buildTaskResultText(task){
   return '我已读取任务「'+task.title+'」的说明。'+(core ? '本次重点是：'+core+'。' : '')+'接下来按「'+(stage.name||'当前阶段')+'」的目标整理交付内容。\n\n'
     +'**'+(stage.name||'当前阶段')+'要点说明：**\n'
     +details.map(function (item) { return '- '+item; }).join('\n')
-    +'\n\n「'+(stage.name||'当前阶段')+'」已执行完成，请确认产物：';
+    +'\n\n「'+(stage.name||'当前阶段')+'」已完成，请确认产物：';
 }
 
 function appendTaskReadingSummary(responseEl, task) {
@@ -1688,6 +1798,7 @@ export function initComposer() {
   });
   renderChatSessions();
   queueMicrotask(renderChatSessions);
+  document.addEventListener('lingee:auth-changed', renderChatSessions);
   document.addEventListener('lingee:sidebar-filter', renderChatSessions);
   document.getElementById('chatSessionList').addEventListener('click', function (event) {
     var entry = event.target.closest('[data-chat-session]');
@@ -1717,10 +1828,16 @@ export function initComposer() {
     if (event.detail?.task?.id === activeSessionTaskId) renderChatTaskSide();
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
-  document.getElementById('chatTitle').addEventListener('click', function () {
+  document.getElementById('chatCurrentStageToggle').addEventListener('click', function () {
+    var details = document.getElementById('chatCurrentStageDetails');
+    details.hidden = !details.hidden;
+    this.setAttribute('aria-expanded', String(!details.hidden));
+  });
+  function openHeaderTaskDetail() {
     var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
     if (task) openChatTaskViewer(task);
-  });
+  }
+  document.getElementById('chatTitle').addEventListener('click', openHeaderTaskDetail);
   var chatDocViewer = document.getElementById('chatDocViewer');
   if (chatDocViewer) {
     document.getElementById('chatDocViewerClose').addEventListener('click', closeChatDocViewer);
