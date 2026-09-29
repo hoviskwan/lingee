@@ -17,6 +17,21 @@
   .chat-team-avatars img{width:25px;height:25px;margin-right:-8px;border:2px solid #fff;border-radius:50%;object-fit:cover;background:var(--brand-fill)}
   .chat-agent-identity{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:13px;color:var(--text)}
   .chat-agent-identity strong{font-weight:600}
+  .chat-agent-identity .chat-agent-state{color:var(--brand);font-size:12px}
+  .chat-agent-identity .chat-agent-state.is-review{color:#a66713}
+  .chat-agent-identity .chat-agent-state.is-done{color:var(--text-muted)}
+  .task-create-avatar{width:25px;height:25px;border-radius:50%;object-fit:cover}
+  .task-create-project{display:flex;align-items:center;gap:12px;width:min(360px,100%);margin-top:16px;color:var(--text-secondary);font-size:12px}
+  .task-create-project select{min-width:0;flex:1;height:36px;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px}
+  .task-create-project select:focus-visible,.task-create-preview button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .task-create-preview{width:min(520px,100%);padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg)}
+  .task-create-preview>strong{display:block;margin-bottom:12px;color:var(--text);font-size:14px}
+  .task-create-preview dl{margin:0 0 12px}.task-create-preview dl>div{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;padding:5px 0;font-size:12px}
+  .task-create-preview dt{color:var(--text-secondary)}.task-create-preview dd{margin:0;color:var(--text)}
+  .task-create-preview p{margin:8px 0 14px;color:var(--text-secondary);font-size:12px;line-height:1.6;white-space:pre-wrap}
+  .task-create-preview ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px;margin:0 0 14px;padding-left:18px;color:var(--text-secondary);font-size:12px}
+  @media(max-width:560px){.task-create-preview ol{grid-template-columns:1fr}}
+  .task-create-preview button{min-height:34px;padding:0 13px;border:0;border-radius:8px;background:var(--brand);color:var(--bg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   /* 会话产物预览：占位挤开式右侧面板（嵌入分栏，不覆盖会话），内容渲染复用任务详情产物样式 */
   .chat-doc-viewer{width:0;min-width:0;flex:none;overflow:hidden;border-left:0 solid var(--divider);background:var(--bg);display:flex;flex-direction:column;position:relative;transition:width .25s ease,border-left-width .25s ease}
   .chat-doc-viewer.show{border-left-width:1px}

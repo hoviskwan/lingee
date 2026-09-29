@@ -10,8 +10,10 @@ import { renderExpertChips } from './expert/chips.js';
 import { EX, pendingInputs, xav, xesc } from './expert/data.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { set__prevWishW } from './sidebar.js';
-import { CV_PROJECTS } from './collab/data.js';
-import { tkGetTasks, tkGetTaskArtifacts } from './tasks-v2/data.js';
+import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
+import { tbTeamStages } from './collab/tb-core.js';
+import { tkAddTask, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
+import { defaultStageAssigneeId } from './tasks-v2/stage-owner.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
 import { reviewTaskStage, submitTaskStage, taskExecutionStages } from './tasks-v2/task-execution.js';
@@ -271,6 +273,136 @@ function renderChatStageEndMarkers(session, exchangeIndex, afterQuestion) {
     if (marker.afterExchangeIndex === exchangeIndex && !!marker.afterQuestion === !!afterQuestion) appendChatStageEndMarker(marker);
   });
 }
+
+/* 新建任务技能的本地原型：沿用会话与追问卡片，回答完成后才写入任务。 */
+function setTaskCreateChipLabel() {
+  var label = document.getElementById('chatExpertLabel');
+  if (label) label.textContent = '任务创建智能体';
+}
+function taskCreateStages(draft) {
+  var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
+  var team = teamById(project?.defaultTeam || '');
+  var people = tkPeopleInProject(draft.projectId);
+  return tbTeamStages(team).map(function (stage) {
+    return {
+      workType:stage.name, title:stage.name, description:stage.desc || '',
+      assigneeId:draft.reviewers?.[stage.name] || defaultStageAssigneeId(project, people, CV_MEMBERS, stage.name),
+      status:'pending',
+    };
+  });
+}
+function taskCreateMissingReviewer(draft) {
+  return taskCreateStages(draft).find(function (stage) { return !stage.assigneeId; });
+}
+function appendTaskCreateAgent(html) {
+  var response = appendAssistantMessage(null);
+  response.innerHTML = '<div class="chat-agent-identity"><img class="task-create-avatar" src="' + xav('pm') + '" alt=""><strong>任务创建智能体</strong><span class="chat-agent-state">任务创建 Skill · 原型</span></div>' + html;
+}
+function renderTaskCreateChat(session) {
+  var draft = session.taskCreate;
+  var projects = tkProjectsForCurrentUser();
+  messagesList.innerHTML = '';
+  var projectOptions = '<option value="">选择项目</option>' + projects.map(function (project) {
+    return '<option value="' + xesc(project.id) + '"' + (draft.projectId === project.id ? ' selected' : '') + '>' + escapeHtml(project.name) + '</option>';
+  }).join('');
+  appendTaskCreateAgent('<p>' + (draft.status === 'prompt' ? '先选择项目，再用一句话告诉我要创建什么任务。需要确认的信息，我会在对话中逐项询问。' : '任务归属项目如下；创建前可以调整。') + '</p>'
+    + '<label class="task-create-project">所属项目 <select id="chatTaskCreateProject" aria-label="选择任务所属项目"' + (draft.status === 'done' ? ' disabled' : '') + '>' + projectOptions + '</select></label>');
+  if (draft.prompt) appendUserMessage(draft.prompt);
+  if (draft.status === 'type') {
+    appendTaskCreateAgent('<div class="ask-card"><div class="ask-head">创建任务前确认一项</div><div class="ask-q"><div class="ask-q-t">这项任务属于哪种类型？</div><div class="ask-opts">'
+      + ['需求', '缺陷'].map(function (type) { return '<button type="button" class="ask-opt' + (draft.suggestedType === type ? ' on' : '') + '" data-task-create-type="' + type + '">' + type + (draft.suggestedType === type ? ' · 建议' : '') + '</button>'; }).join('')
+      + '</div></div></div>');
+  } else if (draft.status === 'reviewer') {
+    var missing = taskCreateMissingReviewer(draft);
+    var people = tkPeopleInProject(draft.projectId);
+    appendTaskCreateAgent('<div class="ask-card"><div class="ask-head">需要确认审核人</div><div class="ask-q"><div class="ask-q-t">「' + escapeHtml(missing?.workType || '当前节点') + '」由谁审核？</div><div class="ask-opts">'
+      + (people.length ? people.map(function (person) { return '<button type="button" class="ask-opt" data-task-create-reviewer="' + xesc(person.id) + '">' + escapeHtml(person.name) + '</button>'; }).join('') : '<span>该项目暂无成员，请先为项目添加成员或更换项目。</span>')
+      + '</div></div></div>');
+  } else if (draft.status === 'confirm') {
+    var stages = taskCreateStages(draft);
+    appendTaskCreateAgent('<div class="task-create-preview"><strong>请核对任务草稿</strong><dl><div><dt>标题</dt><dd>' + escapeHtml(draft.title) + '</dd></div><div><dt>项目</dt><dd>' + escapeHtml(projects.find(function (row) { return row.id === draft.projectId; })?.name || '') + '</dd></div><div><dt>类型</dt><dd>' + escapeHtml(draft.issueType) + '</dd></div></dl><p>' + escapeHtml(draft.description) + '</p><ol>' + stages.map(function (stage) { return '<li>' + escapeHtml(stage.workType) + ' · 审核人 ' + escapeHtml(tkPeopleInProject(draft.projectId).find(function (person) { return person.id === stage.assigneeId; })?.name || '待分配') + '</li>'; }).join('') + '</ol><button type="button" data-task-create-confirm>确认创建任务</button></div>');
+  } else if (draft.status === 'done') {
+    appendTaskCreateAgent('<div class="task-create-preview"><strong>任务已创建</strong><p>' + escapeHtml(session.title) + '</p><button type="button" data-task-create-open>查看任务</button></div>');
+  }
+  chatInput.setAttribute('data-placeholder', draft.status === 'prompt' ? '一句话描述任务…' : draft.status === 'confirm' ? '补充任务要求，或点击确认创建…' : '也可以直接输入你的回答…');
+  setTaskCreateChipLabel();
+  scrollChatBottom();
+}
+function advanceTaskCreate(session) {
+  var draft = session.taskCreate;
+  draft.status = taskCreateMissingReviewer(draft) ? 'reviewer' : 'confirm';
+  saveChatSessions();
+  renderTaskCreateChat(session);
+}
+function answerTaskCreateMessage(session, message) {
+  var draft = session.taskCreate;
+  if (draft.status === 'prompt') {
+    if (!draft.projectId) { toast('请先选择项目', 'warning'); return false; }
+    draft.prompt = message;
+    draft.title = (message.split(/[。！？\n]/)[0].replace(/^(?:请帮我|帮我|我想|我要|我希望)\s*/, '').trim() || message).slice(0, 120);
+    draft.description = message;
+    draft.suggestedType = /缺陷|Bug|报错|故障|修复/i.test(message) ? '缺陷' : '需求';
+    draft.status = 'type';
+  } else if (draft.status === 'type') {
+    if (!/^(需求|缺陷)$/.test(message)) { toast('请选择任务类型：需求或缺陷', 'warning'); return false; }
+    draft.issueType = message;
+    advanceTaskCreate(session);
+    return true;
+  } else if (draft.status === 'reviewer') {
+    var person = tkPeopleInProject(draft.projectId).find(function (row) { return row.name === message; });
+    if (!person) { toast('请选择当前项目成员作为审核人', 'warning'); return false; }
+    draft.reviewers[taskCreateMissingReviewer(draft).workType] = person.id;
+    advanceTaskCreate(session);
+    return true;
+  } else if (draft.status === 'confirm') {
+    draft.description += '\n\n补充要求：' + message;
+  } else return false;
+  saveChatSessions();
+  renderTaskCreateChat(session);
+  return true;
+}
+function confirmTaskCreate(session) {
+  var draft = session.taskCreate;
+  if (draft.status !== 'confirm' || !tkProjectsForCurrentUser().some(function (row) { return row.id === draft.projectId; })) { toast('请先确认所属项目', 'warning'); return; }
+  var stages = taskCreateStages(draft);
+  if (!stages.length || stages.some(function (stage) { return !stage.assigneeId; })) { toast('执行计划尚未匹配审核人', 'warning'); return; }
+  var owner = tkPeopleInProject(draft.projectId).some(function (row) { return row.id === tkCurrentUserId(); }) ? tkCurrentUserId() : '';
+  var task = tkAddTask({ title:draft.title, desc:draft.description, issueType:draft.issueType, status:'backlog', priority:'medium', dueDate:'',
+    assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, teamId:CV_PROJECTS.find(function (row) { return row.id === draft.projectId; })?.defaultTeam || '',
+    labels:[], executionPlan:stages.map(function (stage) { return {...stage, id:crypto.randomUUID()}; }), planStatus:'draft' });
+  session.taskId = task.id;
+  session.title = task.title;
+  draft.status = 'done';
+  activeSessionTaskId = task.id;
+  saveChatSessions();
+  renderChatSessions();
+  renderChatTaskSide();
+  setComposerTaskReference(task.id);
+  renderTaskCreateChat(session);
+  document.dispatchEvent(new Event('lingee:tasks-changed'));
+}
+export function startTaskCreationChat(projectId, initialPrompt) {
+  var projects = tkProjectsForCurrentUser();
+  if (!projects.length) { toast('请先加入项目再创建任务', 'warning'); return; }
+  set_activePick({kind:'expert', id:'software-product-manager', auto:false});
+  renderExpertChips();
+  setTaskCreateChipLabel();
+  activeSessionTaskId = null;
+  setComposerTaskReference(null);
+  var selectedProjectId = projects.some(function (row) { return row.id === projectId; }) ? projectId : '';
+  var session = createChatSession('创建任务', null);
+  session.taskCreate = {projectId:selectedProjectId, prompt:'', title:'', description:'', issueType:'', suggestedType:'', reviewers:{}, status:'prompt'};
+  session.projectId = selectedProjectId;
+  session.teamId = CV_PROJECTS.find(function (row) { return row.id === selectedProjectId; })?.defaultTeam || '';
+  saveChatSessions();
+  showView('chat');
+  closeChatDocViewer();
+  $('#chatTitle').textContent = '创建任务';
+  renderChatTaskSide();
+  if (String(initialPrompt || '').trim()) answerTaskCreateMessage(session, String(initialPrompt).trim());
+  else renderTaskCreateChat(session);
+  chatInput.focus();
+}
 function openChatSession(sessionId) {
   var session = chatSessions.find(function (row) { return row.id === sessionId; });
   if (!session) return;
@@ -284,6 +416,16 @@ function openChatSession(sessionId) {
   chatViewerActiveKey = null;
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
+  $('#chatTitle').textContent = session.title;
+  if (session.taskCreate) {
+    set_activePick({kind:'expert', id:'software-product-manager', auto:false});
+    renderExpertChips();
+    setTaskCreateChipLabel();
+    renderTaskCreateChat(session);
+    renderChatSessions();
+    return;
+  }
+  chatInput.setAttribute('data-placeholder', '输入消息…');
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
   $('#chatTitle').textContent = task ? task.title : session.title;
   if (session.demoState && session.demoState !== 'running') {
@@ -1200,6 +1342,8 @@ function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.tex
 function chatDoSend(){
   var t=chatInput.textContent.trim();
   if(!t){ chatInput.focus(); return; }
+  var creation = chatSessions.find(function (row) { return row.id === activeSessionId && row.taskCreate; });
+  if (creation) { if (answerTaskCreateMessage(creation, t)) { chatInput.innerHTML=''; refreshChatSend(); } chatInput.focus(); return; }
   if (answerTaskQuestion(t)) { chatInput.innerHTML=''; refreshChatSend(); return; }
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; }) || createChatSession($('#chatTitle').textContent || t.slice(0, 60),activeSessionTaskId);
   var exchangeIndex = addSessionExchange(t);
@@ -1469,11 +1613,42 @@ function initTaskMention(ed) {
 
 export function initComposer() {
   document.querySelector('#view-chat .chat-container').addEventListener('click', function (event) {
+    var creation = chatSessions.find(function (row) { return row.id === activeSessionId && row.taskCreate; });
+    var type = event.target.closest('[data-task-create-type]');
+    if (creation && type) { answerTaskCreateMessage(creation, type.dataset.taskCreateType); return; }
+    var reviewer = event.target.closest('[data-task-create-reviewer]');
+    if (creation && reviewer) {
+      var person = tkPeopleInProject(creation.taskCreate.projectId).find(function (row) { return row.id === reviewer.dataset.taskCreateReviewer; });
+      if (person) answerTaskCreateMessage(creation, person.name);
+      return;
+    }
+    if (creation && event.target.closest('[data-task-create-confirm]')) { confirmTaskCreate(creation); return; }
+    if (creation && event.target.closest('[data-task-create-open]')) {
+      import('./tasks-v2/index.js').then(function (module) { module.openTaskDetailFromSession(creation.taskId); });
+      return;
+    }
     var option = event.target.closest('[data-task-question-option]');
     if (!option) return;
     var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
     var answer = session?.demoQuestion?.options[Number(option.getAttribute('data-task-question-option'))];
     if (answer) answerTaskQuestion(answer);
+  });
+  document.getElementById('chatMessages').addEventListener('change', function (event) {
+    if (event.target.id !== 'chatTaskCreateProject') return;
+    var session = chatSessions.find(function (row) { return row.id === activeSessionId && row.taskCreate; });
+    if (!session || session.taskCreate.status === 'done') return;
+    var projectId = event.target.value;
+    if (projectId && !tkProjectsForCurrentUser().some(function (row) { return row.id === projectId; })) return;
+    session.projectId = projectId;
+    session.teamId = CV_PROJECTS.find(function (row) { return row.id === projectId; })?.defaultTeam || '';
+    session.taskCreate.projectId = projectId;
+    session.taskCreate.reviewers = {};
+    if (session.taskCreate.prompt) session.taskCreate.status = 'type';
+    collapsedChatProjects.delete(projectId);
+    saveChatSessions();
+    renderChatSessions();
+    renderTaskCreateChat(session);
+    chatInput.focus();
   });
   renderChatSessions();
   queueMicrotask(renderChatSessions);
