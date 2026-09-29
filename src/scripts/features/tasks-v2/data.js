@@ -10,10 +10,10 @@ import { buildTaskArtifactDocs } from './artifact-docs.js';
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
   { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
-  { id: 'backlog',     name: '待开始', color: 'gray',   icon: 'circle' },
+  { id: 'backlog',     name: '待 AI 执行', color: 'gray',   icon: 'circle' },
+  { id: 'in_review',  name: '待验收', color: 'green',  icon: 'three_quarters' },
+  { id: 'blocked',   name: '执行异常', color: 'red',    icon: 'slash' },
   { id: 'in_progress', name: '执行中', color: 'orange', icon: 'half' },
-  { id: 'in_review',  name: '待审核', color: 'green',  icon: 'three_quarters' },
-  { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
   { id: 'done',       name: '已完成', color: 'blue',   icon: 'check' },
   { id: 'cancelled',  name: '已取消', color: 'gray',   icon: 'cross' },
 ];
@@ -153,9 +153,9 @@ export function tkGetTaskArtifacts(task) {
 
 /* ---------- 视图配置 ---------- */
 export const TK_VIEWS = [
-  { id: 'all',        name: '全部',    scope: 'all',       builtin: true },
-  { id: 'members',    name: '我负责',  scope: 'my_assigned', builtin: true },
-  { id: 'agents',     name: '执行中',  scope: 'in_progress', builtin: true },
+  { id: 'all',        name: '我的任务', scope: 'my_tasks', builtin: true },
+  { id: 'members',    name: '待我处理', scope: 'attention', builtin: true },
+  { id: 'agents',     name: '已完成',   scope: 'completed', builtin: true },
 ];
 
 /* ---------- 筛选字段定义 ---------- */
@@ -327,7 +327,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 editor-value-shapes.json 并归档', assigneeId:'p40', status:'pending' },
     ] },
   { id:1203, code:'T1001203', title:'规则动作类型序列化槽位验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-18', dueDate:'2026-10-08',
-    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已生成，等待审核。',
+    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已生成，等待验收。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-19 11:00:00', authorId:'p23' },
@@ -393,7 +393,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'集成差异清单到 app-build 契约', assigneeId:'p40', status:'done' },
     ] },
   { id:1207, code:'T1001207', title:'属性继承链取值域合并验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
-    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待审核。',
+    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待验收。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-26 09:20:00', authorId:'p23' },
@@ -408,7 +408,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 domain-value-merge-report.json 并归档', assigneeId:'p39', status:'pending' },
     ] },
   { id:1208, code:'T1001208', title:'复杂属性参数表单与转换器映射核对', status:'in_review', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-24', dueDate:'2026-10-11',
-    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已生成，等待审核。',
+    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已生成，等待验收。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-25 10:40:00', authorId:'p23' },

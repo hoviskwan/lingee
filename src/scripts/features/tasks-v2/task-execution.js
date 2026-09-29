@@ -77,11 +77,11 @@ export function submitTaskStage(task) {
     var template = tkGetTaskArtifacts(task).find(function (artifact) { return artifact.id === templateId; });
     artifacts = artifacts.concat(template ? {
       ...template, id:'stage-' + stage.id, stageId:stage.id,
-      status:'待审核', date:date,
+      status:'待验收', date:date,
     } : {
       id:'stage-' + stage.id, stageId:stage.id, type:'技术文档',
       docTitle:'《' + task.title + '》阶段执行记录', summary:stage.desc || task.title,
-      status:'待审核', date:date, author:'执行 Agent',
+      status:'待验收', date:date, author:'执行 Agent',
       sections:[{heading:'执行目标',blocks:[{p:stage.desc || task.desc || task.title}]},
         {heading:'提交说明',blocks:[{p:'本阶段产物已生成，等待项目负责人确认；确认后提交并流转。'}]}],
     });

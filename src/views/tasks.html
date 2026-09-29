@@ -8,6 +8,18 @@
       </div>
     </div>
 
+    <!-- AI 协作任务摘要：用户负责决策，AI 负责执行 -->
+    <section class="tk-focus-summary" id="tkFocusSummary" aria-labelledby="tkFocusTitle">
+      <div class="tk-focus-heading">
+        <h2 id="tkFocusTitle"><span id="tkFocusGreeting">你好</span></h2>
+        <span class="tk-focus-live" id="tkFocusLive"><i></i><span>AI 分身运行中</span></span>
+      </div>
+      <div class="tk-focus-brief">
+        <strong><span aria-hidden="true">✦</span> AI 今日简报</strong>
+        <p id="tkFocusBrief">正在整理你的任务进展…</p>
+      </div>
+    </section>
+
     <!-- 视图标签栏 -->
     <div class="list-page-view-bar tk-view-bar" id="tkViewBar">
       <div class="list-page-tabs tk-view-tabs" id="tkViewTabs" role="tablist" aria-label="任务视图">
@@ -327,11 +339,11 @@
 
     <!-- 批量操作下拉 -->
     <div class="tk-popover" id="tkBulkStatusMenu">
-      <div class="tk-popover-item" data-status="backlog">待处理</div>
+      <div class="tk-popover-item" data-status="backlog">待 AI 执行</div>
       <div class="tk-popover-item" data-status="in_progress">执行中</div>
-      <div class="tk-popover-item" data-status="in_review">评审中</div>
+      <div class="tk-popover-item" data-status="in_review">待验收</div>
       <div class="tk-popover-item" data-status="done">已完成</div>
-      <div class="tk-popover-item" data-status="blocked">已阻塞</div>
+      <div class="tk-popover-item" data-status="blocked">执行异常</div>
     </div>
     <div class="tk-popover" id="tkBulkAssigneeMenu"></div>
 <!--#include "src/modals/tasks/new-issue-ui.html" -->
