@@ -11,7 +11,8 @@ function localSqlite() {
     apply:'serve',
     async configureServer(server) {
       const { createSharedStorage } = await import('./server/shared-storage.mjs');
-      const storage = createSharedStorage(resolve(process.env.LINGEE_SQLITE_PATH || 'data/lingee.sqlite'));
+      // .nosync 后缀让 iCloud Drive 跳过该目录，避免同步干扰 SQLite 的 WAL 写入
+      const storage = createSharedStorage(resolve(process.env.LINGEE_SQLITE_PATH || 'data.nosync/lingee.sqlite'));
       server.middlewares.use(storage.middleware);
       server.httpServer?.on('close',storage.close);
     },

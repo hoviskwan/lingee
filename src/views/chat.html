@@ -4,17 +4,13 @@
       <div class="chat-header">
         <div class="chat-header-info">
           <div class="chat-header-title" id="chatTitle">新会话</div>
-          <span class="chat-header-task hidden" id="chatHeaderTask" role="button" tabindex="0" aria-label="打开关联任务详情"></span>
+          <button class="chat-header-task hidden" id="chatHeaderTask" type="button" aria-label="打开关联任务详情"></button>
         </div>
         <button class="header-btn" id="historyBtn" data-tooltip="历史版本" aria-label="历史版本" tabindex="0" aria-keyshortcuts="Meta+Shift+H Control+Shift+H">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
         </button>
         <button class="header-btn" id="togglePreviewBtn" data-tooltip="显示预览" aria-label="切换预览" aria-pressed="false" tabindex="0">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
-        </button>
-        <!-- 任务会话：执行结束确认产物并流转下一阶段；最后节点为「完成」 -->
-        <button class="chat-stage-confirm hidden" id="chatStageConfirmBtn" type="button" data-tooltip="确认产物，流转下一阶段" disabled>
-          <span class="chat-stage-confirm-label" id="chatStageConfirmLabel">确认</span>
         </button>
       </div>
       <div class="chat-messages" id="chatMessages">
@@ -26,6 +22,17 @@
         </div>
       </div>
       <div class="chat-composer-wrap" id="chatComposerWrap">
+        <div class="chat-stage-guide hidden" id="chatStageGuide" role="status">
+          <span class="chat-stage-guide-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 1.9 7.1L21 11l-7.1 1.9L12 20l-1.9-7.1L3 11l7.1-1.9L12 2Zm6 14 .8 2.2L21 19l-2.2.8L18 22l-.8-2.2L15 19l2.2-.8L18 16Z"/></svg></span>
+          <span class="chat-stage-guide-copy">
+            <strong class="chat-stage-guide-title" id="chatStageGuideTitle"></strong>
+            <span class="chat-stage-guide-text" id="chatStageGuideText"></span>
+          </span>
+          <button class="chat-stage-confirm" id="chatStageConfirmBtn" type="button" data-tooltip="确认产物" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M15 4v4h4M8 12h8M8 16h6"/></svg>
+            <span class="chat-stage-confirm-label" id="chatStageConfirmLabel">确认</span>
+          </button>
+        </div>
         <div class="composer">
           <div class="composer-tags hidden" id="chatTags"></div>
           <div class="composer-input" id="chatInput" contenteditable="true" data-placeholder="输入消息…"></div>
@@ -277,22 +284,6 @@
         </div>
       </div>
     </div>
-    <aside class="chat-task-side" id="chatTaskSide" aria-label="会话关联信息" hidden>
-      <div class="chat-task-side-head">会话信息</div>
-      <div class="chat-task-side-section">
-        <h3>关联任务</h3>
-        <button type="button" class="chat-task-link" id="chatTaskLink"></button>
-        <span class="chat-task-status" id="chatTaskStatus" hidden></span>
-      </div>
-      <div class="chat-task-side-section" id="chatTaskTeamSection" hidden>
-        <h3>执行专家团</h3>
-        <div class="chat-task-team" id="chatTaskTeam"></div>
-      </div>
-      <div class="chat-task-side-section">
-        <h3>产物</h3>
-        <div id="chatTaskArtifacts" class="chat-task-artifacts"><span class="chat-task-pending">对话完成后显示产物</span></div>
-      </div>
-    </aside>
     <div class="chat-resizer" id="chatResizer"></div>
     <div class="chat-preview-side" id="chatPreviewSide">
       <div class="preview-loading" id="previewLoading"></div>
@@ -590,7 +581,7 @@
       <div class="chat-doc-viewer-resize" id="chatDocViewerResize" role="separator" aria-orientation="vertical" aria-label="调整产物预览宽度" tabindex="0"></div>
       <div class="chat-doc-viewer-head">
         <span class="chat-doc-viewer-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
-        <div class="chat-doc-viewer-title"><strong id="chatDocViewerTitle"></strong><span id="chatDocViewerMeta"></span></div>
+        <div class="chat-doc-viewer-title"><strong id="chatDocViewerTitle"></strong></div>
         <button type="button" class="chat-doc-viewer-close" id="chatDocViewerClose" aria-label="关闭产物预览" data-tooltip="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
       <div class="chat-doc-viewer-body" id="chatDocViewerBody"></div>

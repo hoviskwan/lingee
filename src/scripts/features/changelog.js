@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'60',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：看板任务卡按状态提供开始、回复、确认与查看结果操作并直达对应会话，待办列更名为待开始；任务会话支持阻塞、提问与待确认状态并同步侧栏状态点，阶段确认移至输入区引导条、产物在会话内展示；新建任务弹窗改为任务信息与执行节点单页分区；本地共享数据库迁移到 data.nosync 目录避免 iCloud 同步干扰。'},
   {id:'59',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目产物支持右侧内嵌预览、全屏、按格式筛选与下载，任务列表默认仅展示本人参与或创建的任务，本地开发默认使用浏览器存储。'},
   {id:'58',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',body:'功能·任务管理：看板按状态分组保留空列并与有数据列等高，收起分组时恢复自适应高度，待规划任务并入待办列；任务会话结果汇报改为按任务数据生成；任务详情去除专家团卡片重复状态；协作开发徽标与看板审核中列同口径；本地预览服务在构建后自动刷新页面。'},
   {id:'57',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：新建任务按专家团生成执行计划并按成员分工预填各阶段负责人，开始执行即发起会话，执行结束可在会话内确认产物并流转下一阶段；看板已办列改为展示本人处理或审核过且已流转的任务，协作开发菜单显示待审核数，新建任务可查看状态与处理人流程图；项目成员改在独立弹窗逐人设置角色，项目表单随内容调整高度。'},
@@ -57,6 +58,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '60':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 5v11"/><path d="M12 5v6"/><path d="M18 5v14"/></svg>',
   '59':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M15 3v5h4M8 13h8M8 17h8"/></svg>',
   '58':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>',
   '57':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h16M4 12h10M4 18h6"/><path d="M16 15l2 2 4-4"/></svg>',

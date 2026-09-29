@@ -17,9 +17,9 @@ npm run format       # 格式化 src
 
 ## 本机共享数据
 
-`npm run dev`、线上静态页面和双击打开的 HTML 都使用浏览器 `localStorage`。如需临时启用局域网多人共享，运行 `npm run dev:shared`，再通过终端显示的局域网地址访问 `/lingee/`。共享模式会把业务数据保存在 `data/lingee.sqlite`；登录信息、当前工作区和界面偏好仍留在各自浏览器。
+`npm run dev`、线上静态页面和双击打开的 HTML 都使用浏览器 `localStorage`。如需临时启用局域网多人共享，运行 `npm run dev:shared`，再通过终端显示的局域网地址访问 `/lingee/`。共享模式会把业务数据保存在 `data.nosync/lingee.sqlite`（沿用 `node_modules.nosync` 的惯例加 `.nosync` 后缀，iCloud Drive 会跳过该目录，避免同步干扰 SQLite 的 WAL 写入；也可用 `LINGEE_SQLITE_PATH` 环境变量指定其他位置），同一局域网地址的设备共用这份数据；登录信息、当前工作区和界面偏好仍留在各自浏览器。
 
-首次打开空数据库时，可选择把当前浏览器已有的业务数据导入；原有浏览器数据不会删除。数据库文件已被 Git 忽略，备份时先停止开发服务，再复制 `data/lingee.sqlite`。共享模式目前只适合可信网络；同一条业务数据被多人同时修改时，后提交者会看到冲突提示，其未保存内容可下载核对。
+首次打开空数据库时，可选择把当前浏览器已有的业务数据导入；原有浏览器数据不会删除。数据库文件已被 Git 忽略，备份时先停止开发服务，再复制 `data.nosync/lingee.sqlite`。共享模式目前只适合可信网络；同一条业务数据被多人同时修改时，后提交者会看到冲突提示，其未保存内容可下载核对。
 
 ## 目录
 

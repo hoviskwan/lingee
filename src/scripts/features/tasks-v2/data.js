@@ -10,7 +10,7 @@ import { buildTaskArtifactDocs } from './artifact-docs.js';
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
   { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
-  { id: 'backlog',     name: '待办',   color: 'gray',   icon: 'circle' },
+  { id: 'backlog',     name: '待开始', color: 'gray',   icon: 'circle' },
   { id: 'in_progress', name: '执行中', color: 'orange', icon: 'half' },
   { id: 'in_review',  name: '审核中', color: 'green',  icon: 'three_quarters' },
   { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
@@ -276,10 +276,14 @@ function tkConvertCvTasks(projectId, startId) {
 }
 /* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「执行中」预置数量。 */
 const TK_COSMIC_TRIM_CODES = new Set(['T1000077', 'T1000092', 'T1000095']);
-TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) { return !TK_COSMIC_TRIM_CODES.has(task.code); }));
+/* 审核中保留三条有完整执行计划的样本：1203、1207、1208。 */
+const TK_COSMIC_REVIEW_TRIM_CODES = new Set(['T1000076', 'T1000088', 'T1000091', 'T1000097']);
+TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) {
+  return !TK_COSMIC_TRIM_CODES.has(task.code) && !TK_COSMIC_REVIEW_TRIM_CODES.has(task.code);
+}));
 
 /* 吴晓锋 · 苍穹应用开发：参考 designer-metamodel 工程的种子任务，覆盖全部状态与执行阶段；
-   各阶段负责人从项目成员轮换，需求分析固定为吴晓锋本人，流转后即进入其「已办」。 */
+   各阶段确认人从项目成员轮换，需求分析固定为吴晓锋本人，流转后即进入其「已办」。 */
 const TK_COSMIC_WUXF_TASKS = [
   { id:1200, code:'T1001200', title:'设计器属性元模型抽取范围确认', status:'backlog', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-26', dueDate:'2026-10-12',
     desc:'梳理 bos-metadata-8.0.jar 离线抽取范围：839 条属性 style 记录（820 定义 + 19 局部覆盖）、708 个属性名、34 个模型类型的资源继承链；确认 mcombo 逗号连接取值域与 btnedit 复杂属性（ide_* 参数表单）的边界，以及 37 个取值域随模型类型变化的属性清单。',
@@ -535,7 +539,7 @@ try {
     localStorage.setItem('lingee_tasks_cosmic_wuxf_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时跳过 */ }
-/* 「审核中/待办」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
+  /* 「审核中/待开始」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
 try {
   var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210']);
   var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));
@@ -554,6 +558,14 @@ try {
     if (_tasks.length !== trimBefore) persistTasks();
     localStorage.setItem('lingee_tasks_trim_cosmic_overlap_v1', '1');
   }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 已缓存的四条旧审核样本同步移出任务看板；不影响用户已流转到其他状态的任务。 */
+try {
+  var reviewTrimBefore = _tasks.length;
+  _tasks = _tasks.filter(function (task) {
+    return !(task.project === 'cosmic-app-dev' && task.status === 'in_review' && TK_COSMIC_REVIEW_TRIM_CODES.has(task.code));
+  });
+  if (_tasks.length !== reviewTrimBefore) persistTasks();
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));

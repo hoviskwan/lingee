@@ -486,7 +486,7 @@ function cvConfirmProjectSplit(){
 function cvTaskRowHtml(t){
   var sc={'待规划':'pending','待办':'pending','进行中':'running','审核中':'review','已完成':'done','已阻塞':'fail','已取消':'fail'}[t.status]||'pending';
   return '<button type="button" class="pj-task" data-pj-task="'+xesc(t.boardId)+'" title="查看任务详情">'
-    +'<span class="badge-status badge-status--'+sc+'"><span class="badge-status-dot"></span>'+t.status+'</span>'
+    +'<span class="badge-status badge-status--'+sc+'"><span class="badge-status-dot"></span>'+(t.status==='待办'?'待开始':t.status)+'</span>'
     +'<span class="pj-task-title">'+xesc(t.title)+'</span>'
     +'<span class="pj-task-meta">'+xesc(t.type)+' · '+xesc(t.sourceId)+'</span>'
     +'</button>';

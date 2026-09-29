@@ -41,7 +41,7 @@ function renderTaskStartAction() {
   var task = tkGetTasks().find(function (row) { return row.id === taskViewState.drawerTaskId; });
   button.hidden = task?.status === 'backlog' && !tkCanStartTask(task);
   var label = taskStartLegacy ? '发起会话' : '开始任务';
-  button.innerHTML = (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + label + '</span>';
+  button.innerHTML = '<span>' + label + '</span>';
   button.setAttribute('aria-label', label);
 }
 

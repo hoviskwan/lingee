@@ -75,7 +75,7 @@ function seedDemoSessions(task, ownerId) {
   if (_sessions.some(function (session) { return session.taskId === task.id && session.ownerId === ownerId; })) return;
   var stageId = task.executionStageId || taskExecutionStages(task)[0].id;
   var stageOwner = taskExecutionStages(task).find(function (stage) { return stage.id === stageId; })?.assigneeId;
-  if (stageOwner ? stageOwner !== ownerId : task.assignee !== ownerId && task.createdBy !== ownerId) return;
+  if (stageOwner ? stageOwner !== ownerId && !(task.id === 1205 && task.createdBy === ownerId) : task.assignee !== ownerId && task.createdBy !== ownerId) return;
   var status = task.initialStatus || task.status;
   if (!['in_progress', 'in_review', 'blocked', 'done'].includes(status)) {
     if (!['in_progress', 'in_review', 'blocked'].includes(task.status)) return;
@@ -109,6 +109,7 @@ function seedDemoSessions(task, ownerId) {
       { role: 'user', text: tkTaskSessionOpeningMessage(task, 'start') },
       { role: 'agent', text: '已接收任务，按「' + taskExecutionStages(task).map(function (stage) { return stage.name; }).join(' → ') + '」推进。' },
       { role: 'agent', text: progress },
+      ...(status === 'in_progress' && task.id === 1205 ? [{ role:'agent', text:'归档 evidence 时，动作参数映射有差异，等待确认交付依据。' }] : []),
     ],
   });
   if (status === 'in_review' && task.id % 3 === 0 && taskExecutionStages(task).findIndex(function (stage) { return stage.id === stageId; }) > 0) createSession(task, ownerId, {
@@ -130,6 +131,21 @@ export function tkGetMySessions(task) {
   var ownerId = tkCurrentUserId();
   if (!task || !ownerId) return [];
   seedDemoSessions(task, ownerId);
+  /* 已保存旧版演示会话时也补齐待回复场景，避免只在首次打开时出现。 */
+  if (task.id === 1205 && task.status === 'in_progress' && task.createdBy === ownerId) {
+    var currentDemoSession = _sessions.find(function (session) {
+      return session.taskId === task.id && session.ownerId === ownerId && session.stageId === task.executionStageId && session.status === 'active';
+    });
+    if (!currentDemoSession) currentDemoSession = createSession(task, ownerId, {
+      origin:'start', title:sessionTitle(task, 'start', task.executionStageId), stageId:task.executionStageId,
+      status:'active', startedAt:task.updatedAt || minutesAgo(0),
+      messages:[{role:'user', text:tkTaskSessionOpeningMessage(task, 'start', task.executionStageId)}],
+    });
+    if (!currentDemoSession.messages.some(function (message) { return message.role === 'agent' && message.text.includes('归档 evidence 时'); })) {
+      currentDemoSession.messages.push({role:'agent', text:'归档 evidence 时，动作参数映射有差异，等待确认交付依据。'});
+      persistSessions();
+    }
+  }
   if (['in_progress','in_review','blocked'].includes(task.status)) {
     var stageId = task.executionStageId || taskExecutionStages(task)[0]?.id;
     var stageOwner = taskExecutionStages(task).find(function (stage) { return stage.id === stageId; })?.assigneeId;
@@ -170,6 +186,12 @@ export function tkTouchTaskSession(sessionId) {
   if (!session) return;
   session.lastAt = minutesAgo(0);
   if (session.status === 'ended') session.status = 'active';
+  persistSessions();
+}
+export function tkAnswerTaskSessionQuestion(sessionId) {
+  var session = _sessions.find(function (row) { return row.id === sessionId; });
+  if (!session) return;
+  session.questionAnswered = true;
   persistSessions();
 }
 

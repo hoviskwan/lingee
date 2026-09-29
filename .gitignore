@@ -1,8 +1,5 @@
-# 依赖与构建产物
-node_modules/
-node_modules.nosync/
-dist/
 data/
+data.nosync/
 .vite/
 
 # 系统与编辑器

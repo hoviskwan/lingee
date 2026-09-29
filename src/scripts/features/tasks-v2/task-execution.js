@@ -47,7 +47,7 @@ export function startTaskStage(task) {
     return {ok:!!current, stage:current};
   }
   if (!['planned','backlog'].includes(task.status)) return {ok:false};
-  if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
+  if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return stage.requiresConfirmation !== false && !stage.assigneeId; })) return {ok:false, message:'请为需要确认的节点指定确认人'};
   var stages = taskExecutionStages(task);
   var stage = stages.find(function (row) { return row.id === task.executionStageId; })
     || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
@@ -75,6 +75,21 @@ export function submitTaskStage(task) {
       sections:[{heading:'阶段目标', text:stage.desc || task.desc || task.title},
         {heading:'执行结果', text:'「' + stage.name + '」阶段已完成模拟执行，提交当前产物等待审核。'}],
     });
+  }
+  var currentRow = task.executionPlan?.find(function (row) { return row.id === stage.id; });
+  if (currentRow?.requiresConfirmation === false) {
+    var stages = taskExecutionStages(task);
+    var next = stages[stages.findIndex(function (row) { return row.id === stage.id; }) + 1];
+    var nextAssignee = next?.assigneeId || task.assignee;
+    var plan = stagePlan(task, stage.id, 'done');
+    var history = (task.assigneeHistory || []).slice();
+    if (task.assignee && task.assignee !== nextAssignee && !history.includes(task.assignee)) history.push(task.assignee);
+    tkUpdateTask(task.id, {
+      status: next ? 'backlog' : 'done', executionStageId: next?.id || stage.id,
+      executionPlan: plan, executionArtifacts: artifacts.map(function (artifact) { return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact; }),
+      assignee: next ? nextAssignee : task.assignee, assigneeHistory: history,
+    });
+    return {ok:true, stage:stage, next:next, done:!next, continuous:true};
   }
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
   return {ok:true, stage:stage};

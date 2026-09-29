@@ -2,30 +2,14 @@
   #view-chat{background:#fff;overflow:hidden;min-width:0}
   .chat-container{display:flex;flex-direction:column;height:100vh;position:relative}
   .chat-header{display:flex;align-items:center;padding:0 12px 0 20px;height:40px;/* 收起时左右图标距边一致 */box-sizing:border-box;flex:none;border-bottom:1px solid var(--border)}
-  .chat-header-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+  .chat-header-info{flex:1;min-width:0;display:flex;align-items:center;gap:6px}
   .chat-header-title{font-size:15px;font-weight:600;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-header-task{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;background:var(--brand-fill);color:var(--brand-active);font-size:12px;cursor:pointer;max-width:280px;flex:none;transition:background .15s}
+  .chat-header-task{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:0;border-radius:6px;background:var(--brand-fill);color:var(--brand-active);font:inherit;font-size:12px;cursor:pointer;max-width:280px;flex:none;transition:background .15s}
   .chat-header-task:hover{background:#e4ecff}
   .chat-header-task.hidden{display:none}
   .chat-header-task .ic{width:14px;height:14px;flex:none}
   .chat-header-task-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #view-chat.task-context-open{flex-direction:row}
-  #view-chat .chat-task-side{box-sizing:border-box;width:300px;max-width:35%;height:100vh;flex:none;border-left:1px solid var(--border);padding:18px 16px;background:#fff;overflow-y:auto}
-  #view-chat .chat-task-side[hidden]{display:none}
-  #view-chat.task-context-open .chat-resizer,#view-chat.task-context-open .chat-preview-side{display:none}
-  #view-chat.task-context-open #togglePreviewBtn{display:none}
-  #view-chat.task-exception-open .chat-task-side{display:none}
   #view-chat.task-exception-open{flex-direction:column}
-  .chat-task-side-head{font-size:14px;font-weight:600;color:var(--text);padding-bottom:20px}
-  .chat-task-side-section{margin-bottom:24px}
-  .chat-task-side-section h3{font-size:12px;font-weight:600;color:var(--text-muted);margin:0 0 10px}
-  .chat-task-link,.chat-task-artifact{width:100%;display:flex;align-items:center;gap:9px;text-align:left;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text);padding:10px;font:inherit;font-size:13px;cursor:pointer}
-  .chat-task-link:hover,.chat-task-artifact:hover{border-color:var(--brand);background:var(--brand-fill)}
-  .chat-task-link svg,.chat-task-artifact svg{width:17px;height:17px;flex:none;color:var(--brand)}
-  .chat-task-link span,.chat-task-artifact span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-task-status{display:inline-block;margin-top:8px;padding:3px 8px;border-radius:5px;background:#fff5e8;color:#a66713;font-size:12px}
-  .chat-task-status[hidden]{display:none}
-  .chat-task-team{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text);font-weight:500}
   .chat-team-avatars{display:inline-flex;align-items:center;flex:none;padding-right:8px}
   .chat-team-avatars img{width:25px;height:25px;margin-right:-8px;border:2px solid #fff;border-radius:50%;object-fit:cover;background:var(--brand-fill)}
   .chat-agent-identity{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:13px;color:var(--text)}
@@ -33,7 +17,6 @@
   .chat-agent-identity .chat-agent-state{color:var(--brand);font-size:12px}
   .chat-agent-identity .chat-agent-state.is-review{color:#a66713}
   .chat-agent-identity .chat-agent-state.is-done{color:var(--text-muted)}
-  .chat-task-pending{font-size:12px;color:var(--text-muted)}
   /* 会话产物预览：占位挤开式右侧面板（嵌入分栏，不覆盖会话），内容渲染复用任务详情产物样式 */
   .chat-doc-viewer{width:0;min-width:0;flex:none;overflow:hidden;border-left:0 solid var(--divider);background:var(--bg);display:flex;flex-direction:column;position:relative;transition:width .25s ease,border-left-width .25s ease}
   .chat-doc-viewer.show{border-left-width:1px}
@@ -42,38 +25,44 @@
   .chat-doc-viewer-resize{position:absolute;z-index:3;top:0;bottom:0;left:-5px;width:10px;cursor:col-resize;touch-action:none}
   .chat-doc-viewer-resize:after{content:'';position:absolute;top:50%;left:4px;width:2px;height:48px;border-radius:2px;background:var(--border-focus);opacity:0;transform:translateY(-50%);transition:opacity .15s}
   .chat-doc-viewer-resize:hover:after,.chat-doc-viewer-resize:focus-visible:after{opacity:1}
-  /* 产物预览展开：与会话区、会话信息侧栏并排；会话区保底 360px，空间不足时侧栏先收缩 */
+  /* 产物预览展开：与会话区并排；会话区保底 360px */
   #view-chat.doc-open{flex-direction:row}
   #view-chat.doc-open .chat-container{min-width:360px}
-  #view-chat.doc-open .chat-task-side{flex-shrink:1}
-  .chat-doc-viewer-head{display:flex;align-items:center;gap:12px;flex:none;padding:14px 20px;border-bottom:1px solid var(--divider)}
-  .chat-doc-viewer-icon{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:var(--brand-fill);color:var(--brand)}
-  .chat-doc-viewer-icon svg{width:18px;height:18px}
-  .chat-doc-viewer-title{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+  .chat-doc-viewer-head{display:flex;align-items:center;gap:10px;height:40px;box-sizing:border-box;flex:none;padding:0 12px 0 16px;border-bottom:1px solid var(--divider)}
+  .chat-doc-viewer-icon{display:grid;place-items:center;width:26px;height:26px;flex:none;border-radius:6px;background:var(--brand-fill);color:var(--brand)}
+  .chat-doc-viewer-icon svg{width:16px;height:16px}
+  .chat-doc-viewer-title{min-width:0;flex:1}
   .chat-doc-viewer-title strong{font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chat-doc-viewer-title span{font-size:12px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .chat-doc-viewer-close{display:grid;place-items:center;width:28px;height:28px;padding:0;flex:none;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer}
   .chat-doc-viewer-close svg{width:16px;height:16px}
   .chat-doc-viewer-close:hover{background:var(--hover);color:var(--text)}
   .chat-doc-viewer-body{flex:1;overflow:auto;padding:24px 28px 60px}
-  /* 小屏：产物预览占满整行，会话信息侧栏让位 */
+  /* 小屏：产物预览占满整行 */
   @media(max-width:760px){
-    #view-chat .chat-task-side{width:220px;max-width:42%;padding:14px 10px}
-    #view-chat.doc-open .chat-task-side{display:none}
     #view-chat .chat-doc-viewer.show{width:100%!important;border-left:0;border-top:1px solid var(--divider)}
   }
   /* 关联应用禁用状态 */
   .dropdown.disabled{pointer-events:none;opacity:.65}
   .dropdown.disabled .chip{cursor:default}
   .header-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+  #togglePreviewBtn.on{background:var(--brand-fill);color:var(--brand)}
   .header-btn:hover{background:var(--hover);color:var(--text)}
 
-  /* 任务会话「确认 / 完成」按钮：标题行最右侧，执行结束前置灰 */
-  .chat-stage-confirm{display:inline-flex;align-items:center;height:28px;padding:0 12px;margin-left:6px;border-radius:7px;border:none;background:var(--brand);color:var(--bg);font-size:12px;font-weight:600;cursor:pointer;flex:none;transition:background .15s}
+  /* 本轮会话结束后显示交付确认，引导检查产物并进入下一阶段 */
+  .chat-stage-guide{display:flex;align-items:center;gap:12px;min-height:58px;margin-bottom:0;padding:8px 12px;box-sizing:border-box;border:1px solid var(--border);border-bottom:0;border-radius:14px 14px 0 0;background:var(--fill-2);box-shadow:none}
+  .chat-stage-guide.hidden{display:none}
+  .chat-stage-guide-icon{display:grid;place-items:center;width:24px;height:24px;flex:none;color:var(--text)}
+  .chat-stage-guide-icon svg{width:22px;height:22px}
+  .chat-stage-guide-copy{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
+  .chat-stage-guide-title{color:var(--text);font-size:14px;font-weight:500;line-height:1.4}
+  .chat-stage-guide-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .chat-stage-confirm{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:0 12px;border-radius:7px;border:none;background:var(--brand);color:var(--bg);font-size:13px;font-weight:600;cursor:pointer;flex:none;transition:background .15s}
+  .chat-stage-confirm svg{width:15px;height:15px;flex:none}
   .chat-stage-confirm:hover:not(:disabled){background:var(--brand-hover)}
+  .chat-stage-confirm:focus-visible{outline:2px solid var(--brand-active);outline-offset:2px}
   .chat-stage-confirm:disabled{background:var(--hover);color:var(--text-soft);cursor:not-allowed}
-  .chat-stage-confirm.hidden{display:none}
   .chat-stage-confirm-label{line-height:1}
+  @media(max-width:560px){.chat-stage-guide{flex-wrap:wrap}.chat-stage-confirm{margin-left:auto}}
   #historyBtn{margin-right:4px}
   .header-btn .ic{width:18px;height:18px}
   /* 历史版本面板 */
@@ -158,6 +147,31 @@
   .final-step:before{display:none}
   .final-step.bare{padding-left:0}
   .final-step.bare .markdown-content{margin-top:0}
+  .chat-task-thinking{margin:2px 0 20px;color:var(--text-secondary);font-size:13px}
+  .chat-task-process{font-size:14px;line-height:1.6;color:var(--text)}
+  .chat-task-process p{margin:0 0 12px}
+  .chat-task-process ol{margin:0 0 14px;padding:0;list-style:none;display:grid;gap:7px}
+  .chat-task-process li{padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+  .chat-task-process li strong,.chat-task-process li span{display:block}
+  .chat-task-process li strong{font-size:13px;font-weight:600}
+  .chat-task-process li span{font-size:12px;color:var(--text-secondary)}
+  .chat-task-question-panel{flex:none;width:min(900px,calc(100% - 40px));max-height:50vh;overflow:auto;margin:0 auto 10px;border:1px solid var(--border);border-radius:14px;background:var(--bg);box-shadow:0 -8px 28px rgba(22,35,68,.1)}
+  .chat-task-question-panel-inner{padding:16px 18px}
+  .chat-task-question-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;font-size:13px}
+  .chat-task-question-panel-head span,.chat-task-question-panel small{color:var(--text-secondary);font-size:11px}
+  .chat-task-question-panel p{margin:0 0 12px;font-size:14px;line-height:1.55}
+  .chat-task-question-options{display:grid;gap:6px;margin-bottom:10px}
+  .chat-task-question-options button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .chat-task-question-options button span{display:grid;place-items:center;flex:none;width:20px;height:20px;border:1px solid var(--border);border-radius:5px;color:var(--text-secondary);font-size:11px}
+  .chat-task-question-options button:hover{border-color:var(--brand);background:var(--brand-fill)}
+  .chat-task-thinking summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;color:var(--text-muted)}
+  .chat-task-thinking summary::-webkit-details-marker{display:none}
+  .chat-task-thinking-mark{font-size:21px;line-height:1;color:var(--text-muted)}
+  .chat-task-thinking-toggle{margin-left:16px;color:var(--text-muted)}
+  .chat-task-thinking-content{padding:18px 0 0 0;line-height:1.65;color:var(--text)}
+  .chat-task-thinking-content strong{font-weight:500;color:var(--text-secondary)}
+  .chat-task-thinking-content p{margin:16px 0 0}
+  .chat-task-result-closing{margin:16px 0 0;font-size:14px;line-height:1.7;color:var(--text)}
   /* 产物预览卡片 */
   .artifact-card{display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;margin-top:12px}
   .artifact-card:hover{border-color:#c7d2fe;background:#fafbff;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -177,9 +191,8 @@
   /* 预览打开时会话区的真实下限，拖拽上限与之对齐 */
   #view-chat.preview-open .chat-container{min-width:360px}
   #view-chat .chat-preview-side{width:0;overflow:hidden;flex:none;display:flex;flex-direction:column;background:#fff;will-change:width;min-width:0;position:relative}
-  /* 关闭预览时 #view-chat 还是 column 方向，只收 width 挡不住纵向占位，
-     预览侧栏会按内容高度在会话区下面顶出一段空隙（约 48px） */
-  #view-chat:not(.preview-open) .chat-preview-side{height:0}
+  /* 未打开预览时完全退出布局，避免历史内联宽度留下空白区域 */
+  #view-chat:not(.preview-open) .chat-preview-side,#view-chat:not(.preview-open) .chat-resizer{display:none}
   /* 分割线只由 .chat-resizer 提供 */
   /* max-width 是拖拽上限的兜底：100% 即 #view-chat 宽度，减去会话区下限 360px
      和 1px 分割线。JS 的 clamp 只在拖拽时生效，这里覆盖恢复历史宽度、
@@ -335,7 +348,7 @@
   .markdown-content code{background:#f5f5f6;padding:2px 6px;border-radius:4px;font-family:Monaco,Menlo,monospace;font-size:13px}
   .chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;gap:10px}
   .chat-empty .ic{width:40px;height:40px;color:var(--text-soft)}
-  .chat-composer-wrap{max-width:900px;width:100%;margin:0 auto;padding:0 20px 20px;flex:none}
+  .chat-composer-wrap{width:min(900px,calc(100% - 40px));margin:0 auto;padding:0 0 20px;flex:none}
   .chat-composer-wrap.hidden{display:none}
   #view-chat .composer{max-width:900px;box-shadow:0 4px 24px rgba(0,0,0,.05)}
   /* 会话详情不显示项目切换与关联应用（进入会话后二者已确定） */

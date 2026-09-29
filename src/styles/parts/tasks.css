@@ -234,12 +234,16 @@
 .tk-card-label{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--fill-1);color:var(--text-secondary);border:1px solid var(--border)}
 .tk-card-foot{display:flex;align-items:center;justify-content:space-between}
 .tk-card-foot-left{display:flex;align-items:center;gap:6px}
+.tk-card-action{flex:none;margin-left:auto;padding:5px 9px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font-size:11px;cursor:pointer}
+.tk-card-action:hover{border-color:var(--brand);color:var(--brand)}
+.tk-card-action--primary{border-color:var(--brand);background:var(--brand);color:#fff}
+.tk-card-action--primary:hover{background:var(--brand-hover,var(--brand));color:#fff}
 .tk-card-priority{font-size:10px}
 .tk-card-due{font-size:11px;display:flex;align-items:center;gap:3px}
 .tk-card-due.overdue{color:var(--danger)}
 .tk-card-assignee{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
-.tk-card-exec-btn{position:absolute;top:6px;right:6px;display:flex;align-items:center;border:none;background:var(--brand-fill);color:var(--brand);cursor:pointer;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:500;line-height:1.4;transition:background .15s,color .15s}
-.tk-card-exec-btn:hover{background:var(--brand);color:#fff}
+.tk-card-exec-btn{flex:none;margin-left:auto;display:flex;align-items:center;padding:5px 9px;border:1px solid var(--brand);border-radius:5px;background:var(--brand);color:#fff;font-size:11px;font-weight:500;line-height:1.4;cursor:pointer}
+.tk-card-exec-btn:hover{background:var(--brand-hover,var(--brand));border-color:var(--brand-hover,var(--brand));color:#fff}
 .tk-card-more{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;padding:4px;border-radius:4px;display:flex;opacity:0;transition:opacity .15s,background .15s,color .15s}
 .tk-card:hover .tk-card-more{opacity:1}
 .tk-card-more:hover{background:var(--hover);color:var(--text)}
@@ -398,9 +402,9 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;margin-left:auto}
 .tk-drawer-head-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-head-btn:hover{background:var(--hover);color:var(--text)}
-#tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid transparent;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:600;white-space:nowrap}
+#tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid var(--brand);background:var(--brand);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
 #tkDrawerChat[hidden]{display:none}
-#tkDrawerChat:hover,#tkDrawerChat:focus-visible{background:var(--border-focus);color:var(--brand-hover)}
+#tkDrawerChat:hover,#tkDrawerChat:focus-visible{background:var(--brand-hover);border-color:var(--brand-hover);color:#fff}
 .tk-drawer-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-close:hover{background:var(--hover)}
 .tk-drawer-body{flex:1;overflow:hidden;display:flex}
@@ -1413,3 +1417,46 @@ input[type=date].tk-mc-pill{width:auto}
 .tk-flow-help-close{display:grid;place-items:center;width:32px;height:32px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);font-size:24px;cursor:pointer}
 .tk-flow-help-close:hover{background:var(--fill-1);color:var(--text)}
 .tk-flow-help-dialog iframe{width:100%;height:0;min-height:0;flex:0 1 auto;border:0;background:#fff}
+
+/* 新建任务：任务信息与执行节点在同一滚动表单中。 */
+.niu-create{width:min(960px,calc(100vw - 32px));height:min(820px,calc(100vh - 32px))}
+.niu-create-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--fill-1)}
+.niu-create-section{margin:20px 24px;padding:22px;border:1px solid var(--border);border-radius:16px;background:var(--bg);scroll-margin-top:18px}
+.niu-create-section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.niu-create-section-head .niu-step{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--brand-fill);color:var(--brand);font-size:13px;font-weight:700}
+.niu-create-section-head h2{margin:0;color:var(--text);font-size:17px;line-height:1.3}
+.niu-create-section-head h2 span{margin-left:5px;color:var(--text-secondary);font-size:13px;font-weight:500}
+.niu-create-section-head p{margin:4px 0 0;color:var(--text-secondary);font-size:12px}
+.niu-create-section-head .niu-button{margin-left:auto;white-space:nowrap}
+.niu-create .niu-create-columns{height:auto;min-height:0;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:20px}
+.niu-create .niu-create-writing{padding:0;gap:14px}
+.niu-create .niu-create-writing .niu-field textarea{min-height:116px;resize:vertical}
+.niu-create .niu-create-properties{padding:0 0 0 20px;background:transparent}
+.niu-create-section--plan{margin-top:0}
+.niu-create-section--plan .niu-stage-list{gap:10px}
+.niu-create .niu-stage{display:grid;grid-template-columns:32px minmax(0,1fr) minmax(220px,.8fr) 24px;align-items:start;gap:12px;min-height:0;padding:14px;border-radius:12px}
+.niu-create .niu-stage-index{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--brand-fill);font-size:12px}
+.niu-stage-fields{display:grid;grid-template-columns:minmax(130px,.8fr) minmax(170px,1.2fr);gap:10px;min-width:0}
+.niu-stage-fields label{display:flex;flex-direction:column;gap:6px;min-width:0}
+.niu-stage-fields label>span,.niu-stage-label{color:var(--text-secondary);font-size:11px;font-weight:600}
+.niu-stage-completion{display:flex;flex-direction:column;gap:6px;min-width:0}
+.niu-stage-choice{display:flex;gap:3px;padding:3px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+.niu-stage-choice button{flex:1;min-width:0;min-height:28px;padding:3px 6px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);font:inherit;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+.niu-stage-choice button[aria-pressed=true]{background:var(--bg);color:var(--brand);box-shadow:var(--pill-shadow)}
+.niu-stage-choice button:disabled{cursor:default}
+.niu-stage-continuous{display:block;padding:2px 1px;color:var(--text-secondary);font-size:11px}
+.niu-stage-completion .niu-stage-owner{height:30px}
+.niu-create .niu-stage-remove{margin-top:18px}
+.niu-plan .niu-stage{grid-template-columns:32px minmax(0,1fr) minmax(220px,.8fr) 24px;align-items:start;gap:12px;padding:14px}
+.niu-plan .niu-stage-remove{margin-top:18px}
+.niu-plan .niu-stage-columns{display:none}
+@media(max-width:760px){
+  .niu-create-section{margin:12px;padding:16px}
+  .niu-create .niu-create-columns{grid-template-columns:1fr}
+  .niu-create .niu-create-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:16px 0 0;border-left:0;border-top:1px solid var(--divider)}
+  .niu-create .niu-stage,.niu-plan .niu-stage{grid-template-columns:28px minmax(0,1fr) 24px}
+  .niu-stage-fields{grid-column:2;grid-template-columns:1fr}
+  .niu-stage-completion{grid-column:2;grid-row:2}
+  .niu-create .niu-stage-remove,.niu-plan .niu-stage-remove{grid-column:3;grid-row:1;margin-top:0}
+}
+@media(max-width:480px){.niu-create-section-head{flex-wrap:wrap}.niu-create-section-head .niu-button{margin-left:46px}.niu-create .niu-create-properties{grid-template-columns:1fr}}

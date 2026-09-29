@@ -20,8 +20,8 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;margin-left:auto}
 .tk-drawer-head-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-head-btn:hover{background:var(--hover);color:var(--text)}
-#tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid transparent;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:600;white-space:nowrap}
-#tkDrawerChat:hover,#tkDrawerChat:focus-visible{background:var(--border-focus);color:var(--brand-hover)}
+#tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid var(--brand);background:var(--brand);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+#tkDrawerChat:hover,#tkDrawerChat:focus-visible{background:var(--brand-hover);border-color:var(--brand-hover);color:#fff}
 .tk-drawer-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-close:hover{background:var(--hover)}
 .tk-drawer-body{flex:1;overflow:hidden;display:flex}

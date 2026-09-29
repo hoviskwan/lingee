@@ -6,7 +6,6 @@ import { createArtifactCard, messagesList, scrollChatBottom } from './composer.j
 import { EX, PRESET_TEAMS, STAGES, xav, xesc } from './expert/data.js';
 import { renderExpertChips } from './expert/chips.js';
 import { set_activePick } from './expert/store.js';
-import { openTaskDetailFromSession } from './tasks-v2/index.js';
 /* 侧边栏演示会话：苍穹应用开发专家团执行「苍穹采购订单开发」。
    阶段沿用专家团流程 STAGES，演示停在「编码实现」完成、等待进入「测试验证」。 */
 
@@ -154,6 +153,7 @@ function openTeamSession() {
   /* 标题旁关联任务标签：点击跳转任务详情 */
   var taskTag = $('#chatHeaderTask');
   if (taskTag) {
+    taskTag.dataset.taskId = String(LINKED_TASK.id);
     taskTag.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="chat-header-task-label">' + xesc(LINKED_TASK.code) + ' ' + xesc(LINKED_TASK.title) + '</span>';
     taskTag.classList.remove('hidden');
   }
@@ -210,9 +210,6 @@ export function initTeamSession() {
     if (!action) return;
     if (action.getAttribute('data-ts-action') === 'verify') toast('原型演示：已提交测试，等待软件测试工程师认领');
   });
-  /* 标题旁关联任务标签：点击打开任务详情 */
-  var taskTag = $('#chatHeaderTask');
-  if (taskTag) taskTag.addEventListener('click', function () { openTaskDetailFromSession(LINKED_TASK.id); });
   /* 离开会话时隐藏关联任务标签 */
   document.addEventListener('lingee:new-conversation', function () {
     var tag = $('#chatHeaderTask');

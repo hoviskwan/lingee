@@ -15,6 +15,7 @@ import { tkGetTasks, tkGetTaskArtifacts } from './tasks-v2/data.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
 import { reviewTaskStage, submitTaskStage, taskExecutionStages } from './tasks-v2/task-execution.js';
+import { tkAnswerTaskSessionQuestion, tkGetMySessions, tkTaskSessionOpeningMessage } from './tasks-v2/task-sessions.js';
 /* 输入框、发送、＋按钮下拉菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -129,13 +130,60 @@ try {
   var savedSessions = JSON.parse(localStorage.getItem(CHAT_SESSIONS_KEY) || '[]');
   if (Array.isArray(savedSessions)) chatSessions = savedSessions.filter(function (session) {
     return session && /^[a-z0-9]+$/i.test(session.id) && typeof session.title === 'string' && Array.isArray(session.exchanges);
-  }).slice(0, 30).map(function (session) {
+  }).slice(0, 60).map(function (session) {
     session.exchanges = session.exchanges.filter(function (exchange) { return exchange && typeof exchange.prompt === 'string'; });
     return session;
   });
 } catch (e) {}
+/* 苍穹项目会话样本：稳定 ID 让已有本地会话与用户回复在刷新后保留。 */
+var COSMIC_DEMO_SESSIONS = [
+  {id:'cosmicdemo1',title:'操作元模型四张注册表抽取方案设计',taskId:1201,demoState:'running',exchanges:[{prompt:'开始执行操作元模型四张注册表抽取方案设计。',done:false,response:'已读取任务说明与注册表资料，正在核对操作类型和参数类映射。'}]},
+  {id:'cosmicdemo2',title:'编辑器提交形状与 EntryId 冲突裁决实现',taskId:1202,demoState:'running',demoArtifact:true,exchanges:[{prompt:'开始执行编辑器提交形状与 EntryId 冲突裁决实现。',done:false,response:'已生成初版裁决方案，正在继续核对提交形状和冲突分支。'}]},
+  {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'规则动作类型的序列化槽位已验证，阶段报告已生成。'}]},
+  {id:'cosmicdemo4',title:'属性继承链取值域合并验证',taskId:1207,demoState:'review',demoArtifact:true,exchanges:[{prompt:'开始执行属性继承链取值域合并验证。',done:true,response:'37 个属性的继承链取值域合并结果已核对，验证报告等待确认。'}]},
+  {id:'cosmicdemo5',title:'采购订单规则配置清单交付',taskId:1205,demoState:'question',exchanges:[],demoQuestion:{text:'归档 evidence 时，系统导出的动作参数映射与项目手工维护版本有差异。交付清单应以哪份为准？',options:['以当前系统导出的注册表为准，记录手工版本差异','保留项目手工维护版本，标注与注册表的差异'],answer:''}},
+  {id:'cosmicdemo6',title:'扩展表单属性锁定规则解析修复',taskId:1204,demoState:'blocked',exchanges:[{prompt:'开始执行扩展表单属性锁定规则解析修复。',done:true,response:'已读取任务说明并开始解析扩展属性规则。'}]},
+  {id:'cosmicdemo7',title:'属性元模型与 app-build 契约交叉比对集成',taskId:1206,demoState:'confirmed',demoArtifact:true,exchanges:[{prompt:'开始执行属性元模型与 app-build 契约交叉比对集成。',done:true,response:'交叉比对已完成，差异清单已交付，产物已确认。'}]},
+  {id:'cosmicdemo8',title:'操作业务规则类型目录构建',taskId:84,demoState:'question',exchanges:[],demoQuestion:{
+    prompt:'执行「需求分析」：整理 174 个操作业务规则类型及 RunClass、SettingFormId 映射。',
+    intro:'正在核对操作业务规则类型目录的映射来源。',
+    steps:[
+      ['已扫描规则类型注册表','识别出 174 个操作业务规则类型及其挂载关系。'],
+      ['正在核对参数映射','RunClass 与 SettingFormId 已完成初步关联，发现双运行时差异。'],
+      ['等待映射口径确认','部分规则类型在两套运行时中的 RunClass 不一致，需确认目录采用的口径。'],
+    ],
+    closing:'确定映射口径后，我会继续生成目录并提交产物。',
+    text:'部分操作业务规则类型在两套运行时中的 RunClass 不一致。目录应以哪套映射为准？',
+    options:['以当前苍穹运行时的映射为准，另列差异项','同时保留两套运行时映射，并标注适用版本'],
+    acknowledgement:'收到，我会按你选择的映射口径继续构建目录。',answer:'',
+  }},
+];
+var cosmicDemoChanged = false;
+COSMIC_DEMO_SESSIONS.forEach(function (sample) {
+  var existing = chatSessions.find(function (session) { return session.id === sample.id; });
+  if (existing) {
+    existing.title = sample.title;
+    existing.demoArtifact = !!sample.demoArtifact || !!existing.demoQuestion?.continuationDone;
+    var progressed = sample.demoState === 'running' && existing.demoState === 'review' && existing.exchanges[0]?.done;
+    if (!progressed) {
+      existing.demoState = sample.demoState;
+      if (sample.exchanges.length) existing.exchanges[0] = sample.exchanges[0];
+    } else existing.demoArtifact = true;
+    if (sample.demoQuestion) existing.demoQuestion = Object.assign({}, sample.demoQuestion, existing.demoQuestion || {});
+    cosmicDemoChanged = true;
+    return;
+  }
+  chatSessions.push(Object.assign({projectId:'cosmic-app-dev',teamId:'cosmic-app-dev'}, sample));
+  cosmicDemoChanged = true;
+});
+if (cosmicDemoChanged) saveChatSessions();
 function saveChatSessions() {
-  try { localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(chatSessions.slice(0, 30))); } catch (e) {}
+  try { localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(chatSessions.slice(0, 60))); } catch (e) {}
+}
+export function taskConversationNeedsReply(task) {
+  return task?.status === 'in_progress' && chatSessions.some(function (session) {
+    return Number(session.taskId) === task.id && !!session.demoQuestion && !session.demoQuestion.answer;
+  });
 }
 function renderChatSessions() {
   var list = document.getElementById('chatSessionList');
@@ -149,9 +197,10 @@ function renderChatSessions() {
   }
   function projectName(id) { return CV_PROJECTS.find(function (project) { return project.id === id; })?.name || id; }
   function sessionHtml(session) {
-    var running = session.exchanges.some(function (exchange) { return !exchange.done && !exchange.waiting; });
-    var waiting = session.exchanges.some(function (exchange) { return !!exchange.waiting; });
-    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '"><span class="dot ' + (running ? 'blue' : waiting ? 'orange' : 'green') + '"></span><span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
+    var running = session.demoState === 'running' || session.exchanges.some(function (exchange) { return !exchange.done && !exchange.waiting; });
+    var waiting = session.demoState === 'question' && !session.demoQuestion?.answer || session.exchanges.some(function (exchange) { return !!exchange.waiting; });
+    var state = session.demoState === 'blocked' ? 'red' : running ? 'blue' : waiting || session.demoState === 'review' ? 'orange' : 'green';
+    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '"><span class="dot ' + state + '"></span><span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
   }
   var ungrouped = chatSessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
   section.hidden = !ungrouped.length;
@@ -182,7 +231,8 @@ function createChatSession(title, taskId) {
   var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, projectId: projectId, teamId: teamId, exchanges: [] };
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
-  chatSessions = chatSessions.slice(0, 30);
+  var regularCount = 0;
+  chatSessions = chatSessions.filter(function (row) { return row.demoState || ++regularCount <= 30; });
   activeSessionId = session.id;
   saveChatSessions();
   renderChatSessions();
@@ -215,26 +265,194 @@ function openChatSession(sessionId) {
   $('#chatHeaderTask')?.classList.add('hidden');
   messagesList.innerHTML = '';
   closeChatDocViewer();
-  document.getElementById('chatTaskArtifacts').innerHTML = '<span class="chat-task-pending">对话完成后显示产物</span>';
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
   $('#chatTitle').textContent = session.title;
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  if (session.demoState && session.demoState !== 'running') {
+    if (session.demoState !== 'question') session.exchanges.forEach(function (exchange) {
+      if (!exchange) return;
+      appendUserMessage(exchange.prompt);
+      var response = appendAssistantMessage(resolveChatTeam(session, task));
+      if (task) appendTaskReadingSummary(response, task);
+      var timeline = document.createElement('div');
+      timeline.className = 'work-steps';
+      timeline.appendChild(createWorkStep('读取任务资料', 'done'));
+      timeline.appendChild(createWorkStep(session.demoState === 'blocked' ? '解析扩展属性锁定规则' : '执行当前阶段', session.demoState === 'running' ? 'running' : 'done'));
+      response.appendChild(timeline);
+      var result = createFinalResult(false);
+      result.querySelector('.markdown-content').innerHTML = renderMarkdown(exchange.response);
+      timeline.appendChild(result);
+      if (session.demoState === 'blocked') {
+        var failure = document.createElement('div');
+        failure.className = 'task-exception-error';
+        failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
+        result.appendChild(failure);
+      }
+      var state = response.closest('.message')?.querySelector('.chat-agent-state');
+      if (state) {
+        state.textContent = ({running:'执行中',ended:'已结束',review:'待确认',blocked:'已阻塞',confirmed:'已确认'})[session.demoState] || '执行中';
+        if (session.demoState !== 'running') state.classList.add(session.demoState === 'review' ? 'is-review' : 'is-done');
+      }
+      if (task && session.demoArtifact) {
+        var artifact = taskStageArtifact(task);
+        if (artifact) result.appendChild(createChatResultArtifactCard(task, artifact));
+      }
+    });
+    if (session.demoQuestion) {
+      renderTaskQuestion(session, task);
+      if (session.demoQuestion.answer && task) {
+        var continuation = appendAssistantMessage(resolveChatTeam(session, task));
+        simulateAIResponse(continuation, !!session.demoQuestion.continuationDone, task, session.demoQuestion.answer, function () {
+          session.demoQuestion.continuationDone = true;
+          session.demoArtifact = true;
+          saveChatSessions();
+          renderChatSessions();
+        });
+      }
+    }
+    else document.getElementById('chatTaskQuestionPanel')?.remove();
+    if (session.demoArtifact && task) {
+      var previewArtifact = taskStageArtifact(task);
+      if (previewArtifact) openChatDocViewer(task, previewArtifact);
+    }
+    renderChatSessions();
+    refreshChatStageConfirm();
+    scrollChatBottom();
+    return;
+  }
   session.exchanges.forEach(function (exchange, index) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
-    var response = appendAssistantMessage(task ? null : resolveChatTeam(session, task));
+    var response = appendAssistantMessage(resolveChatTeam(session, task));
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
   });
+  if (session.demoState === 'running' && task?.status === 'in_review' && session.exchanges.some(function (exchange) { return exchange.done; })) {
+    var readyArtifact = taskStageArtifact(task);
+    if (readyArtifact) openChatDocViewer(task, readyArtifact);
+  }
+  if (session.demoQuestion) renderTaskQuestion(session, task);
+  else document.getElementById('chatTaskQuestionPanel')?.remove();
   renderChatSessions();
   scrollChatBottom();
+}
+/* 任务状态卡片回到对应的聊天；旧数据没有聊天记录时只补建一次。 */
+export function openTaskStatusConversation(task) {
+  if (!task) return;
+  var linked = chatSessions.filter(function (session) { return Number(session.taskId) === task.id; });
+  var session = task.status === 'blocked'
+    ? linked.find(function (row) { return row.demoState === 'blocked'; })
+    : task.status === 'in_review'
+      ? linked.find(function (row) { return row.demoState === 'question' && row.demoQuestion?.continuationDone; })
+        || linked.find(function (row) { return row.demoState === 'review' || row.demoState === 'ended'; })
+        || linked.find(function (row) { return !row.demoState && row.exchanges.some(function (exchange) { return exchange?.done; }); })
+      : linked.find(function (row) { return row.demoState === 'question' && !row.demoQuestion?.answer; })
+        || linked.find(function (row) { return row.demoState === 'question' && row.demoQuestion?.answer && !row.demoQuestion.continuationDone; })
+        || linked.find(function (row) { return row.exchanges.some(function (exchange) { return exchange && !exchange.done && !exchange.waiting; }); })
+        || linked.find(function (row) { return row.demoState === 'running'; });
+  var created = false;
+  if (!session) {
+    created = true;
+    session = createChatSession(task.title, task.id);
+    var finished = task.status === 'in_review' || task.status === 'blocked';
+    session.exchanges.push({
+      prompt:tkTaskSessionOpeningMessage(task, 'start', task.executionStageId), done:finished,
+      ...(task.status === 'blocked' ? {response:'执行在当前阶段中断，以下是失败结果。'}
+        : task.status === 'in_review' ? {response:'当前阶段已执行完成，产物已提交，等待确认。'} : {}),
+    });
+    if (finished) session.demoState = task.status === 'blocked' ? 'blocked' : 'review';
+    if (task.status === 'blocked') session.demoFailure = task.blockedRun?.reason || '本次执行失败，请检查任务中的阻塞原因。';
+    if (task.status === 'in_review') session.demoArtifact = true;
+    saveChatSessions();
+  }
+  if (task.status === 'in_progress' && session.demoState === 'running' && session.exchanges.at(-1)?.done) {
+    session.exchanges.at(-1).done = false;
+    saveChatSessions();
+  }
+  if (session.demoQuestion && !session.demoQuestion.taskSessionId) {
+    var taskSession = tkGetMySessions(task).find(function (row) { return row.stageId === task.executionStageId && row.status === 'active'; });
+    if (taskSession) {
+      session.demoQuestion.taskSessionId = taskSession.id;
+      saveChatSessions();
+    }
+  }
+  if (!created && activeSessionId === session.id && messagesList.querySelector('.message') && $('#chatTitle').textContent === session.title) {
+    showView('chat');
+    renderChatSessions();
+    return;
+  }
+  openChatSession(session.id);
+}
+function renderTaskQuestion(session, task) {
+  var question = session.demoQuestion;
+  appendUserMessage(question.prompt || '执行「部署交付」：完成采购订单规则配置清单，整理说明并归档 evidence 证据。');
+  var response = appendAssistantMessage(resolveChatTeam(session, task));
+  if (task) appendTaskReadingSummary(response, task);
+  var process = document.createElement('div');
+  response.appendChild(process);
+  var steps = question.steps || [
+    ['已核对规则动作类型与参数取值形状','清单字段与当前注册表逐项对齐。'],
+    ['正在整理采购订单规则配置清单','已核对字段口径，尚未提交最终文件。'],
+    ['归档 evidence 时发现冲突','系统导出映射与项目手工维护版本存在差异，等待确认采用哪份作为交付依据。'],
+  ];
+  process.innerHTML = '<div class="chat-task-process"><p>' + escapeHtml(question.intro || '正在完成采购订单规则配置清单的交付收口。') + '</p><ol>'
+    + steps.map(function (step) { return '<li><strong>' + escapeHtml(step[0]) + '</strong><span>' + escapeHtml(step[1]) + '</span></li>'; }).join('')
+    + '</ol><p>' + escapeHtml(question.closing || '归档前需要你确认一项取舍。') + '</p></div>';
+  var state = response.closest('.message')?.querySelector('.chat-agent-state');
+  if (state) state.textContent = question.answer ? '已回复' : '待回复';
+  document.getElementById('chatTaskQuestionPanel')?.remove();
+  if (!question.answer) {
+    var panel = document.createElement('section');
+    panel.id = 'chatTaskQuestionPanel';
+    panel.className = 'chat-task-question-panel';
+    panel.setAttribute('aria-label', 'AI 提问');
+    panel.innerHTML = '<div class="chat-task-question-panel-inner"><div class="chat-task-question-panel-head"><strong>需要你的决定</strong><span>1 个问题</span></div>'
+      + '<p>' + escapeHtml(question.text) + '</p><div class="chat-task-question-options">'
+      + question.options.map(function (option, index) { return '<button type="button" data-task-question-option="' + index + '"><span>' + (index + 1) + '</span>' + escapeHtml(option) + '</button>'; }).join('')
+      + '</div><small>也可以在下方输入自己的答复</small></div>';
+    document.querySelector('#view-chat .chat-container').insertBefore(panel, document.getElementById('chatComposerWrap'));
+  }
+  if (question.answer) {
+    appendUserMessage(question.answer);
+    var acknowledgement = appendAssistantMessage(resolveChatTeam(session, task));
+    acknowledgement.textContent = question.acknowledgement || '收到，将按你的决定整理 evidence 归档和交付说明，继续完成当前阶段。';
+  }
+}
+function answerTaskQuestion(answer) {
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  if (!session?.demoQuestion || session.demoQuestion.answer) return false;
+  session.demoQuestion.answer = answer;
+  if (session.demoQuestion.taskSessionId) tkAnswerTaskSessionQuestion(session.demoQuestion.taskSessionId);
+  saveChatSessions();
+  openChatSession(session.id);
+  return true;
+}
+export function openTaskQuestionConversation(task, taskSession) {
+  if (!task || !taskSession) return;
+  closeTaskExceptionHistory();
+  var session = chatSessions.find(function (row) { return row.taskId === task.id && row.demoQuestion?.taskSessionId === taskSession.id; });
+  if (!session) {
+    session = createChatSession(task.title, task.id);
+    session.demoQuestion = {
+      taskSessionId:taskSession.id,
+      text:'归档 evidence 时，系统导出的动作参数映射与项目手工维护版本有差异。交付清单应以哪份为准？',
+      options:['以当前系统导出的注册表为准，记录手工版本差异','保留项目手工维护版本，标注与注册表的差异'], answer:'',
+    };
+    saveChatSessions();
+  }
+  if (!session.demoQuestion.answer) {
+    session.demoQuestion.text = '归档 evidence 时，系统导出的动作参数映射与项目手工维护版本有差异。交付清单应以哪份为准？';
+    session.demoQuestion.options = ['以当前系统导出的注册表为准，记录手工版本差异','保留项目手工维护版本，标注与注册表的差异'];
+    saveChatSessions();
+  }
+  openChatSession(session.id);
 }
 function getConversationTask() {
   return conversationTaskId == null ? null : tkGetTasks().find(function (task) { return task.id === conversationTaskId; }) || null;
 }
 function renderConversationTaskReference() {
   var task = getConversationTask();
-  /* 任务发起的会话详情（聊天页）输入框不显示任务标签：任务上下文由右侧「会话信息」面板与标题承载 */
+  /* 任务发起的会话详情由标题旁的关联任务标签承载上下文。 */
   var tags = document.getElementById('ntTags');
   if (tags) {
     tags.classList.toggle('hidden', !task);
@@ -244,33 +462,22 @@ function renderConversationTaskReference() {
 }
 function renderChatTaskSide() {
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
-  var side = document.getElementById('chatTaskSide');
-  side.hidden = !task;
-  viewChat.classList.toggle('task-context-open', !!task);
-  if (task) viewChat.classList.remove('preview-open');
+  if (task) {
+    viewChat.classList.remove('preview-open');
+    var preview = document.getElementById('chatPreviewSide');
+    if (preview) { preview.style.width = ''; preview.style.maxWidth = ''; }
+    syncTogglePreviewBtn();
+  }
+  var tag = document.getElementById('chatHeaderTask');
+  tag.classList.toggle('hidden', !task);
+  tag.dataset.taskId = task ? String(task.id) : '';
+  if (task) tag.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="chat-header-task-label">' + escapeHtml(String(task.code || '')) + ' ' + escapeHtml(String(task.title || '')) + '</span>';
   refreshChatStageConfirm();
   /* 任务会话确认流转/完成后任务不再处于执行态，隐藏输入区；任务重新执行时恢复。 */
   document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !['in_progress', 'in_review'].includes(task.status));
-  if (!task) return;
-  var link = document.getElementById('chatTaskLink');
-  link.dataset.taskId = String(task.id);
-  link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>' + escapeHtml(String(task.code || '')) + ' ' + escapeHtml(String(task.title || '')) + '</span>';
-  var status = document.getElementById('chatTaskStatus');
-  status.textContent = task.status === 'in_review' ? '待审核' : task.status === 'in_progress' ? '执行中' : task.status === 'done' ? '已完成' : '';
-  status.hidden = !status.textContent;
-  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
-  var team = resolveChatTeam(session, task);
-  var teamSection = document.getElementById('chatTaskTeamSection');
-  teamSection.hidden = !team;
-  if (team) document.getElementById('chatTaskTeam').innerHTML = teamAvatarHtml(team) + '<span>' + escapeHtml(team.name) + '</span>';
-  var completed = session?.exchanges.filter(function (exchange) { return exchange.done && !exchange.waiting; }).at(-1);
-  var output = document.getElementById('chatTaskArtifacts');
-  output.innerHTML = completed ? '' : '<span class="chat-task-pending">执行完成后显示产物</span>';
-  if (completed) renderChatDocCards(task);
 }
 /* ---------- 任务会话「确认」按钮：执行结束确认产物、流转下一阶段 ---------- */
-/* 显示：当前会话关联的任务正在执行（in_progress）或已提交待审核（in_review）；
-   可点击：执行结束（待审核且本轮回复完成）；点击与任务详情「通过审核」同一条流转链路。 */
+/* 只在本轮回复结束、任务进入待审核后显示；点击与任务详情「通过审核」同一条流转链路。 */
 function chatStageConfirmInfo() {
   if (viewChat.classList.contains('task-exception-open')) return null;
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
@@ -282,22 +489,40 @@ function chatStageConfirmInfo() {
   var visible = ['in_progress', 'in_review'].includes(task.status);
   if (!visible) return null;
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  if (session?.demoState && !['running','review','ended'].includes(session.demoState)
+    && !(session.demoState === 'question' && session.demoQuestion?.continuationDone)) return null;
   var lastExchange = session?.exchanges.at(-1);
-  var ready = task.status === 'in_review' && !!lastExchange && lastExchange.done && !lastExchange.waiting;
-  return { task: task, ready: ready, isLastStage: !stages[index + 1] };
+  var ready = task.status === 'in_review' && (session?.demoQuestion?.continuationDone || !!lastExchange && lastExchange.done && !lastExchange.waiting);
+  return { task: task, ready: ready, nextStage: stages[index + 1] || null };
+}
+function chatStageConfirmTooltip(nextStage) {
+  if (!nextStage) return '确认最终产物，完成任务';
+  var next = nextStage.name || '下一阶段';
+  return ({
+    '方案设计':'确认需求，开始方案设计',
+    '实现规划':'确认方案，开始实现规划',
+    '编码实现':'确认规划，开始开发',
+    '测试验证':'确认开发结果，开始测试',
+    '部署交付':'确认测试结果，开始交付',
+  })[next] || '确认当前产物，开始「' + next + '」';
 }
 function refreshChatStageConfirm() {
   var btn = document.getElementById('chatStageConfirmBtn');
   if (!btn) return;
   var info = chatStageConfirmInfo();
-  btn.classList.toggle('hidden', !info);
-  if (!info) return;
+  document.getElementById('chatStageGuide')?.classList.toggle('hidden', !info?.ready);
+  btn.disabled = !info?.ready;
+  if (!info?.ready) return;
   var label = document.getElementById('chatStageConfirmLabel');
-  var isLast = info.isLastStage;
-  btn.disabled = !info.ready;
+  var title = document.getElementById('chatStageGuideTitle');
+  var guide = document.getElementById('chatStageGuideText');
+  var isLast = !info.nextStage;
+  var currentStage = taskExecutionStages(info.task).find(function (stage) { return stage.id === info.task.executionStageId; });
+  if (title) title.textContent = (currentStage?.name || '当前阶段') + '已完成，请确认';
+  if (guide) guide.textContent = isLast ? '确认后任务将标记为已完成。' : '确认后任务将流转至下一阶段。';
   if (label) label.textContent = isLast ? '完成' : '确认';
-  btn.setAttribute('aria-label', isLast ? '确认产物，完成任务' : '确认产物，流转下一阶段');
-  btn.setAttribute('data-tooltip', isLast ? '确认产物，完成任务' : '确认产物，流转下一阶段');
+  btn.setAttribute('aria-label', chatStageConfirmTooltip(info.nextStage));
+  btn.setAttribute('data-tooltip', chatStageConfirmTooltip(info.nextStage));
 }
 function confirmChatStage() {
   var info = chatStageConfirmInfo();
@@ -311,43 +536,12 @@ function confirmChatStage() {
   toast(reviewed.done ? '任务完成' : '流转成功', 'success');
 }
 function clearChatTaskSide() {
+  document.getElementById('chatTaskQuestionPanel')?.remove();
   activeSessionTaskId = null;
   activeSessionId = null;
   activeResponseRun++;
-  document.getElementById('chatTaskArtifacts').innerHTML = '<span class="chat-task-pending">对话完成后显示产物</span>';
   renderChatTaskSide();
   renderChatSessions();
-}
-/* 会话产物：卡片点击后右侧占位弹出预览（挤开分栏，不覆盖会话），内容与任务详情产物渲染一致。 */
-function createChatDocCard(task, artifact) {
-  var card = document.createElement('button');
-  card.type = 'button';
-  card.className = 'chat-task-artifact';
-  card.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span>' + escapeHtml(artifact.type) + '</span>';
-  card.addEventListener('click', function () { openChatDocViewer(task, artifact); });
-  return card;
-}
-function renderChatDocCards(task) {
-  var output = document.getElementById('chatTaskArtifacts');
-  /* 产物跟随阶段推进：显示已完成阶段与当前执行/待审核阶段的产物；
-     确认流转后下一阶段尚未开始，保留刚确认阶段的产物，不展示后续阶段交付物。 */
-  var stages = taskExecutionStages(task);
-  var stage = stages.find(function (row) { return row.id === task.executionStageId; })
-    || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
-    || stages[0];
-  var currentIndex = stage ? stages.indexOf(stage) : -1;
-  var active = ['in_progress', 'in_review'].includes(task.status);
-  var maxIndex = task.status === 'done' ? stages.length - 1 : active ? currentIndex : currentIndex - 1;
-  var plan = task.executionPlan || [];
-  var artifacts = currentIndex >= 0 ? tkGetTaskArtifacts(task).filter(function (artifact) {
-    var index = stages.findIndex(function (row) { return row.id === artifact.stageId; });
-    return index >= 0 && index <= maxIndex && plan.find(function (item) { return item.id === artifact.stageId; })?.status !== 'pending';
-  }) : [];
-  if (artifacts.length) {
-    artifacts.forEach(function (artifact) { output.appendChild(createChatDocCard(task, artifact)); });
-  } else {
-    output.innerHTML = '<span class="chat-task-pending">当前阶段暂无产物</span>';
-  }
 }
 var chatDocViewerCloseTimer = null;
 function openChatDocViewer(task, artifact, keepConversationAtBottom) {
@@ -355,11 +549,10 @@ function openChatDocViewer(task, artifact, keepConversationAtBottom) {
   if (!viewer) return;
   clearTimeout(chatDocViewerCloseTimer);
   document.getElementById('chatDocViewerTitle').textContent = task.title + ' · ' + artifact.type;
-  document.getElementById('chatDocViewerMeta').textContent =
-    (artifact.author ? artifact.author + ' · ' : '') + (artifact.date || '') + (artifact.status ? ' · ' + artifact.status : '');
   document.getElementById('chatDocViewerBody').innerHTML = renderArtifactPreview(artifact);
   viewer.hidden = false;
   viewChat.classList.add('doc-open');
+  syncTogglePreviewBtn();
   if (keepConversationAtBottom) {
     scrollChatBottom();
     var scrollObserver = new ResizeObserver(scrollChatBottom);
@@ -382,21 +575,20 @@ function closeChatDocViewer() {
   clearTimeout(chatDocViewerCloseTimer);
   viewer.classList.remove('show');
   viewChat.classList.remove('doc-open');
+  syncTogglePreviewBtn();
   chatDocViewerCloseTimer = setTimeout(function () {
     viewer.hidden = true;
     viewer.style.width = '';
   }, 250);
 }
-/* 占位弹出宽度：会话区保底 360px、会话信息侧栏按实际宽预留，预览取剩余空间并封顶 880px。 */
+/* 默认保留约 500px 会话区，其余空间给产物预览；拖拽时会话区保底 360px。 */
 function chatDocViewerWidthBounds() {
   var view = document.getElementById('view-chat');
-  var side = document.getElementById('chatTaskSide');
-  var reserved = 360 + (side && !side.hidden ? side.offsetWidth : 0);
-  return { min: 320, max: Math.max(320, view.clientWidth - reserved) };
+  return { min: 320, max: Math.max(320, view.clientWidth - 360) };
 }
 function setChatDocViewerWidth(viewer) {
   var bounds = chatDocViewerWidthBounds();
-  viewer.style.width = Math.min(880, bounds.max) + 'px';
+  viewer.style.width = Math.min(bounds.max, Math.max(bounds.min, document.getElementById('view-chat').clientWidth - 500)) + 'px';
 }
 function initChatDocViewerResize(handle, viewer) {
   handle.addEventListener('pointerdown', function (e) {
@@ -432,11 +624,21 @@ function initChatDocViewerResize(handle, viewer) {
     viewer.style.width = Math.round(Math.min(bounds.max, Math.max(bounds.min, current + (e.key === 'ArrowLeft' ? 24 : -24)))) + 'px';
   });
 }
-function appendTaskArtifact(result, task, autoOpen) {
+function taskStageArtifact(task) {
   var artifacts = tkGetTaskArtifacts(task);
-  if (!artifacts.length) return;
-  result.appendChild(createChatResultArtifactCard(task, artifacts[0]));
-  if (autoOpen) openChatDocViewer(task, artifacts[0], true);
+  return artifacts.find(function (artifact) { return artifact.stageId === task.executionStageId; }) || artifacts[0];
+}
+function appendTaskArtifact(result, task, autoOpen) {
+  var artifact = taskStageArtifact(task);
+  if (!artifact) return;
+  result.appendChild(createChatResultArtifactCard(task, artifact));
+  var stages = taskExecutionStages(task);
+  var next = stages[stages.findIndex(function (stage) { return stage.id === task.executionStageId; }) + 1];
+  var closing = document.createElement('p');
+  closing.className = 'chat-task-result-closing';
+  closing.textContent = artifact.type + '已生成，覆盖「' + task.title + '」当前阶段的交付范围。' + (next ? '请确认是否进入「' + next.name + '」，或先提出需要调整的内容。' : '请确认最终交付内容，或先提出需要调整的内容。');
+  result.appendChild(closing);
+  if (autoOpen) openChatDocViewer(task, artifact, true);
 }
 /* 任务会话结果产物卡片：视觉与采购订单会话的 artifact-card 保持一致，点击打开产物预览。 */
 function createChatResultArtifactCard(task, artifact) {
@@ -708,24 +910,31 @@ function syncPreviewOpen(artifact){
 function buildTaskResultText(task){
   var stages=taskExecutionStages(task);
   var stage=stages.find(function(s){return s.id===task.executionStageId;})||stages[0]||{};
-  var nextStage=stages[stages.indexOf(stage)+1];
-  var doc=tkGetTaskArtifacts(task)[0];
+  var doc=taskStageArtifact(task);
   var points=requirementPoints(task);
   var core=String(task.desc||'').split(/[。；;\n]/)[0].trim()||('完成「'+task.title+'」主流程');
-  var frLast='FR-'+String(points.length).padStart(2,'0');
-  var openIssues=openIssueCount(task);
-  return '关联任务 **'+task.code+' '+task.title+'** 的「'+(stage.name||'需求分析')+'」已完成，整理要点如下。\n\n'
-    +'**范围与目标**\n'
-    +'- 核心诉求：'+core+'。\n'
-    +'- 本阶段目标：'+(stage.desc||stage.name||'确认范围与验收标准')+'。\n\n'
-    +'**产出要点**\n'
-    +'- 梳理 3 类用户角色（业务操作员、业务主管、项目负责人）的使用场景与频次\n'
-    +'- 拆分功能需求 '+points.length+' 条（FR-01 ~ '+frLast+'），前 2 条为 P0，逐条附验收标准\n'
-    +'- 非功能需求覆盖性能、权限、兼容与审计\n'
-    +'- 登记 '+openIssues+' 个待确认问题（历史数据迁移、导出规格等），需要你拍板\n\n'
-    +'产物：需求分析.md'+(doc?'（'+doc.docNo+' '+doc.version+'，'+doc.status+'）':'（原型模拟）')+'，点击下方产物卡片可查看全文。'
-    +'建议重点看第 3 节功能需求与第 6 节待确认问题；'
-    +(nextStage?'确认后进入「'+nextStage.name+'」阶段。':'确认后即可归档收尾。');
+  var details={
+    requirements:['明确业务目标、使用角色与验收边界','拆分 '+points.length+' 条功能需求，并标记优先级与验收条件','登记 '+openIssueCount(task)+' 个待确认问题，供项目负责人核对'],
+    design:['确定页面、业务服务、数据访问和外部集成的职责边界','梳理关键字段、状态流转与接口依赖','记录并发修改和外部接口联调风险'],
+    planning:['把交付范围拆为可验收的工作项','安排依赖、负责人和阶段里程碑','预留联调、回归与发布检查时间'],
+    implementation:['按已确认方案实现页面交互与业务接口','补齐输入校验、状态反馈和异常处理','记录关键接口与组件的实现说明'],
+    verification:['验证主流程、边界条件与权限场景','复测异常输入和失败恢复路径','汇总缺陷、回归结果与验收结论'],
+    delivery:['核对交付文件、部署配置和接口清单','整理上线验证步骤与回滚说明','汇总已知限制和后续维护事项'],
+  }[stage.id] || ['核对当前阶段的目标与交付边界','按任务描述完成执行和自检','整理可审核的阶段产物'];
+  return '我已读取任务「'+task.title+'」的说明。'+(core ? '本次重点是：'+core+'。' : '')+'接下来按「'+(stage.name||'当前阶段')+'」的目标整理交付内容。\n\n'
+    +'**'+(stage.name||'当前阶段')+'要点说明：**\n'
+    +details.map(function (item) { return '- '+item; }).join('\n')
+    +'\n\n现在提交'+(doc?.type||'阶段产物')+'：';
+}
+
+function appendTaskReadingSummary(responseEl, task) {
+  var thinking = document.createElement('details');
+  thinking.className = 'chat-task-thinking';
+  thinking.open = true;
+  thinking.innerHTML = '<summary><span class="chat-task-thinking-mark" aria-hidden="true">✧</span><span>思考了 1 秒</span><span class="chat-task-thinking-toggle">收起</span></summary>'
+    + '<div class="chat-task-thinking-content"><strong>✧ 读取附件</strong><p>已读取「' + escapeHtml(task.title) + '」的任务描述与当前阶段资料，正在核对交付范围、依赖和验收要求。</p></div>';
+  thinking.addEventListener('toggle', function () { thinking.querySelector('.chat-task-thinking-toggle').textContent = thinking.open ? '收起' : '展开'; });
+  responseEl.appendChild(thinking);
 }
 
 function simulateAIResponse(responseEl,instant,task,prompt,onDone){
@@ -735,6 +944,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   var taskResultText=task ? buildTaskResultText(task) : '';
   var timeline=document.createElement('div');
   timeline.className='work-steps';
+  if(task)appendTaskReadingSummary(responseEl,task);
   responseEl.appendChild(timeline);
   var completed=false;
   var cancelStream=null;
@@ -747,6 +957,14 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     var currentTask = !instant && task && tkGetTasks().find(function (row) { return row.id === task.id; });
     var submitted = currentTask?.status === 'in_progress' ? submitTaskStage(currentTask) : null;
     if(submitted?.ok) document.dispatchEvent(new CustomEvent('lingee:task-stage-submitted', {detail:{taskId:task.id}}));
+    var runningSession = chatSessions.find(function (session) { return session.id === activeSessionId; });
+    if (submitted?.ok && runningSession?.demoState === 'running') {
+      runningSession.demoState = 'review';
+      runningSession.demoArtifact = true;
+      if (runningSession.exchanges.at(-1)) runningSession.exchanges.at(-1).response = taskResultText;
+      saveChatSessions();
+      renderChatSessions();
+    }
     var state=responseEl.closest('.message')?.querySelector('.chat-agent-state');
     var waitingReview = submitted?.ok || (task && tkGetTasks().find(function (row) { return row.id === task.id; })?.status === 'in_review');
     if(state){state.textContent=waitingReview ? '待审核' : '已完成';state.classList.add(waitingReview ? 'is-review' : 'is-done');}
@@ -840,7 +1058,6 @@ function doSend(automatic){
   activeSessionTaskId = linkedTask ? linkedTask.id : null;
   activeResponseRun++;
   closeChatDocViewer();
-  document.getElementById('chatTaskArtifacts').innerHTML = '<span class="chat-task-pending">对话完成后显示产物</span>';
   $('#chatTitle').textContent = linkedTask ? linkedTask.title : t.slice(0, 60);
   var session = createChatSession($('#chatTitle').textContent, activeSessionTaskId);
   var exchangeIndex = addSessionExchange(t);
@@ -858,7 +1075,7 @@ function doSend(automatic){
     saveChatSessions();
     renderChatSessions();
   }else{
-    var responseEl=appendAssistantMessage(linkedTask ? null : resolveChatTeam(session, linkedTask));
+    var responseEl=appendAssistantMessage(resolveChatTeam(session, linkedTask));
     simulateAIResponse(responseEl,false,linkedTask,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   }
   chatInput.innerHTML='';
@@ -901,6 +1118,7 @@ function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.tex
 function chatDoSend(){
   var t=chatInput.textContent.trim();
   if(!t){ chatInput.focus(); return; }
+  if (answerTaskQuestion(t)) { chatInput.innerHTML=''; refreshChatSend(); return; }
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; }) || createChatSession($('#chatTitle').textContent || t.slice(0, 60),activeSessionTaskId);
   var exchangeIndex = addSessionExchange(t);
   renderChatTaskSide();
@@ -909,7 +1127,7 @@ function chatDoSend(){
   appendUserMessage(t);
   chatInput.innerHTML=''; refreshChatSend();
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
-  var responseEl=appendAssistantMessage(task ? null : resolveChatTeam(session, task));
+  var responseEl=appendAssistantMessage(resolveChatTeam(session, task));
   activeResponseRun++;
   simulateAIResponse(responseEl,false,task,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   chatInput.focus();
@@ -1168,6 +1386,13 @@ function initTaskMention(ed) {
 }
 
 export function initComposer() {
+  document.querySelector('#view-chat .chat-container').addEventListener('click', function (event) {
+    var option = event.target.closest('[data-task-question-option]');
+    if (!option) return;
+    var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+    var answer = session?.demoQuestion?.options[Number(option.getAttribute('data-task-question-option'))];
+    if (answer) answerTaskQuestion(answer);
+  });
   renderChatSessions();
   queueMicrotask(renderChatSessions);
   document.addEventListener('lingee:sidebar-filter', renderChatSessions);
@@ -1193,9 +1418,10 @@ export function initComposer() {
     if (event.detail?.task?.id === activeSessionTaskId) renderChatTaskSide();
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
-  document.getElementById('chatTaskLink').addEventListener('click', function () {
-    if (activeSessionTaskId == null) return;
-    import('./tasks-v2/index.js').then(function (module) { module.openTaskDetailFromSession(activeSessionTaskId); });
+  document.getElementById('chatHeaderTask').addEventListener('click', function (event) {
+    var taskId = Number(event.currentTarget.dataset.taskId);
+    if (!taskId) return;
+    import('./tasks-v2/index.js').then(function (module) { module.openTaskDetailFromSession(taskId); });
   });
   var chatDocViewer = document.getElementById('chatDocViewer');
   if (chatDocViewer) {

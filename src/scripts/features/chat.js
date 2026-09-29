@@ -38,10 +38,11 @@ function setPickMode(on){
 var togglePreviewBtn=$('#togglePreviewBtn');
 function syncTogglePreviewBtn(){
   if(!togglePreviewBtn)return;
-  var open=$('#view-chat').classList.contains('preview-open');
+  var view=$('#view-chat');
+  var open=view.classList.contains('preview-open')||view.classList.contains('doc-open');
   togglePreviewBtn.classList.toggle('on',open);
   togglePreviewBtn.setAttribute('aria-pressed',open?'true':'false');
-  togglePreviewBtn.setAttribute('data-tooltip',open?'收起预览':'显示预览');
+  togglePreviewBtn.setAttribute('data-tooltip',open?'收起产物预览':'显示预览');
 }
 /* ---------- 历史版本面板 ---------- */
 var historyBtn=$('#historyBtn');
@@ -111,7 +112,9 @@ export function initPreview() {
   if(togglePreviewBtn){
     togglePreviewBtn.addEventListener('click',function(){
       var view=$('#view-chat');
-      if(view.classList.contains('preview-open')){
+      if(view.classList.contains('doc-open')){
+        var docClose=$('#chatDocViewerClose'); if(docClose) docClose.click();
+      }else if(view.classList.contains('preview-open')){
         var cb=$('#chatPreviewClose'); if(cb) cb.click();
       }else{
         var card=$('.artifact-card');
