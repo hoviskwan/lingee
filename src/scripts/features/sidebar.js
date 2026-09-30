@@ -4,7 +4,6 @@ import { showView } from '../core/view.js';
 import { openChangelog } from './changelog.js';
 
 import { chatResizer } from './composer.js';
-import { LOGIN_KEY, REMEMBER_KEY, loginError, loginForm, showLogin } from './login.js';
 /* 侧边栏：滚动条、用户菜单、图标功能、分段页签、分组折叠
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -32,7 +31,6 @@ function closeUserMenu(){
   if(userBtn) userBtn.setAttribute('aria-expanded','false');
 }
 var userMenuSettings=$('#userMenuSettings');
-var userMenuLogout=$('#userMenuLogout');
 /* ---------- 侧边栏图标功能 ---------- */
 var sbSearchIcon=$('#sbSearchIcon');
 var sbCollapseIcon=$('#sbCollapseIcon');
@@ -172,26 +170,6 @@ export function initUserMenu() {
       openChangelog();
     });
   }
-  if(userMenuLogout) userMenuLogout.addEventListener('click',function(){
-    closeUserMenu();
-    try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}
-    try{ sessionStorage.removeItem('lingee_demo_role'); }catch(e){}
-    if(document.body) document.body.removeAttribute('data-role');
-    if(loginForm) loginForm.reset();
-    if(loginError) loginError.textContent='';
-    /* 重新回填记住的账号和密码 */
-    try{
-      var saved=localStorage.getItem(REMEMBER_KEY);
-      if(saved){
-        saved=JSON.parse(saved);
-        var inp=$('#loginUser'); if(inp) inp.value=saved.u||'';
-        var pp=$('#loginPass'); if(pp) pp.value=saved.p||'';
-        var cb=$('#loginRemember'); if(cb) cb.checked=true;
-      }
-    }catch(e){}
-    showLogin();
-    $('#loginUser').focus();
-  });
 }
 
 export function initSidebarIcons() {

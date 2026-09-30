@@ -134,8 +134,11 @@ function hideLogin(){
   setLoginFieldsEnabled(false);
 }
 
-/* 未登录则显示登录页，已登录则恢复用户信息 */
-var _authedUser=getAuthedUser();
+/* 原型免登录：保留身份模型供任务、项目等模块识别“当前用户”，
+   首次打开时自动使用吴晓锋账号，已有会话身份则继续沿用。 */
+var DEFAULT_USER='6686612@qq.com';
+var _authedUser=getAuthedUser()||DEFAULT_USER;
+if(!getAuthedUser()) setAuthed(_authedUser);
 
 export function initLogin() {
   /* 恢复记住的账号和密码 */
@@ -215,15 +218,10 @@ export function initLogin() {
     }
   });
   }
-  if(!_authedUser){
-    showLogin();
-    try{localStorage.removeItem('lingeeUrlState')}catch(e){}
-  }else{
-    applyRole();
-    var _r=DEMO_ROLES.filter(function(x){return x.id===getRole();})[0];
-    if(_r && String(_authedUser).indexOf('demo:')===0) applyRoleUser(_r); else applyUserInfo(_authedUser);
-    hideLogin();
-  }
+  applyRole();
+  var _r=DEMO_ROLES.filter(function(x){return x.id===getRole();})[0];
+  if(_r && String(_authedUser).indexOf('demo:')===0) applyRoleUser(_r); else applyUserInfo(_authedUser);
+  hideLogin();
 }
 
 export { DEMO_ROLES, LOGIN_KEY, REMEMBER_KEY, _authedUser, applyRole, getLoginPeople, getRole, loginError, loginForm, showLogin };
