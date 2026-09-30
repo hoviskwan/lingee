@@ -9,7 +9,7 @@ import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSe
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkCurrentStageHandlerId, tkIsHandledByMe, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -474,7 +474,7 @@ function getFilteredTasks(skipField) {
     var me = tkCurrentUserId();
     tasks = tasks.filter(function (task) {
       if (task.status === 'done') return tkWasTaskHandler(task);
-      return task.status !== 'cancelled' && task.status !== 'planned' && tkCurrentStageHandlerId(task) === me;
+      return task.status !== 'cancelled' && task.status !== 'planned' && task.assignee === me;
     });
   } else if (skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
   var scope = state.scope;
@@ -687,7 +687,7 @@ function renderFocusSummary() {
   var me = tkCurrentUserId();
   var tasks = tkGetTasks().filter(tkCanViewTask).filter(function (task) {
     return task.status === 'done' ? tkWasTaskHandler(task)
-      : task.status !== 'cancelled' && task.status !== 'planned' && tkCurrentStageHandlerId(task) === me;
+      : task.status !== 'cancelled' && task.status !== 'planned' && task.assignee === me;
   });
   var counts = {};
   ['backlog','in_review','blocked','in_progress','done'].forEach(function (status) {

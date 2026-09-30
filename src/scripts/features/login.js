@@ -135,10 +135,11 @@ function hideLogin(){
 }
 
 /* 原型免登录：保留身份模型供任务、项目等模块识别“当前用户”，
-   首次打开时自动使用吴晓锋账号，已有会话身份则继续沿用。 */
+   每次打开统一使用吴晓锋账号，避免历史登录会话改变演示数据归属。 */
 var DEFAULT_USER='6686612@qq.com';
-var _authedUser=getAuthedUser()||DEFAULT_USER;
-if(!getAuthedUser()) setAuthed(_authedUser);
+var _authedUser=DEFAULT_USER;
+setAuthed(_authedUser);
+setRole('owner');
 
 export function initLogin() {
   /* 恢复记住的账号和密码 */
