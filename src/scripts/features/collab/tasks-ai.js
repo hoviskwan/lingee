@@ -1,11 +1,12 @@
 import { xesc } from '../expert/data.js';
-import { tkCanViewTask, tkCurrentUserId, tkGetPerson, tkGetProjectName, tkGetTasks, tkWasTaskHandler } from '../tasks-v2/data.js';
-import { openTaskFromBoard } from '../tasks-v2/index.js';
+import { tkCanViewTask, tkCurrentUserId, tkGetPerson, tkGetProjectName, tkGetTasks, tkProjectsForCurrentUser, tkWasTaskHandler } from '../tasks-v2/data.js';
+import { openTaskFromBoard, tkOpenTaskCreate } from '../tasks-v2/index.js';
 import { cvOpenVersionPicker, cvSwitchView } from './view.js';
 
 /* AI 任务新版：只负责独立页面的聚合展示，不修改当前任务页及其状态。 */
 var root;
 var priorityWeight={urgent:4,high:3,medium:2,low:1};
+var filters={query:'',project:'',status:'',priority:''};
 
 function sortTasks(tasks){
   return tasks.slice().sort(function(a,b){
@@ -18,7 +19,41 @@ function myTasks(){
   return tkGetTasks().filter(tkCanViewTask).filter(function(task){
     if(task.status==='done')return tkWasTaskHandler(task);
     return task.assignee===me&&!['planned','cancelled'].includes(task.status);
+  }).filter(function(task){
+    if(filters.project&&task.project!==filters.project)return false;
+    if(filters.status&&task.status!==filters.status)return false;
+    if(filters.priority&&task.priority!==filters.priority)return false;
+    if(filters.query){
+      var haystack=[task.code,task.title,task.desc,tkGetProjectName(task.project)].join(' ').toLocaleLowerCase();
+      if(!haystack.includes(filters.query))return false;
+    }
+    return true;
   });
+}
+function syncProjectOptions(){
+  var select=document.getElementById('cvAiProjectFilter');if(!select)return;
+  var value=filters.project;
+  select.innerHTML='<option value="">全部项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+xesc(project.id)+'">'+xesc(project.name)+'</option>';}).join('');
+  select.value=value;
+  if(select.value!==value){filters.project='';select.value='';}
+}
+function syncFilteredSections(){
+  var status=filters.status;
+  var actionSection=document.getElementById('cvAiActionSection');
+  var observeSection=root.querySelector('.cv-ai-section--observe');
+  var runningBlock=document.getElementById('cvAiRunningBlock');
+  var doneBlock=document.getElementById('cvAiDoneBlock');
+  root.querySelectorAll('[data-ai-status]').forEach(function(column){column.hidden=!!status&&column.getAttribute('data-ai-status')!==status;});
+  actionSection.hidden=!!status&&!['backlog','in_review'].includes(status);
+  observeSection.hidden=!!status&&!['in_progress','done'].includes(status);
+  runningBlock.hidden=status==='done';
+  doneBlock.hidden=status==='in_progress';
+}
+function syncFilterUi(count){
+  var active=!!(filters.query||filters.project||filters.status||filters.priority);
+  document.getElementById('cvAiFilterResult').textContent=active?'筛选到 '+count+' 项':'';
+  document.getElementById('cvAiFilterReset').classList.toggle('hidden',!active);
+  syncFilteredSections();
 }
 function meta(task){
   return '<span>'+xesc(task.code||'')+'</span><span>'+xesc(tkGetProjectName(task.project)||'未归属项目')+'</span>'+(task.dueDate?'<span>截止 '+xesc(task.dueDate.slice(5).replace('-','/'))+'</span>':'');
@@ -55,7 +90,7 @@ function renderActionList(id,tasks,status,emptyText){
   var el=document.getElementById(id);if(!el)return;
   var visible=sortTasks(tasks).slice(0,3);
   el.innerHTML=visible.length?visible.map(function(task){return actionCard(task,status);}).join(''):'<div class="cv-ai-empty">'+emptyText+'</div>';
-  if(tasks.length>3)el.insertAdjacentHTML('beforeend','<button type="button" class="cv-ai-more" data-ai-open-current>查看全部 '+tasks.length+' 项</button>');
+  if(status!=='in_review'&&tasks.length>3)el.insertAdjacentHTML('beforeend','<button type="button" class="cv-ai-more" data-ai-open-current>查看全部 '+tasks.length+' 项</button>');
 }
 function taskProgress(task){
   var stages=task.executionPlan||[];if(!stages.length)return 45;
@@ -90,6 +125,7 @@ function renderDone(tasks){
 }
 export function renderAiTaskPage(){
   if(!root)root=document.getElementById('cv-tasks-ai');if(!root)return;
+  syncProjectOptions();
   var tasks=myTasks();
   var groups={backlog:[],in_review:[],blocked:[],in_progress:[],done:[]};
   tasks.forEach(function(task){if(groups[task.status])groups[task.status].push(task);});
@@ -108,17 +144,31 @@ export function renderAiTaskPage(){
   renderActionList('cvAiReviewList',groups.in_review,'in_review','没有等待你验收的结果');
   renderRunning(groups.in_progress);
   renderDone(groups.done);
+  syncFilterUi(tasks.length);
 }
 export function initAiTaskPage(){
   root=document.getElementById('cv-tasks-ai');if(!root)return;
   root.addEventListener('click',function(event){
     if(event.target.closest('#cvAiVersionSwitch')){cvOpenVersionPicker();return;}
+    if(event.target.closest('#cvAiNewTask')){tkOpenTaskCreate();return;}
+    if(event.target.closest('#cvAiFilterReset')){
+      filters={query:'',project:'',status:'',priority:''};
+      document.getElementById('cvAiSearch').value='';
+      document.getElementById('cvAiProjectFilter').value='';
+      document.getElementById('cvAiStatusFilter').value='';
+      document.getElementById('cvAiPriorityFilter').value='';
+      renderAiTaskPage();return;
+    }
     if(event.target.closest('[data-ai-open-current]')){cvSwitchView('tasks');return;}
     var target=event.target.closest('[data-ai-task-id]');if(target)openTaskFromBoard(Number(target.getAttribute('data-ai-task-id')));
   });
   root.addEventListener('keydown',function(event){
     if((event.key==='Enter'||event.key===' ')&&event.target.matches('[data-ai-task-id]')){event.preventDefault();openTaskFromBoard(Number(event.target.getAttribute('data-ai-task-id')));}
   });
+  document.getElementById('cvAiSearch').addEventListener('input',function(event){filters.query=event.target.value.trim().toLocaleLowerCase();renderAiTaskPage();});
+  document.getElementById('cvAiProjectFilter').addEventListener('change',function(event){filters.project=event.target.value;renderAiTaskPage();});
+  document.getElementById('cvAiStatusFilter').addEventListener('change',function(event){filters.status=event.target.value;renderAiTaskPage();});
+  document.getElementById('cvAiPriorityFilter').addEventListener('change',function(event){filters.priority=event.target.value;renderAiTaskPage();});
   document.addEventListener('lingee:task-updated',renderAiTaskPage);
   document.addEventListener('lingee:tasks-changed',renderAiTaskPage);
   document.addEventListener('lingee:ai-task-page-open',renderAiTaskPage);

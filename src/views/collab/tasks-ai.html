@@ -9,9 +9,19 @@
       <button type="button" class="cv-ai-version-switch" id="cvAiVersionSwitch">切换版本</button>
     </header>
 
+    <div class="cv-ai-toolbar" aria-label="任务筛选工具栏">
+      <label class="cv-ai-search" for="cvAiSearch"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="cvAiSearch" type="search" placeholder="搜索任务或编号" autocomplete="off"></label>
+      <select id="cvAiProjectFilter" aria-label="按项目筛选"><option value="">全部项目</option></select>
+      <select id="cvAiStatusFilter" aria-label="按状态筛选"><option value="">全部状态</option><option value="backlog">待 AI 执行</option><option value="in_review">待验收</option><option value="blocked">执行异常</option><option value="in_progress">执行中</option><option value="done">已完成</option></select>
+      <select id="cvAiPriorityFilter" aria-label="按优先级筛选"><option value="">全部优先级</option><option value="urgent">紧急</option><option value="high">高</option><option value="medium">中</option><option value="low">低</option></select>
+      <span class="cv-ai-filter-result" id="cvAiFilterResult"></span>
+      <button type="button" class="cv-ai-filter-reset hidden" id="cvAiFilterReset">清空筛选</button>
+      <button type="button" class="cv-ai-new-task" id="cvAiNewTask"><span aria-hidden="true">＋</span> 新建任务</button>
+    </div>
+
     <section class="cv-ai-alert-zone" id="cvAiAlertZone" aria-label="执行异常"></section>
 
-    <section class="cv-ai-section cv-ai-section--action" aria-labelledby="cvAiActionTitle">
+    <section class="cv-ai-section cv-ai-section--action" id="cvAiActionSection" aria-labelledby="cvAiActionTitle">
       <div class="cv-ai-section-head">
         <div><span>需要你行动</span><strong id="cvAiActionTitle">先完成需要你决定的事情</strong></div>
         <small id="cvAiActionSummary"></small>
@@ -33,11 +43,11 @@
         <div><span>关注与回顾</span><strong id="cvAiObserveTitle">AI 自动推进中，偶尔回来看看</strong></div>
         <small id="cvAiRunningSummary"></small>
       </div>
-      <div class="cv-ai-running-block">
+      <div class="cv-ai-running-block" id="cvAiRunningBlock">
         <div class="cv-ai-subhead"><span><i></i>AI 正在推进 <b id="cvAiRunningCount">0</b></span><small>通常会在 1–2 小时内完成</small></div>
         <div class="cv-ai-running-list" id="cvAiRunningList"></div>
       </div>
-      <div class="cv-ai-done-block">
+      <div class="cv-ai-done-block" id="cvAiDoneBlock">
         <div class="cv-ai-subhead"><span>最近完成 <b id="cvAiDoneCount">0</b></span><button type="button" data-ai-open-current>查看全部完成任务</button></div>
         <div class="cv-ai-done-list" id="cvAiDoneList"></div>
       </div>

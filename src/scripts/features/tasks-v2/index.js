@@ -1022,6 +1022,9 @@ export function tkOpenProjectTaskCreate(projectId) {
   if (projectId !== projectListProjectId) tkSetProjectListMode(true, projectId);
   openTaskModal(null);
 }
+export function tkOpenTaskCreate() {
+  openTaskModal(null);
+}
 var cardPropertyOptions = [
   ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
   ['project','项目'],['childProgress','子任务进度'],
@@ -4314,6 +4317,11 @@ export function initTasksV2() {
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
   if (els.tkDrawer && els.tkDrawer.parentNode !== document.body) document.body.appendChild(els.tkDrawer);
   if (els.tkDrawerClickaway && els.tkDrawerClickaway.parentNode !== document.body) document.body.appendChild(els.tkDrawerClickaway);
+  /* 新建任务浮层同样供协作开发新版复用，避免被隐藏的任务页容器一起隐藏。 */
+  ['niuCreateOverlay','niuPlanOverlay','niuProjectPopup','niuPersonPopup'].forEach(function (id) {
+    var node = document.getElementById(id);
+    if (node && node.parentNode !== document.body) document.body.appendChild(node);
+  });
   try { taskStartLegacy = localStorage.getItem(TASK_START_LEGACY_KEY) === '1'; } catch (e) { taskStartLegacy = false; }
   try { taskDetailVersion = localStorage.getItem(TASK_DETAIL_VERSION_STORAGE_KEY) === 'v1' ? 'v1' : 'latest'; } catch (e) { taskDetailVersion = 'latest'; }
   renderTaskStartAction();
