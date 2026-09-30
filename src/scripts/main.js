@@ -37,6 +37,7 @@ import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
 import { initAnalytics } from './features/analytics.js';
+import { initAiTaskPage } from './features/collab/tasks-ai.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -94,6 +95,7 @@ initPersonPicker();
 initCollabConfig();               /* 6370  features/collab/config.js */
 initCollab();                     /* 6445  features/collab/index.js */
 initTasksV2();                    /* 任务管理 v2 */
+initAiTaskPage();                 /* 协作开发 · AI 任务新版 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
 

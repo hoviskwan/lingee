@@ -2578,6 +2578,12 @@ function taskCommentTimestamp() {
 
 export function openTaskDetail(taskId) { openDrawer(Number(taskId)); }
 export function openTaskDetailFromSession(taskId) { openDrawer(Number(taskId)); }
+export function openTaskFromBoard(taskId) {
+  var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
+  if (!task) return;
+  if (['in_progress','in_review','blocked'].includes(task.status)) openBoardTaskSession(task);
+  else openDrawer(task.id);
+}
 
 function openDrawer(taskId) {
   closeTaskLabelPicker();
@@ -4036,9 +4042,7 @@ function bindEvents() {
         else state.selectedIds.add(id);
         render();
       } else {
-        var task = tkGetTasks().find(function (row) { return row.id === id; });
-        if (task && ['in_progress','in_review','blocked'].includes(task.status)) openBoardTaskSession(task);
-        else openDrawer(id);
+        openTaskFromBoard(id);
       }
     }
   });

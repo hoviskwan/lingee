@@ -1,0 +1,46 @@
+<div class="cv-panel" id="cv-tasks-ai">
+  <main class="cv-ai-tasks" aria-labelledby="cvAiTaskTitle">
+    <header class="cv-ai-task-hero">
+      <div>
+        <span class="cv-ai-task-kicker">AI 协作任务</span>
+        <h1 id="cvAiTaskTitle">你好</h1>
+        <p id="cvAiTaskBrief">正在整理你的任务进展…</p>
+      </div>
+      <button type="button" class="cv-ai-version-switch" id="cvAiVersionSwitch">切换版本</button>
+    </header>
+
+    <section class="cv-ai-alert-zone" id="cvAiAlertZone" aria-label="执行异常"></section>
+
+    <section class="cv-ai-section cv-ai-section--action" aria-labelledby="cvAiActionTitle">
+      <div class="cv-ai-section-head">
+        <div><span>需要你行动</span><strong id="cvAiActionTitle">先完成需要你决定的事情</strong></div>
+        <small id="cvAiActionSummary"></small>
+      </div>
+      <div class="cv-ai-action-grid">
+        <div class="cv-ai-action-column" data-ai-status="backlog">
+          <div class="cv-ai-column-head"><span>待 AI 执行 <b id="cvAiBacklogCount">0</b></span><small>确认后交给 AI 开始</small></div>
+          <div class="cv-ai-card-list" id="cvAiBacklogList"></div>
+        </div>
+        <div class="cv-ai-action-column" data-ai-status="in_review">
+          <div class="cv-ai-column-head"><span>待验收 <b id="cvAiReviewCount">0</b></span><small>AI 已完成，等你确认结果</small></div>
+          <div class="cv-ai-card-list" id="cvAiReviewList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cv-ai-section cv-ai-section--observe" aria-labelledby="cvAiObserveTitle">
+      <div class="cv-ai-section-head">
+        <div><span>关注与回顾</span><strong id="cvAiObserveTitle">AI 自动推进中，偶尔回来看看</strong></div>
+        <small id="cvAiRunningSummary"></small>
+      </div>
+      <div class="cv-ai-running-block">
+        <div class="cv-ai-subhead"><span><i></i>AI 正在推进 <b id="cvAiRunningCount">0</b></span><small>通常会在 1–2 小时内完成</small></div>
+        <div class="cv-ai-running-list" id="cvAiRunningList"></div>
+      </div>
+      <div class="cv-ai-done-block">
+        <div class="cv-ai-subhead"><span>最近完成 <b id="cvAiDoneCount">0</b></span><button type="button" data-ai-open-current>查看全部完成任务</button></div>
+        <div class="cv-ai-done-list" id="cvAiDoneList"></div>
+      </div>
+    </section>
+  </main>
+</div>

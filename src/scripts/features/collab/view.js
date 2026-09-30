@@ -45,6 +45,7 @@ var CV_SUBS={
   config:[['config','工作区设置'],['config-perm','人员']]
 };
 function cvPrimaryOf(name){
+  if(name==='tasks-ai') return 'tasks';
   if(name==='config-perm') return 'config';
   return name;
 }
@@ -84,11 +85,23 @@ function cvSwitchView(name){
   }
   cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
   cvShowPanel(name);
+  if(name==='tasks-ai') document.dispatchEvent(new Event('lingee:ai-task-page-open'));
   if(name==='members'&&window.cvRenderProjectList)window.cvRenderProjectList();
   if(name==='teams') renderExpertGrid();
   if(name==='experts') cvRenderExperts();
   if(name==='config' && window.cvRenderPermTable) window.cvRenderPermTable();   /* 人员管理是设置里默认打开的一项 */
   cvSyncUrl();
+}
+function cvCloseVersionPicker(){
+  var overlay=document.getElementById('cvVersionOverlay');
+  if(overlay)overlay.classList.add('hidden');
+}
+function cvOpenVersionPicker(){
+  var overlay=document.getElementById('cvVersionOverlay');
+  if(!overlay){ showView('collab'); cvSwitchView('tasks'); return; }
+  overlay.classList.remove('hidden');
+  var preferred=overlay.querySelector('[data-cv-version="ai"]');
+  if(preferred)requestAnimationFrame(function(){preferred.focus();});
 }
 /* 执行中的任务在侧边栏项目下挂一条会话 */
 function cvAddSidebarConversation(title){
@@ -103,6 +116,21 @@ function cvAddSidebarConversation(title){
 }
 
 export function initCollabView() {
+  var versionOverlay=document.getElementById('cvVersionOverlay');
+  if(versionOverlay){
+    versionOverlay.addEventListener('click',function(event){
+      var choice=event.target.closest('[data-cv-version]');
+      if(choice){
+        cvCloseVersionPicker();
+        showView('collab');
+        setNavActive('协作开发');
+        cvSwitchView(choice.getAttribute('data-cv-version')==='ai'?'tasks-ai':'tasks');
+        return;
+      }
+      if(event.target===versionOverlay||event.target.closest('[data-cv-version-close]'))cvCloseVersionPicker();
+    });
+    document.addEventListener('keydown',function(event){if(event.key==='Escape'&&!versionOverlay.classList.contains('hidden'))cvCloseVersionPicker();});
+  }
   /* 下拉筛选器：按钮开合、选项选中后刷新列表、点空白处收起 */
   document.addEventListener('click',function(e){
     var sub=e.target.closest('[data-cvsub]');
@@ -149,4 +177,4 @@ export function set_cvPendingProj(v){ cvPendingProj=v; return v; }
 /* cvPendingTab 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_cvPendingTab(v){ cvPendingTab=v; return v; }
 
-export { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvInited, cvLastTab, cvPendingProj, cvPendingTab, cvShowPanel, cvSwitchFilter, cvSwitchSub, cvSwitchView, cvToast };
+export { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvInited, cvLastTab, cvOpenVersionPicker, cvPendingProj, cvPendingTab, cvShowPanel, cvSwitchFilter, cvSwitchSub, cvSwitchView, cvToast };

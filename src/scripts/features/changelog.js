@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'70',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'kingdee',body:'功能·协作开发：协作开发新增当前版与 AI 任务新版选择入口，新版以异常置顶、决策待办、紧凑执行进度和最近完成分层展示，并复用现有任务详情与会话跳转。'},
   {id:'69',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'登录认证',author:'kingdee',body:'功能·登录认证：原型取消账号登录与退出入口，首次打开自动以默认演示用户进入，同时保留已有会话身份与现有权限数据。'},
   {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页按用户待办优先级重构为“需要你行动”和“关注与回顾”分组，新增个性化 AI 今日简报、语义化状态与空状态，并统一验收和 AI 执行动作。'},
   {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
@@ -60,6 +61,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '70':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/><path d="m13 14 2 2 4-4"/></svg>',
   '69':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
   '68':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 3v3M6.64 5.64l2.12 2.12M3 12h3m.64 6.36 2.12-2.12M12 18v3m5.36-2.64-2.12-2.12M18 12h3m-5.64-4.24 2.12-2.12"/><circle cx="12" cy="12" r="4"/></svg>',
   '67':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
