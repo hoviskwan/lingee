@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 原始备份分支
   workflow_dispatch:
 
 permissions:
