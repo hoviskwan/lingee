@@ -6,7 +6,7 @@ import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskStartLegacy, TASK_START_CHAT_ICON, TASK_START_PLAY_ICON, closeDrawer, openTaskConversationWithTask, openDrawer, syncDrawerClickaway } from './issue-detail.js';
 import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
-import { taskListVisibleColumnCount, applyTaskListFieldSettings, renderTaskStageProgress } from './list-template.js';
+import { taskListVisibleColumnCount, applyTaskListFieldSettings, renderTaskListRow as renderSharedTaskListRow } from './list-template.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal, refreshFormAssignees } from './create.js';
@@ -313,29 +313,7 @@ function renderListTreeNodes(tasks, childrenMap, depth) {
 }
 
 function renderListRow(t, opts, ctx) {
-  var depth = opts.depth || 0;
-  var hasChildren = !!opts.hasChildren;
-  var isCollapsed = !!opts.isCollapsed;
-  var childCount = opts.childCount || 0;
-  var pri = tkGetPriorityObj(t.priority);
-  var st = tkGetStatusObj(t.status);
-  var person = tkGetPerson(t.assignee);
-  var sel = ctx.selectedIds.has(t.id) ? ' selected' : '';
-  var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
-  var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
-  var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
-  var indentStyle = depth > 0 ? ' style="padding-left:calc(10px + ' + depth + 'em)"' : '';
-  return '<tr class="tk-row' + sel + (ctx.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '">'
-    + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (ctx.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
-    + '<td class="tk-col-code"><span class="tk-row-code">' + (opts.rowNum || '') + '</span></td>'
-    + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + ctx.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
-    + '<td class="tk-col-stage">' + renderTaskStageProgress(t, ctx.escapeHtml) + '</td>'
-    + '<td class="tk-col-status"><span class="tk-row-status">' + ctx.statusSvg(t.status) + ctx.escapeHtml(st.name) + '</span></td>'
-    + '<td class="tk-col-priority"><span class="tk-row-priority">' + ctx.escapeHtml(pri.name) + '</span></td>'
-
-    + '<td class="tk-col-project">' + ctx.escapeHtml(tkGetProjectName(t.project)) + '</td>'
-    + '<td class="tk-col-created">' + ctx.fmtDate(t.createDate) + '</td>'
-    + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
+  return renderSharedTaskListRow(t, opts, ctx);
 }
 
 function getGroupedTasks(tasks) {

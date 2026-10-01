@@ -1,4 +1,4 @@
-import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
+import { tkGetProjectName, tkGetStatusObj } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
@@ -14,56 +14,73 @@ export function renderTaskListTreeNodes(tasks, childrenMap, depth, context) {
   }).join('');
 }
 
-export function renderTaskStageProgress(task, escapeValue) {
+function currentTaskStage(task) {
   var stages = taskExecutionStages(task);
-  if (!stages.length) return '<span class="tk-list-stage-empty">—</span>';
+  if (!stages.length) return {name:'未规划', index:0, total:0};
   var currentIndex = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
   if (task.status === 'done') currentIndex = stages.length - 1;
   if (currentIndex < 0 && Array.isArray(task.executionPlan)) {
     currentIndex = task.executionPlan.findIndex(function (stage) { return stage.status !== 'done'; });
   }
   if (currentIndex < 0) currentIndex = 0;
-  var isDone = task.status === 'done';
   var current = stages[currentIndex] || stages[0];
-  var summaryClass = isDone ? ' is-done' : '';
-  var steps = stages.map(function (stage, index) {
-    var planStage = Array.isArray(task.executionPlan) ? task.executionPlan.find(function (item) { return item.id === stage.id; }) : null;
-    var complete = isDone || planStage?.status === 'done' || index < currentIndex;
-    var active = !isDone && index === currentIndex;
-    var className = complete ? ' is-complete' : active ? ' is-current' : ' is-pending';
-    return '<span class="tk-list-stage-step' + className + '" title="' + escapeValue(stage.name) + '"><span>' + escapeValue(stage.name) + '</span><i aria-hidden="true"></i></span>';
-  }).join('');
-  return '<div class="tk-list-stage-progress" role="progressbar" aria-label="当前任务阶段：' + escapeValue(current.name) + '" aria-valuemin="1" aria-valuemax="' + stages.length + '" aria-valuenow="' + (currentIndex + 1) + '">'
-    + '<div class="tk-list-stage-summary' + summaryClass + '"><span>' + escapeValue(current.name) + '</span><b>' + (currentIndex + 1) + '/' + stages.length + '</b></div>'
-    + '<div class="tk-list-stage-track">' + steps + '</div></div>';
+  return {name:current.name, index:currentIndex + 1, total:stages.length};
 }
 
-function renderTaskListRow(t, opts, context) {
+function taskListSummary(task, stage) {
+  if (task.status === 'blocked') return 'AI 执行已暂停 · 检查点已保存';
+  if (task.status === 'in_review') return 'AI 已提交交付物 · 等待你审核';
+  if (task.status === 'in_progress') return 'AI 正在执行 · ' + stage.name;
+  if (task.status === 'done') return 'AI 已完成交付 · 结果已归档';
+  if (task.status === 'cancelled') return '任务已取消';
+  if (task.status === 'planned') return '等待确认任务计划';
+  return '等待开始处理';
+}
+
+function taskDueLabel(task) {
+  if (!task.dueDate) return '暂无截止日期';
+  var today = new Date();
+  var todayKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  if (task.dueDate === todayKey) return '今日截止';
+  var parts = task.dueDate.split('-');
+  return parts.length === 3 ? Number(parts[1]) + '/' + Number(parts[2]) + ' 截止' : task.dueDate + ' 截止';
+}
+
+function renderAdaptiveStageProgress(task, stage, escapeValue) {
+  if (!stage.total) return '';
+  var stages = taskExecutionStages(task);
+  var details = stages.map(function (item, index) {
+    var number = index + 1;
+    var planStage = Array.isArray(task.executionPlan) ? task.executionPlan.find(function (row) { return row.id === item.id; }) : null;
+    var complete = task.status === 'done' || planStage?.status === 'done' || number < stage.index;
+    var state = complete ? ' is-complete' : number === stage.index ? ' is-current' : ' is-pending';
+    var stateName = complete ? '已完成' : number === stage.index ? '当前阶段' : '待开始';
+    return '<li class="tk-stage-popover-item' + state + '"><i aria-hidden="true"></i><span>' + escapeValue(item.name) + '</span><em>' + stateName + '</em></li>';
+  }).join('');
+  var percent = Math.round(stage.index / stage.total * 100);
+  return '<span class="tk-stage-progress-wrap" tabindex="0" aria-label="阶段进度 ' + stage.index + '/' + stage.total + '，当前' + escapeValue(stage.name) + '">'
+    + '<span class="tk-stage-progress-track" role="progressbar" aria-valuemin="1" aria-valuemax="' + stage.total + '" aria-valuenow="' + stage.index + '"><i style="width:' + percent + '%"></i></span>'
+    + '<span class="tk-stage-progress-count">' + stage.index + '/' + stage.total + '</span>'
+    + '<span class="tk-stage-popover" role="tooltip"><span class="tk-stage-popover-head"><strong>任务阶段</strong><b>' + stage.index + '/' + stage.total + '</b></span><ol>' + details + '</ol></span></span>';
+}
+
+export function renderTaskListRow(t, opts, context) {
   var depth = opts.depth || 0;
   var hasChildren = !!opts.hasChildren;
   var isCollapsed = !!opts.isCollapsed;
   var childCount = opts.childCount || 0;
-  var pri = tkGetPriorityObj(t.priority);
   var st = tkGetStatusObj(t.status);
-  var person = tkGetPerson(t.assignee);
   var sel = context.selectedIds.has(t.id) ? ' selected' : '';
+  var stage = currentTaskStage(t);
   var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
-  var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
-  var indentStyle = depth > 0 ? ' style="padding-left:calc(10px + ' + depth + 'em)"' : '';
   return '<tr class="tk-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '">'
-    + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (context.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
-    + '<td class="tk-col-code"><span class="tk-row-code">' + context.escapeHtml(t.code) + '</span></td>'
-    + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + context.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
-    + '<td class="tk-col-stage">' + renderTaskStageProgress(t, context.escapeHtml) + '</td>'
-    + '<td class="tk-col-status"><span class="tk-row-status">' + context.statusSvg(t.status) + context.escapeHtml(st.name) + '</span></td>'
-    + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(t.issueType) + '</span>' : '—') + '</td>'
-    + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
-    + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + context.avatarSm(t.assignee) + '<span>' + context.escapeHtml(person.name) + '</span></div></td>'
-    + '<td class="tk-col-project">' + context.escapeHtml(tkGetProjectName(t.project)) + '</td>'
-    + '<td class="tk-col-created">' + context.fmtDate(t.createDate) + '</td>'
-    + '<td class="tk-col-desc">' + (t.desc ? '<span class="tk-row-desc" title="' + context.escapeHtml(String(t.desc).replace(/\s+/g, ' ')) + '">' + context.escapeHtml(t.desc) + '</span>' : '—') + '</td>'
-    + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
+    + '<td class="tk-compact-cell" colspan="12"><div class="tk-compact-task" style="--tk-task-indent:' + (depth * 20) + 'px">'
+    + '<div class="tk-compact-main"><div class="tk-compact-title">' + toggle + '<strong>' + context.escapeHtml(t.title) + '</strong>' + childBadge + '</div>'
+    + '<div class="tk-compact-meta"><span>' + context.escapeHtml(t.code) + '</span><i>·</i><span>' + context.escapeHtml(tkGetProjectName(t.project)) + '</span><i>/</i><span>' + context.escapeHtml(stage.name) + '</span></div>'
+    + '<div class="tk-compact-summary-row"><div class="tk-compact-summary">' + context.escapeHtml(taskListSummary(t, stage)) + '</div>' + renderAdaptiveStageProgress(t, stage, context.escapeHtml) + '</div></div>'
+    + '<div class="tk-compact-side"><span class="tk-compact-status" data-status="' + context.escapeHtml(t.status) + '">' + context.escapeHtml(st.name) + '</span><span class="tk-compact-due">' + context.escapeHtml(taskDueLabel(t)) + '</span></div>'
+    + '</div></td></tr>';
 }
 
 export function taskListVisibleColumnCount(order, visibility) {
