@@ -21,7 +21,7 @@ import { $, $$ } from '../../core/dom.js';
 import { setComposerTaskReference } from '../composer.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
-import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
+import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount, updateNeedsActionFilters } from './list-template.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
@@ -64,7 +64,6 @@ var LIST_FIELDS = [
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
 var TASK_STATUS_TABS = [
-  { id:'all', name:'所有任务', statuses:null },
   { id:'needs_action', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
   { id:'ai_running', name:'AI执行中', statuses:['in_progress'] },
   { id:'done', name:'已完成', statuses:['done'] },
@@ -73,6 +72,7 @@ var state = {
   layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   activeStatusTab: 'needs_action',
+  needsActionType: 'all',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },
@@ -217,7 +217,7 @@ function cacheEls() {
     'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
     'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNewGroup','tkToolbarNew','tkToolbarNewArrow','tkToolbarNewMenu','tkImportExcel','tkExportExcelTemplate',
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
-    'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
+    'tkLayoutToggle','tkNeedsActionFilters','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
     'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalSave','tkModalTitle','tkMcExpand','tkMcContinue','tkMcAgent','tkMcAgentPanel','tkMcAgentChat','tkMcAgentPrompt','tkMcAgentSend',
@@ -492,8 +492,9 @@ function getFilteredTasks(skipField, options) {
   else if (scope === 'my_assigned') tasks = tasks.filter(tkWasTaskHandler);
   else if (scope === 'in_progress') tasks = tasks.filter(function (t) { return t.status === 'in_progress'; });
   if (!options.skipStatusTab && !projectListMode && state.layout === 'list') {
-    var statusTab = TASK_STATUS_TABS.find(function (tab) { return tab.id === state.activeStatusTab; }) || TASK_STATUS_TABS[1];
+    var statusTab = TASK_STATUS_TABS.find(function (tab) { return tab.id === state.activeStatusTab; }) || TASK_STATUS_TABS[0];
     if (statusTab.statuses) tasks = tasks.filter(function (task) { return statusTab.statuses.includes(task.status); });
+    if (statusTab.id === 'needs_action' && state.needsActionType !== 'all') tasks = tasks.filter(function (task) { return task.status === state.needsActionType; });
   }
   if (state.search) {
     var q = state.search.toLowerCase();
@@ -926,6 +927,8 @@ function render() {
   renderDisplayControls();
   updateFilterButton();
   renderViewBar();
+  var summaryTasks = getFilteredTasks(undefined, {skipStatusTab:true});
+  updateNeedsActionFilters(els, summaryTasks.filter(function (task) { return ['backlog','in_review','blocked'].includes(task.status); }), state.needsActionType, state.layout === 'list' && state.activeStatusTab === 'needs_action' && !projectListMode);
   if (split) {
     var visibleTasks = getFilteredTasks();
     if (!visibleTasks.some(function (t) { return t.id === state.drawerTaskId; })) {
@@ -3747,6 +3750,13 @@ function bindEvents() {
       updateFilterButton();
       render();
     }
+  });
+  els.tkNeedsActionFilters.addEventListener('click', function (e) {
+    var button = e.target.closest('[data-needs-action-type]');
+    if (!button) return;
+    state.needsActionType = button.getAttribute('data-needs-action-type');
+    state.selectedIds.clear();
+    render();
   });
   els.tkViewTabs.addEventListener('keydown', function (e) {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.list-page-tab')) { e.preventDefault(); e.target.click(); }

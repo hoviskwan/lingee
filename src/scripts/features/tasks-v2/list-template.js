@@ -1,6 +1,13 @@
 import { tkGetProjectName, tkGetStatusObj } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
+var NEEDS_ACTION_FILTERS = [
+  { id:'all', name:'全部' },
+  { id:'in_review', name:'待审核' },
+  { id:'backlog', name:'待开始' },
+  { id:'blocked', name:'阻塞' },
+];
+
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
 export function renderTaskListTreeNodes(tasks, childrenMap, depth, context) {
@@ -11,6 +18,20 @@ export function renderTaskListTreeNodes(tasks, childrenMap, depth, context) {
     var html = renderTaskListRow(task, { depth:depth, hasChildren:hasChildren, isCollapsed:isCollapsed, childCount:children.length }, context);
     if (hasChildren && !isCollapsed) html += renderTaskListTreeNodes(children, childrenMap, depth + 1, context);
     return html;
+  }).join('');
+}
+
+export function updateNeedsActionFilters(elements, tasks, activeType, visible) {
+  if (!elements.tkNeedsActionFilters) return;
+  elements.tkNeedsActionFilters.classList.toggle('hidden', !visible);
+  if (!visible) {
+    elements.tkNeedsActionFilters.innerHTML = '';
+    return;
+  }
+  elements.tkNeedsActionFilters.innerHTML = '<span class="tk-needs-action-filter-label">任务种类</span>' + NEEDS_ACTION_FILTERS.map(function (filter) {
+    var count = filter.id === 'all' ? tasks.length : tasks.filter(function (task) { return task.status === filter.id; }).length;
+    var active = filter.id === activeType;
+    return '<button type="button" class="tk-needs-action-filter' + (active ? ' active' : '') + '" data-needs-action-type="' + filter.id + '" aria-pressed="' + active + '"><span>' + filter.name + '</span><b>' + count + '</b></button>';
   }).join('');
 }
 

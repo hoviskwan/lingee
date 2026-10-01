@@ -6,7 +6,7 @@ import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskStartLegacy, TASK_START_CHAT_ICON, TASK_START_PLAY_ICON, closeDrawer, openTaskConversationWithTask, openDrawer, syncDrawerClickaway } from './issue-detail.js';
 import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
-import { taskListVisibleColumnCount, applyTaskListFieldSettings, renderTaskListRow as renderSharedTaskListRow } from './list-template.js';
+import { taskListVisibleColumnCount, applyTaskListFieldSettings, renderTaskListRow as renderSharedTaskListRow, updateNeedsActionFilters } from './list-template.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal, refreshFormAssignees } from './create.js';
@@ -22,7 +22,6 @@ var viewBeforeProjectList = null;
 var collapsedParents = new Set();
 
 var TASK_STATUS_TABS = [
-  { id:'all', name:'所有任务', statuses:null },
   { id:'needs_action', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
   { id:'ai_running', name:'AI执行中', statuses:['in_progress'] },
   { id:'done', name:'已完成', statuses:['done'] },
@@ -187,8 +186,9 @@ function getFilteredTasks(skipField, options) {
   else if (scope === 'my_assigned') tasks = tasks.filter(tkWasTaskHandler);
   else if (scope === 'my_created') tasks = tasks.filter(function (t) { return t.createdBy === tkCurrentUserId(); });
   if (!options.skipStatusTab && !projectListMode && taskViewState.layout === 'list') {
-    var statusTab = TASK_STATUS_TABS.find(function (tab) { return tab.id === taskViewState.activeStatusTab; }) || TASK_STATUS_TABS[1];
+    var statusTab = TASK_STATUS_TABS.find(function (tab) { return tab.id === taskViewState.activeStatusTab; }) || TASK_STATUS_TABS[0];
     if (statusTab.statuses) tasks = tasks.filter(function (task) { return statusTab.statuses.includes(task.status); });
+    if (statusTab.id === 'needs_action' && taskViewState.needsActionType !== 'all') tasks = tasks.filter(function (task) { return task.status === taskViewState.needsActionType; });
   }
   if (taskViewState.search) {
     var q = taskViewState.search.toLowerCase();
@@ -649,6 +649,8 @@ function render() {
   renderDisplayControls();
   updateFilterButton();
   renderViewBar();
+  var summaryTasks = getFilteredTasks(undefined, {skipStatusTab:true});
+  updateNeedsActionFilters(els, summaryTasks.filter(function (task) { return ['backlog','in_review','blocked'].includes(task.status); }), taskViewState.needsActionType, taskViewState.layout === 'list' && taskViewState.activeStatusTab === 'needs_action' && !projectListMode);
   if (split) {
     var visibleTasks = getFilteredTasks();
     if (!visibleTasks.some(function (t) { return t.id === taskViewState.drawerTaskId; })) {
@@ -1345,6 +1347,13 @@ els.tkViewMenuNew.addEventListener('click', function () { closeViewMenu(); openS
 els.tkViewManage.addEventListener('click', function () { closeViewMenu(); openManageViews(); });
 document.addEventListener('click', function (e) { if (!e.target.closest('.tk-view-action')) closeViewMenu(); });
 els.tkViewTabs.addEventListener('click', function (e) {
+    var statusTab = e.target.closest('[data-task-status-tab]');
+    if (statusTab) {
+      taskViewState.activeStatusTab = statusTab.getAttribute('data-task-status-tab');
+      taskViewState.selectedIds.clear();
+      render();
+      return;
+    }
     var delBtn = e.target.closest('[data-del-view]');
     if (delBtn) {
       e.stopPropagation();
@@ -1380,6 +1389,13 @@ els.tkViewTabs.addEventListener('click', function (e) {
       render();
     }
   });
+els.tkNeedsActionFilters.addEventListener('click', function (e) {
+  var button = e.target.closest('[data-needs-action-type]');
+  if (!button) return;
+  taskViewState.needsActionType = button.getAttribute('data-needs-action-type');
+  taskViewState.selectedIds.clear();
+  render();
+});
 els.tkViewTabs.addEventListener('keydown', function (e) {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.list-page-tab')) { e.preventDefault(); e.target.click(); }
   });

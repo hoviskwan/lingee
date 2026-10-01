@@ -40,6 +40,13 @@
 .tk-status-tab{gap:8px}
 .tk-status-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;box-sizing:border-box;padding:0 6px;border-radius:9px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;font-weight:500;line-height:18px}
 .tk-status-tab.active .tk-status-tab-count{background:var(--brand-fill);color:var(--brand)}
+.tk-needs-action-filters{display:flex;align-items:center;gap:6px;padding:0 24px 10px;flex:none}
+.tk-needs-action-filters.hidden{display:none}
+.tk-needs-action-filter-label{margin-right:2px;color:var(--text-soft);font-size:11px}
+.tk-needs-action-filter{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.tk-needs-action-filter:hover{border-color:var(--border-hover);background:var(--hover);color:var(--text)}
+.tk-needs-action-filter.active{border-color:color-mix(in srgb,var(--brand) 35%,var(--border));background:var(--brand-fill);color:var(--brand);font-weight:600}
+.tk-needs-action-filter b{min-width:14px;color:inherit;font-size:10px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums}
 .tk-overflow-menu{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
 .tk-overflow-menu.show{display:block}
 .tk-overflow-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text)}

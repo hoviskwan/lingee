@@ -13,7 +13,7 @@ var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id
 
 var taskViewState = {
   layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
-  search: '', filters: [], selectedIds: new Set(), activeViewId: 'all', activeStatusTab:'needs_action',
+  search: '', filters: [], selectedIds: new Set(), activeViewId: 'all', activeStatusTab:'needs_action', needsActionType:'all',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },
@@ -28,7 +28,7 @@ function cacheEls() {
     'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
     'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNewGroup','tkToolbarNew','tkToolbarNewArrow','tkToolbarNewMenu','tkImportExcel','tkExportExcelTemplate',
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
-    'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
+    'tkLayoutToggle','tkNeedsActionFilters','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
     'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalCancel','tkModalSave','tkModalTitle',

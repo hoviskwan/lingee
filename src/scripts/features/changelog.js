@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'68',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认改为列表视图，新增“需要我处理 / AI执行中 / 已完成”等状态页签及实时数量，移除看板与列表的搜索筛选和新建入口，并将列表重构为任务卡片式信息布局，通过轻量进度线与悬停浮层查看完整阶段明细。'},
+  {id:'68',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认改为列表视图，新增“需要我处理 / AI执行中 / 已完成”等状态页签及实时数量，暂时隐藏“所有任务”并支持在“需要我处理”中按待审核、待开始、阻塞快速过滤，移除看板与列表的搜索筛选和新建入口，并将列表重构为任务卡片式信息布局，通过轻量进度线与悬停浮层查看完整阶段明细。'},
   {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
   {id:'66',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目列表和详情重构分组、搜索筛选、显示设置与权限化编辑，产物支持侧栏预览、全屏、筛选和下载；新建任务支持两步式智能创建及逐阶段执行人和自动审核配置，任务管理新增 Excel 模板下载与导入。'},
   {id:'58',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',body:'功能·任务管理：看板按状态分组保留空列并与有数据列等高，收起分组时恢复自适应高度，待规划任务并入待办列；任务会话结果汇报改为按任务数据生成；任务详情去除专家团卡片重复状态；协作开发徽标与看板审核中列同口径；本地预览服务在构建后自动刷新页面。'},
