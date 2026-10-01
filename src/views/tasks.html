@@ -13,7 +13,7 @@
       <div class="list-page-tabs tk-view-tabs" id="tkViewTabs" role="tablist" aria-label="任务视图">
         <!-- 视图 Tab 由 JS 渲染 -->
       </div>
-      <div class="tk-view-action">
+      <div class="tk-view-action hidden">
         <button class="tk-view-add" id="tkViewAdd" data-tooltip="视图" aria-label="视图" aria-expanded="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
         </button>
@@ -33,11 +33,11 @@
     <!-- 工具栏 -->
     <div class="tk-toolbar">
       <div class="tk-tools-left">
-        <div class="tk-search-wrap">
+        <div class="tk-search-wrap hidden">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input type="search" id="tkSearch" name="task-filter-query" placeholder="搜索任务或编号…" aria-label="搜索任务或编号" autocomplete="off" data-1p-ignore data-lpignore="true" readonly>
         </div>
-        <button class="tk-filter-btn" id="tkFilterBtn" aria-haspopup="menu" aria-expanded="false">
+        <button class="tk-filter-btn hidden" id="tkFilterBtn" aria-haspopup="menu" aria-expanded="false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
           <span id="tkFilterLabel">筛选</span>
         </button>
@@ -169,7 +169,7 @@
       <div class="tk-empty hidden" id="tkEmpty">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
         <p>没有匹配的任务</p>
-        <button class="tk-btn-ghost" id="tkResetFilter">清除筛选</button>
+        <button class="tk-btn-ghost hidden" id="tkResetFilter">清除筛选</button>
       </div>
 
       <!-- 侧滑详情的透明点击层 -->

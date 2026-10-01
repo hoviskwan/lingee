@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'68',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认改为列表视图，新增“需要我处理 / AI执行中 / 已完成”等状态页签及实时数量，移除看板与列表的搜索筛选和新建入口，并在列表标题后增加紧凑的圆点式当前任务阶段进度。'},
   {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
   {id:'66',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目列表和详情重构分组、搜索筛选、显示设置与权限化编辑，产物支持侧栏预览、全屏、筛选和下载；新建任务支持两步式智能创建及逐阶段执行人和自动审核配置，任务管理新增 Excel 模板下载与导入。'},
   {id:'58',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',body:'功能·任务管理：看板按状态分组保留空列并与有数据列等高，收起分组时恢复自适应高度，待规划任务并入待办列；任务会话结果汇报改为按任务数据生成；任务详情去除专家团卡片重复状态；协作开发徽标与看板审核中列同口径；本地预览服务在构建后自动刷新页面。'},
@@ -58,6 +59,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '68':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>',
   '67':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
   '66':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 12h8M8 16h5"/></svg>',
   '58':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>',

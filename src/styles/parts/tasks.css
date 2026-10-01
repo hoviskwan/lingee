@@ -34,6 +34,12 @@
 .tk-view-menu button:hover{background:var(--hover)}
 .tk-view-menu svg{flex:none}
 .tk-view-overflow.hidden{display:none}
+.tk-view-bar.hidden{display:none}
+.tk-view-tabs.hidden{display:none}
+.tk-view-bar>.tk-display-btn{margin-left:auto;flex:none}
+.tk-status-tab{gap:8px}
+.tk-status-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;box-sizing:border-box;padding:0 6px;border-radius:9px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;font-weight:500;line-height:18px}
+.tk-status-tab.active .tk-status-tab-count{background:var(--brand-fill);color:var(--brand)}
 .tk-overflow-menu{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
 .tk-overflow-menu.show{display:block}
 .tk-overflow-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text)}
@@ -42,6 +48,7 @@
 
 /* ---------- 工具栏 ---------- */
 .tk-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px;flex-wrap:wrap}
+#view-tasks>.tk-toolbar{display:none}
 .tk-tools-left{display:flex;align-items:center;gap:8px}
 .tk-tools-right{display:flex;align-items:center;gap:8px}
 .tk-toolbar-new-group{position:relative;display:inline-flex;align-items:center;height:30px}
@@ -59,12 +66,14 @@
 
 /* 搜索框 */
 .tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;transition:border-color .15s}
+.tk-search-wrap.hidden{display:none}
 .tk-search-wrap:focus-within{border-color:var(--border-focus);background:var(--bg)}
 .tk-search-wrap input{border:none;background:transparent;outline:none;font-size:13px;width:180px;color:var(--text)}
 .tk-search-wrap input::placeholder{color:var(--text-soft)}
 
 /* 筛选按钮 */
 .tk-filter-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
+.tk-filter-btn.hidden{display:none}
 .tk-filter-btn:hover{border-color:var(--border-hover);color:var(--text)}
 .tk-filter-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
 .tk-filter-btn.has-filters{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
@@ -187,6 +196,14 @@
 /* ---------- 筛选标签栏 ---------- */
 .tk-filter-chips{display:flex;align-items:center;gap:6px;padding:6px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;flex-wrap:wrap}
 .tk-filter-chips.hidden{display:none}
+
+/* 任务看板与列表均不提供通用筛选入口；状态切换只通过列表页签完成。 */
+#view-tasks #tkFilterBtn,
+#view-tasks #tkFilterPanel,
+#view-tasks #tkFilterChips,
+#view-tasks #tkResetFilter,
+#view-tasks .tk-search-wrap{display:none}
+#view-tasks .tk-board-col-add{display:none}
 .tk-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:12px;background:var(--brand-fill);border:1px solid var(--border-focus);color:var(--brand);cursor:default}
 .tk-chip:hover{border-color:var(--brand)}
 .tk-chip .tk-chip-field{color:var(--brand);font-weight:500}
@@ -324,7 +341,7 @@
 .tk-list-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
 .tk-list-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
 
-.tk-table{width:100%;min-width:1100px;border-collapse:collapse;font-size:var(--cv-list-row-size);table-layout:fixed}
+.tk-table{width:100%;min-width:1340px;border-collapse:collapse;font-size:var(--cv-list-row-size);table-layout:fixed}
 .tk-table thead{position:sticky;top:0;z-index:5}
 .tk-table th{position:sticky;top:0;background:var(--fill-1);border-bottom:1px solid var(--border);padding:var(--cv-list-head-pad);text-align:left;font-weight:var(--cv-list-head-fw);color:var(--cv-list-head-fg);font-size:var(--cv-list-head-size);white-space:nowrap;z-index:5;overflow:hidden;text-overflow:ellipsis;position:relative}
 .tk-table th[data-sort]{cursor:pointer;user-select:none}
@@ -372,6 +389,23 @@ body.tk-col-resizing{user-select:none;cursor:col-resize}
 .tk-col-title{width:200px;min-width:200px}
 .tk-table td.tk-col-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tk-table th.tk-col-title{padding-left:34px}
+.tk-col-stage{width:240px;min-width:240px}
+.tk-table td.tk-col-stage{padding-top:9px;padding-bottom:9px}
+.tk-list-stage-progress{display:flex;min-width:0;max-width:210px;flex-direction:column;gap:6px}
+.tk-list-stage-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;color:var(--text-secondary);font-size:11px;line-height:13px;white-space:nowrap}
+.tk-list-stage-summary>span{overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:500}
+.tk-list-stage-summary>b{flex:none;color:var(--text-soft);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums}
+.tk-list-stage-summary.is-done>span{color:#438a59}
+.tk-list-stage-track{display:flex;min-width:0;padding:0 2px}
+.tk-list-stage-step{position:relative;display:flex;min-width:0;flex:1;align-items:center;justify-content:center}
+.tk-list-stage-step>span{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.tk-list-stage-step>i{position:relative;z-index:1;display:block;width:7px;height:7px;box-sizing:border-box;border:1.5px solid #d8dce3;border-radius:50%;background:var(--bg);transition:border-color .15s,background .15s,box-shadow .15s}
+.tk-list-stage-step::after{content:'';position:absolute;z-index:0;left:calc(50% + 3.5px);top:3px;width:calc(100% - 7px);height:1px;background:#dfe3e8}
+.tk-list-stage-step:last-child::after{display:none}
+.tk-list-stage-step.is-complete>i{border-color:#72b98a;background:#72b98a}
+.tk-list-stage-step.is-complete::after{background:#9acbaa}
+.tk-list-stage-step.is-current>i{border-color:#6674e8;background:#6674e8;box-shadow:0 0 0 1.5px rgba(102,116,232,.16)}
+.tk-list-stage-empty{color:var(--text-soft)}
 .tk-col-status{width:90px}
 .tk-col-priority{width:80px}
 .tk-col-assignee{width:100px}
@@ -1184,9 +1218,6 @@ input[type=date].tk-mc-pill{width:auto}
 .tk-row-collapse-ghost{position:fixed;z-index:20;pointer-events:none;transform-origin:top center}
 .tk-just-expanded .tk-card--child{animation:tkCardExpandIn .28s cubic-bezier(.34,1.3,.64,1) both;transform-origin:top center}
 .tk-card.tk-leaving{animation:tkCardExpandOut .22s cubic-bezier(.4,0,.2,1) both;transform-origin:top center}
-
-/* 任务页固定为最新版布局：视图方案整行不再显示。 */
-#view-tasks #tkViewBar{display:none}
 
 /* ---------- 任务详情「我的会话」：只列当前用户的会话标题，默认折叠 ---------- */
 .tk-my-sessions{margin:0 0 32px}

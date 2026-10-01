@@ -1,6 +1,7 @@
 /* T00 结构拆分：ui-state。保留原交互；事件在 init* 中按原顺序注册。 */
 var LIST_FIELDS = [
   { id:'code', name:'编号' }, { id:'title', name:'标题', required:true },
+  { id:'stage', name:'当前任务阶段', required:true },
   { id:'module', name:'模块' }, { id:'status', name:'状态' }, { id:'type', name:'任务类型' },
   { id:'priority', name:'优先级' }, { id:'assignee', name:'处理人' },
   { id:'project', name:'项目' },
@@ -11,8 +12,8 @@ var LIST_FIELDS = [
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
 
 var taskViewState = {
-  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
-  search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
+  layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
+  search: '', filters: [], selectedIds: new Set(), activeViewId: 'all', activeStatusTab:'needs_action',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },

@@ -6,8 +6,7 @@ import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskStartLegacy, TASK_START_CHAT_ICON, TASK_START_PLAY_ICON, closeDrawer, openTaskConversationWithTask, openDrawer, syncDrawerClickaway } from './issue-detail.js';
 import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
-import { taskListVisibleColumnCount, applyTaskListFieldSettings } from './list-template.js';
-import { renderListPageTabs } from '../shared/list-page-tabs.js';
+import { taskListVisibleColumnCount, applyTaskListFieldSettings, renderTaskStageProgress } from './list-template.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal, refreshFormAssignees } from './create.js';
@@ -21,6 +20,20 @@ var layoutBeforeProjectList = null;
 var viewBeforeProjectList = null;
 
 var collapsedParents = new Set();
+
+var TASK_STATUS_TABS = [
+  { id:'all', name:'所有任务', statuses:null },
+  { id:'needs_action', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
+  { id:'ai_running', name:'AI执行中', statuses:['in_progress'] },
+  { id:'done', name:'已完成', statuses:['done'] },
+];
+
+function normalizeRequiredListFieldOrder() {
+  var order = taskViewState.listFieldOrder.filter(function (id) { return id !== 'stage'; });
+  var titleIndex = order.indexOf('title');
+  order.splice(titleIndex >= 0 ? titleIndex + 1 : 0, 0, 'stage');
+  taskViewState.listFieldOrder = order;
+}
 
 var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
 var CARD_PROP_REV = 2; /* 与 index.js 保持同值：卡片显示属性默认值版本 */
@@ -162,7 +175,8 @@ function handleCardAction(act, aid) {
   }
 }
 
-function getFilteredTasks(skipField) {
+function getFilteredTasks(skipField, options) {
+  options = options || {};
   var tasks = tkGetTasks();
   tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
@@ -172,6 +186,10 @@ function getFilteredTasks(skipField) {
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
   else if (scope === 'my_assigned') tasks = tasks.filter(tkWasTaskHandler);
   else if (scope === 'my_created') tasks = tasks.filter(function (t) { return t.createdBy === tkCurrentUserId(); });
+  if (!options.skipStatusTab && !projectListMode && taskViewState.layout === 'list') {
+    var statusTab = TASK_STATUS_TABS.find(function (tab) { return tab.id === taskViewState.activeStatusTab; }) || TASK_STATUS_TABS[1];
+    if (statusTab.statuses) tasks = tasks.filter(function (task) { return statusTab.statuses.includes(task.status); });
+  }
   if (taskViewState.search) {
     var q = taskViewState.search.toLowerCase();
     tasks = tasks.filter(function (t) {
@@ -311,6 +329,7 @@ function renderListRow(t, opts, ctx) {
     + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (ctx.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
     + '<td class="tk-col-code"><span class="tk-row-code">' + (opts.rowNum || '') + '</span></td>'
     + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + ctx.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
+    + '<td class="tk-col-stage">' + renderTaskStageProgress(t, ctx.escapeHtml) + '</td>'
     + '<td class="tk-col-status"><span class="tk-row-status">' + ctx.statusSvg(t.status) + ctx.escapeHtml(st.name) + '</span></td>'
     + '<td class="tk-col-priority"><span class="tk-row-priority">' + ctx.escapeHtml(pri.name) + '</span></td>'
 
@@ -355,7 +374,19 @@ function getGroupedTasks(tasks) {
 }
 
 function renderViewBar() {
-  els.tkViewTabs.innerHTML = renderListPageTabs(tkGetViews().map(function(view){return {id:view.id,name:view.name,removable:!view.builtin};}),taskViewState.activeViewId,'data-view-id');
+  var showStatusTabs = taskViewState.layout === 'list' && !projectListMode;
+  document.getElementById('tkViewBar')?.classList.remove('hidden');
+  els.tkViewTabs.classList.toggle('hidden', !showStatusTabs);
+  if (!showStatusTabs) {
+    els.tkViewTabs.innerHTML = '';
+    return;
+  }
+  var tasks = getFilteredTasks(undefined, {skipStatusTab:true});
+  els.tkViewTabs.innerHTML = TASK_STATUS_TABS.map(function (tab) {
+    var count = tab.statuses ? tasks.filter(function (task) { return tab.statuses.includes(task.status); }).length : tasks.length;
+    var active = tab.id === taskViewState.activeStatusTab;
+    return '<button type="button" class="list-page-tab tk-status-tab' + (active ? ' active' : '') + '" data-task-status-tab="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-status-tab-count">' + count + '</span></button>';
+  }).join('');
 }
 
 function renderBoard() {
@@ -448,7 +479,7 @@ function renderList(tasks) {
   showBoardOrList();
   var tree = buildTaskTree(tasks);
   var html = renderListTreeNodes(tree.roots, tree.childrenMap, 0);
-  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="' + visibleListColumnCount() + '"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
+  els.tkListBody.innerHTML = html;
   updateSortArrows();
 }
 
@@ -615,6 +646,10 @@ function updateBulkBar() {
 
 function render() {
   tkSyncPeople();
+  normalizeRequiredListFieldOrder();
+  taskViewState.filters = [];
+  taskViewState.search = '';
+  if (els.tkSearch) els.tkSearch.value = '';
   taskViewState.selectedIds.forEach(function (id) {
     var task = tkGetTasks().find(function (item) { return item.id === id; });
     if (!tkCanViewTask(task)) taskViewState.selectedIds.delete(id);
@@ -625,7 +660,7 @@ function render() {
   }
   var split = taskViewState.viewMode === 'split';
   if (split) taskViewState.layout = 'list';
-  els.tkToolbarNewGroup.classList.remove('hidden');
+  els.tkToolbarNewGroup.classList.add('hidden');
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', taskViewState.viewMode === 'full');
   $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {

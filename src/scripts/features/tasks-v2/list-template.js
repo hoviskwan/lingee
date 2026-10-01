@@ -1,4 +1,5 @@
 import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
+import { taskExecutionStages } from './task-execution.js';
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
@@ -11,6 +12,30 @@ export function renderTaskListTreeNodes(tasks, childrenMap, depth, context) {
     if (hasChildren && !isCollapsed) html += renderTaskListTreeNodes(children, childrenMap, depth + 1, context);
     return html;
   }).join('');
+}
+
+export function renderTaskStageProgress(task, escapeValue) {
+  var stages = taskExecutionStages(task);
+  if (!stages.length) return '<span class="tk-list-stage-empty">—</span>';
+  var currentIndex = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
+  if (task.status === 'done') currentIndex = stages.length - 1;
+  if (currentIndex < 0 && Array.isArray(task.executionPlan)) {
+    currentIndex = task.executionPlan.findIndex(function (stage) { return stage.status !== 'done'; });
+  }
+  if (currentIndex < 0) currentIndex = 0;
+  var isDone = task.status === 'done';
+  var current = stages[currentIndex] || stages[0];
+  var summaryClass = isDone ? ' is-done' : '';
+  var steps = stages.map(function (stage, index) {
+    var planStage = Array.isArray(task.executionPlan) ? task.executionPlan.find(function (item) { return item.id === stage.id; }) : null;
+    var complete = isDone || planStage?.status === 'done' || index < currentIndex;
+    var active = !isDone && index === currentIndex;
+    var className = complete ? ' is-complete' : active ? ' is-current' : ' is-pending';
+    return '<span class="tk-list-stage-step' + className + '" title="' + escapeValue(stage.name) + '"><span>' + escapeValue(stage.name) + '</span><i aria-hidden="true"></i></span>';
+  }).join('');
+  return '<div class="tk-list-stage-progress" role="progressbar" aria-label="当前任务阶段：' + escapeValue(current.name) + '" aria-valuemin="1" aria-valuemax="' + stages.length + '" aria-valuenow="' + (currentIndex + 1) + '">'
+    + '<div class="tk-list-stage-summary' + summaryClass + '"><span>' + escapeValue(current.name) + '</span><b>' + (currentIndex + 1) + '/' + stages.length + '</b></div>'
+    + '<div class="tk-list-stage-track">' + steps + '</div></div>';
 }
 
 function renderTaskListRow(t, opts, context) {
@@ -30,6 +55,7 @@ function renderTaskListRow(t, opts, context) {
     + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (context.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
     + '<td class="tk-col-code"><span class="tk-row-code">' + context.escapeHtml(t.code) + '</span></td>'
     + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + context.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
+    + '<td class="tk-col-stage">' + renderTaskStageProgress(t, context.escapeHtml) + '</td>'
     + '<td class="tk-col-status"><span class="tk-row-status">' + context.statusSvg(t.status) + context.escapeHtml(st.name) + '</span></td>'
     + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(t.issueType) + '</span>' : '—') + '</td>'
     + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
@@ -45,7 +71,7 @@ export function taskListVisibleColumnCount(order, visibility) {
 }
 
 function taskListFieldKey(cell) {
-  var match = cell.className.match(/(?:^|\s)tk-col-(code|title|module|status|type|priority|assignee|project|created|desc)(?:\s|$)/);
+  var match = cell.className.match(/(?:^|\s)tk-col-(code|title|stage|module|status|type|priority|assignee|project|created|desc)(?:\s|$)/);
   return match && match[1];
 }
 
