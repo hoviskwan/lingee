@@ -21,25 +21,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      - name: Checkout original backup
+        uses: actions/checkout@v4
+        with:
+          ref: 原始备份分支
+          path: original-backup
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            main/package-lock.json
+            original-backup/package-lock.json
 
-      - name: Install dependencies
+      - name: Install main dependencies
+        working-directory: main
         run: npm ci
 
-      - name: Build
+      - name: Build main
+        working-directory: main
         run: npm run build
+
+      - name: Install original backup dependencies
+        working-directory: original-backup
+        run: npm ci
+
+      - name: Build original backup
+        working-directory: original-backup
+        run: npm run build
+
+      - name: Assemble Pages site
+        run: |
+          mkdir -p site/original-backup
+          cp -R main/dist/. site/
+          cp -R original-backup/dist/. site/original-backup/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: ./site
 
   deploy:
     environment:
